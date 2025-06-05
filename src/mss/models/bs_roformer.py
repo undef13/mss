@@ -13,11 +13,11 @@ from torch import nn
 from torch.nn import Module, ModuleList
 from torch.utils.checkpoint import checkpoint
 
-from .attend import Attend
+from ..utils.attend import Attend
 
 try:
-    from .attend_sage import Attend as AttendSage
-except:
+    from ..utils.attend_sage import AttendSage
+except ImportError:
     pass
 
 # helper functions
@@ -46,14 +46,18 @@ def l2norm(t):
     return F.normalize(t, dim=-1, p=2)
 
 
-class RMSNorm(Module):
-    def __init__(self, dim):
+class CustomNorm(Module):
+    def __init__(self, dim, eps: float = 5.960464477539063e-08):  # 0x1p-24
         super().__init__()
         self.scale = dim**0.5
         self.gamma = nn.Parameter(torch.ones(dim))
+        self.eps = eps
 
     def forward(self, x):
-        return F.normalize(x, dim=-1) * self.scale * self.gamma
+        l2_norm = torch.linalg.norm(x, dim=-1, keepdim=True)
+        denom = torch.maximum(l2_norm, torch.full_like(l2_norm, self.eps))
+        normalized_x = x / denom
+        return normalized_x * self.scale * self.gamma
 
 
 # attention
@@ -64,7 +68,7 @@ class FeedForward(Module):
         super().__init__()
         dim_inner = int(dim * mult)
         self.net = nn.Sequential(
-            RMSNorm(dim),
+            CustomNorm(dim),
             nn.Linear(dim, dim_inner),
             nn.GELU(),
             nn.Dropout(dropout),
@@ -101,7 +105,7 @@ class Attention(Module):
         else:
             self.attend = Attend(flash=flash, dropout=dropout)
 
-        self.norm = RMSNorm(dim)
+        self.norm = CustomNorm(dim)
         self.to_qkv = nn.Linear(dim, dim_inner * 3, bias=(shared_qkv_bias is not None))
         if shared_qkv_bias is not None:
             self.to_qkv.bias = shared_qkv_bias
@@ -118,7 +122,8 @@ class Attention(Module):
     def forward(self, x):
         x = self.norm(x)
 
-        q, k, v = rearrange(self.to_qkv(x), "b n (qkv h d) -> qkv b h n d", qkv=3, h=self.heads)
+        qkv = self.to_qkv(x)
+        q, k, v = rearrange(qkv, "b n (qkv h d) -> qkv b h n d", qkv=3, h=self.heads)
 
         if exists(self.rotary_embed):
             q = self.rotary_embed.rotate_queries_or_keys(q)
@@ -155,7 +160,7 @@ class LinearAttention(Module):
     ):
         super().__init__()
         dim_inner = dim_head * heads
-        self.norm = RMSNorm(dim)
+        self.norm = CustomNorm(dim)
 
         self.to_qkv = nn.Sequential(
             nn.Linear(dim, dim_inner * 3, bias=False),
@@ -235,7 +240,7 @@ class Transformer(Module):
                 ModuleList([attn, FeedForward(dim=dim, mult=ff_mult, dropout=ff_dropout)])
             )
 
-        self.norm = RMSNorm(dim) if norm_output else nn.Identity()
+        self.norm = CustomNorm(dim) if norm_output else nn.Identity()
 
     def forward(self, x):
         for attn, ff in self.layers:
@@ -255,7 +260,7 @@ class BandSplit(Module):
         self.to_features = ModuleList([])
 
         for dim_in in dim_inputs:
-            net = nn.Sequential(RMSNorm(dim_in), nn.Linear(dim_in, dim))
+            net = nn.Sequential(CustomNorm(dim_in), nn.Linear(dim_in, dim))
 
             self.to_features.append(net)
 
@@ -318,70 +323,16 @@ class MaskEstimator(Module):
 
 # main class
 
+# fmt: off
 DEFAULT_FREQS_PER_BANDS = (
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    4,
-    4,
-    4,
-    4,
-    4,
-    4,
-    4,
-    4,
-    4,
-    4,
-    4,
-    4,
-    12,
-    12,
-    12,
-    12,
-    12,
-    12,
-    12,
-    12,
-    24,
-    24,
-    24,
-    24,
-    24,
-    24,
-    24,
-    24,
-    48,
-    48,
-    48,
-    48,
-    48,
-    48,
-    48,
-    48,
-    128,
-    129,
+    2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+    4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
+    12, 12, 12, 12, 12, 12, 12, 12,
+    24, 24, 24, 24, 24, 24, 24, 24,
+    48, 48, 48, 48, 48, 48, 48, 48,
+    128, 129
 )
+# fmt: on
 
 
 class BSRoformer(Module):
@@ -426,7 +377,6 @@ class BSRoformer(Module):
         use_torch_checkpoint=False,
         skip_connection=False,
         sage_attention=False,
-        use_shared_bias=False,
     ):
         super().__init__()
 
@@ -441,10 +391,9 @@ class BSRoformer(Module):
         if sage_attention:
             print("Use Sage Attention")
 
-        if use_shared_bias:
-            dim_inner = heads * dim_head
-            self.linear_62_bias_0 = nn.Parameter(torch.ones(dim_inner * 3))  # QKV
-            self.linear_64_bias_0 = nn.Parameter(torch.ones(dim))  # OUT
+        dim_inner = heads * dim_head
+        self.linear_62_bias_0 = nn.Parameter(torch.ones(dim_inner * 3))  # QKV
+        self.linear_64_bias_0 = nn.Parameter(torch.ones(dim))  # OUT
 
         transformer_kwargs = dict(
             dim=dim,
@@ -488,7 +437,7 @@ class BSRoformer(Module):
             )
             self.layers.append(nn.ModuleList(tran_modules))
 
-        self.final_norm = RMSNorm(dim)
+        self.final_norm = CustomNorm(dim)
 
         self.stft_kwargs = dict(
             n_fft=stft_n_fft,
@@ -498,18 +447,6 @@ class BSRoformer(Module):
         )
 
         self.stft_window_fn = partial(default(stft_window_fn, torch.hann_window), stft_win_length)
-
-        freqs = torch.stft(
-            torch.randn(1, stft_n_fft),
-            **self.stft_kwargs,
-            window=torch.ones(stft_win_length),
-            return_complex=True,
-        ).shape[1]
-
-        assert len(freqs_per_bands) > 1
-        assert sum(freqs_per_bands) == freqs, (
-            f"the number of freqs in the bands must equal {freqs} based on the STFT settings, but got {sum(freqs_per_bands)}"
-        )
 
         freqs_per_bands_with_complex = tuple(2 * f * self.audio_channels for f in freqs_per_bands)
 

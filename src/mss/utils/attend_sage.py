@@ -43,7 +43,7 @@ def default(v, d):
 
 
 # main class
-class Attend(nn.Module):
+class AttendSage(nn.Module):
     def __init__(
         self,
         dropout=0.0,
