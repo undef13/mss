@@ -6,8 +6,8 @@ from pathlib import Path
 import torch
 
 from mss import PATH_MODELS
+from mss.mil import BlobFile, parse_mil_program, resolve_path
 from mss.models.bs_roformer import BSRoformer
-from mss.utils.mil import BlobFile, parse_mil_program, resolve_path
 
 PATH_RAW = PATH_MODELS / "roformer.mlmodelc"
 FP_MIL = PATH_RAW / "model.mil"
