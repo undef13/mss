@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "mss"
-version = "0.1.0"
+version = "0.0.1"
 description = "Music source separation inference."
 readme = "README.md"
 requires-python = ">=3.10"
@@ -21,9 +21,7 @@ sageattention = ["sageattention>=1.0.6"]
 all = ["mss[sageattention]"]
 
 [dependency-groups]
-dev = [
-    "ipykernel>=6.29.5",
-]
+dev = ["ipykernel>=6.29.5"]
 lint = ["ruff>=0.11.12"]
 typing = ["mypy>=1.16.0"]
 
