@@ -1,0 +1,42 @@
+name: tests
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+  pull_request_target:
+  # schedule:
+  #   - cron: "42 7 * * 0"
+  workflow_dispatch:
+
+jobs:
+  linting:
+    name: linting/formatting
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.12
+
+      - name: Install the project
+        run: |
+          uv sync --dev --all-extras
+
+      - name: Style checking
+        run: |
+          uv run ruff check src tests
+          uv run ruff format --check src tests
+
+      # - name: Type checking
+      #   run: uv run mypy src tests
