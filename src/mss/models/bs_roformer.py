@@ -1,9 +1,17 @@
+from __future__ import annotations
+
 from functools import partial
 
 import torch
 import torch.nn.functional as F
+from beartype import beartype
+from beartype.typing import Callable
+from einops import pack, rearrange, unpack
+from einops.layers.torch import Rearrange
+from rotary_embedding_torch import RotaryEmbedding
 from torch import nn
 from torch.nn import Module, ModuleList
+from torch.utils.checkpoint import checkpoint
 
 from .attend import Attend
 
@@ -11,12 +19,6 @@ try:
     from .attend_sage import Attend as AttendSage
 except:
     pass
-from beartype import beartype
-from beartype.typing import Callable, Optional, Tuple
-from einops import pack, rearrange, unpack
-from einops.layers.torch import Rearrange
-from rotary_embedding_torch import RotaryEmbedding
-from torch.utils.checkpoint import checkpoint
 
 # helper functions
 
@@ -81,7 +83,9 @@ class Attention(Module):
         heads=8,
         dim_head=64,
         dropout=0.0,
-        rotary_embed=None,
+        shared_qkv_bias=None,
+        shared_out_bias=None,
+        rotary_embed: RotaryEmbedding | None = None,
         flash=True,
         sage_attention=False,
     ):
@@ -98,11 +102,18 @@ class Attention(Module):
             self.attend = Attend(flash=flash, dropout=dropout)
 
         self.norm = RMSNorm(dim)
-        self.to_qkv = nn.Linear(dim, dim_inner * 3, bias=False)
+        self.to_qkv = nn.Linear(dim, dim_inner * 3, bias=(shared_qkv_bias is not None))
+        if shared_qkv_bias is not None:
+            self.to_qkv.bias = shared_qkv_bias
 
         self.to_gates = nn.Linear(dim, heads)
 
-        self.to_out = nn.Sequential(nn.Linear(dim_inner, dim, bias=False), nn.Dropout(dropout))
+        self.to_out = nn.Sequential(
+            nn.Linear(dim_inner, dim, bias=(shared_out_bias is not None)),
+            nn.Dropout(dropout),
+        )
+        if shared_out_bias is not None:
+            self.to_out[0].bias = shared_out_bias
 
     def forward(self, x):
         x = self.norm(x)
@@ -116,10 +127,13 @@ class Attention(Module):
         out = self.attend(q, k, v)
 
         gates = self.to_gates(x)
-        out = out * rearrange(gates, "b n h -> b h n 1").sigmoid()
+        gate_act = gates.sigmoid()
+
+        out = out * rearrange(gate_act, "b n h -> b h n 1")
 
         out = rearrange(out, "b h n d -> b n (h d)")
-        return self.to_out(out)
+        out = self.to_out(out)
+        return out
 
 
 class LinearAttention(Module):
@@ -188,6 +202,8 @@ class Transformer(Module):
         flash_attn=True,
         linear_attn=False,
         sage_attention=False,
+        shared_qkv_bias=None,
+        shared_out_bias=None,
     ):
         super().__init__()
         self.layers = ModuleList([])
@@ -208,6 +224,8 @@ class Transformer(Module):
                     dim_head=dim_head,
                     heads=heads,
                     dropout=attn_dropout,
+                    shared_qkv_bias=shared_qkv_bias,
+                    shared_out_bias=shared_out_bias,
                     rotary_embed=rotary_embed,
                     flash=flash_attn,
                     sage_attention=sage_attention,
@@ -223,7 +241,6 @@ class Transformer(Module):
         for attn, ff in self.layers:
             x = attn(x) + x
             x = ff(x) + x
-
         return self.norm(x)
 
 
@@ -232,7 +249,7 @@ class Transformer(Module):
 
 class BandSplit(Module):
     @beartype
-    def __init__(self, dim, dim_inputs: Tuple[int, ...]):
+    def __init__(self, dim, dim_inputs: tuple[int, ...]):
         super().__init__()
         self.dim_inputs = dim_inputs
         self.to_features = ModuleList([])
@@ -274,7 +291,7 @@ def MLP(dim_in, dim_out, dim_hidden=None, depth=1, activation=nn.Tanh):
 
 class MaskEstimator(Module):
     @beartype
-    def __init__(self, dim, dim_inputs: Tuple[int, ...], depth, mlp_expansion_factor=4):
+    def __init__(self, dim, dim_inputs: tuple[int, ...], depth, mlp_expansion_factor=4):
         super().__init__()
         self.dim_inputs = dim_inputs
         self.to_freqs = ModuleList([])
@@ -379,8 +396,9 @@ class BSRoformer(Module):
         time_transformer_depth=2,
         freq_transformer_depth=2,
         linear_transformer_depth=0,
-        freqs_per_bands: Tuple[int, ...] = DEFAULT_FREQS_PER_BANDS,
-        # in the paper, they divide into ~60 bands, test with 1 for starters
+        freqs_per_bands: tuple[
+            int, ...
+        ] = DEFAULT_FREQS_PER_BANDS,  # in the paper, they divide into ~60 bands, test with 1 for starters
         dim_head=64,
         heads=8,
         attn_dropout=0.0,
@@ -388,14 +406,13 @@ class BSRoformer(Module):
         flash_attn=True,
         dim_freqs_in=1025,
         stft_n_fft=2048,
-        stft_hop_length=512,
-        # 10ms at 44100Hz, from sections 4.1, 4.4 in the paper - @faroit recommends // 2 or // 4 for better reconstruction
+        stft_hop_length=512,  # 10ms at 44100Hz, from sections 4.1, 4.4 in the paper - @faroit recommends // 2 or // 4 for better reconstruction
         stft_win_length=2048,
         stft_normalized=False,
-        stft_window_fn: Optional[Callable] = None,
+        stft_window_fn: Callable | None = None,
         mask_estimator_depth=2,
         multi_stft_resolution_loss_weight=1.0,
-        multi_stft_resolutions_window_sizes: Tuple[int, ...] = (
+        multi_stft_resolutions_window_sizes: tuple[int, ...] = (
             4096,
             2048,
             1024,
@@ -409,6 +426,7 @@ class BSRoformer(Module):
         use_torch_checkpoint=False,
         skip_connection=False,
         sage_attention=False,
+        use_shared_bias=False,
     ):
         super().__init__()
 
@@ -423,6 +441,11 @@ class BSRoformer(Module):
         if sage_attention:
             print("Use Sage Attention")
 
+        if use_shared_bias:
+            dim_inner = heads * dim_head
+            self.linear_62_bias_0 = nn.Parameter(torch.ones(dim_inner * 3))  # QKV
+            self.linear_64_bias_0 = nn.Parameter(torch.ones(dim))  # OUT
+
         transformer_kwargs = dict(
             dim=dim,
             heads=heads,
@@ -432,6 +455,8 @@ class BSRoformer(Module):
             flash_attn=flash_attn,
             norm_output=False,
             sage_attention=sage_attention,
+            shared_qkv_bias=self.linear_62_bias_0,
+            shared_out_bias=self.linear_64_bias_0,
         )
 
         time_rotary_embed = RotaryEmbedding(dim=dim_head)
@@ -475,7 +500,7 @@ class BSRoformer(Module):
         self.stft_window_fn = partial(default(stft_window_fn, torch.hann_window), stft_win_length)
 
         freqs = torch.stft(
-            torch.randn(1, 4096),
+            torch.randn(1, stft_n_fft),
             **self.stft_kwargs,
             window=torch.ones(stft_win_length),
             return_complex=True,
@@ -567,10 +592,20 @@ class BSRoformer(Module):
 
         x = rearrange(stft_repr, "b f t c -> b t (f c)")
 
+        if torch.isnan(x).any() or torch.isinf(x).any():
+            raise RuntimeError(
+                f"NaN/Inf in x after stft: {x.isnan().sum()} NaNs, {x.isinf().sum()} Infs"
+            )
+
         if self.use_torch_checkpoint:
             x = checkpoint(self.band_split, x, use_reentrant=False)
         else:
             x = self.band_split(x)
+
+        if torch.isnan(x).any() or torch.isinf(x).any():
+            raise RuntimeError(
+                f"NaN/Inf in x after band_split: {x.isnan().sum()} NaNs, {x.isinf().sum()} Infs"
+            )
 
         # axial / hierarchical attention
 
