@@ -1,5 +1,4 @@
-from __future__ import annotations
-
+from dataclasses import dataclass, field
 from functools import partial
 
 import torch
@@ -8,30 +7,97 @@ from beartype import beartype
 from beartype.typing import Callable
 from einops import pack, rearrange, unpack
 from einops.layers.torch import Rearrange
-from torch import nn
+from torch import Tensor, nn
 from torch.nn import Module, ModuleList
 from torch.utils.checkpoint import checkpoint
 
 from ..utils.attend import Attend
+from . import ModelConfigLike
 
 try:
     from ..utils.attend_sage import AttendSage
 except ImportError:
     pass
 
+# fmt: off
+DEFAULT_FREQS_PER_BANDS = (
+    2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+    4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
+    12, 12, 12, 12, 12, 12, 12, 12,
+    24, 24, 24, 24, 24, 24, 24, 24,
+    48, 48, 48, 48, 48, 48, 48, 48,
+    128, 129
+)
+# fmt: on
 
-def l2norm(t):
+
+@dataclass
+class BSRoformerConfig(ModelConfigLike):
+    chunk_size: int
+    output_stem_names: tuple[str, ...]
+    dim: int
+    depth: int
+    stereo: bool = False
+    time_transformer_depth: int = 2
+    freq_transformer_depth: int = 2
+    linear_transformer_depth: int = 0
+    freqs_per_bands: tuple[int, ...] = field(default_factory=lambda: DEFAULT_FREQS_PER_BANDS)
+    dim_head: int = 64
+    heads: int = 8
+    attn_dropout: float = 0.0
+    ff_dropout: float = 0.0
+    flash_attn: bool = True
+    stft_n_fft: int = 2048
+    stft_hop_length: int = 512
+    stft_win_length: int = 2048
+    stft_normalized: bool = False
+    stft_window_fn_name: str = "torch.hann_window"
+    mask_estimator_depth: int = 2
+    mlp_expansion_factor: int = 4
+    use_torch_checkpoint: bool = False
+    sage_attention: bool = False
+    use_shared_bias: bool = False
+    skip_connection: bool = False
+
+    multi_stft_resolution_loss_weight: float = 1.0
+    multi_stft_resolutions_window_sizes: tuple[int, ...] = field(
+        default_factory=lambda: (4096, 2048, 1024, 512, 256)
+    )
+    multi_stft_hop_size: int = 147
+    multi_stft_normalized: bool = False
+    multi_stft_window_fn_name: str = "torch.hann_window"
+
+    @property
+    def stft_window_fn(self) -> Callable[[int], Tensor]:
+        return _fn_name_to_callable(self.stft_window_fn_name)
+
+    @property
+    def multi_stft_window_fn(self) -> Callable[[int], Tensor]:
+        return _fn_name_to_callable(self.multi_stft_window_fn_name)
+
+
+def _fn_name_to_callable(fn_name: str) -> Callable[[int], Tensor]:
+    if fn_name == "torch.hann_window":
+        return torch.hann_window
+    elif fn_name == "torch.hamming_window":
+        return torch.hamming_window
+    else:
+        # TODO: allow more
+        raise ValueError(f"Unknown window function: {fn_name}")
+
+
+def l2norm(t: Tensor) -> Tensor:
     return F.normalize(t, dim=-1, p=2)
 
 
 class CustomNorm(Module):
-    def __init__(self, dim, eps: float = 5.960464477539063e-08):  # 0x1p-24
+    def __init__(self, dim: int, eps: float = 5.960464477539063e-08):
         super().__init__()
         self.scale = dim**0.5
         self.gamma = nn.Parameter(torch.ones(dim))
         self.eps = eps
 
-    def forward(self, x):
+    def forward(self, x: Tensor) -> Tensor:
         l2_norm = torch.linalg.norm(x, dim=-1, keepdim=True)
         denom = torch.maximum(l2_norm, torch.full_like(l2_norm, self.eps))
         normalized_x = x / denom
@@ -42,19 +108,19 @@ class CustomNorm(Module):
 
 
 class RotaryEmbedding(nn.Module):
-    def __init__(self, cos_emb, sin_emb):
+    def __init__(self, cos_emb: nn.Parameter, sin_emb: nn.Parameter):
         super().__init__()
         # both (seq_len_for_rotation, dim_head)
         self.cos_emb = cos_emb
         self.sin_emb = sin_emb
 
-    def rotate_half(self, x):
+    def rotate_half(self, x: Tensor) -> Tensor:
         x = rearrange(x, "... (d r) -> ... d r", r=2)
         x1, x2 = x.unbind(dim=-1)
         x = torch.stack((-x2, x1), dim=-1)
         return rearrange(x, "... d r -> ... (d r)")
 
-    def forward(self, x):
+    def forward(self, x: Tensor) -> Tensor:
         # x is (batch_eff, heads, seq_len_for_rotation, dim_head)
         cos_b = self.cos_emb.unsqueeze(0).unsqueeze(0).to(x.device, x.dtype)
         sin_b = self.sin_emb.unsqueeze(0).unsqueeze(0).to(x.device, x.dtype)
@@ -62,12 +128,12 @@ class RotaryEmbedding(nn.Module):
         term1 = x * cos_b
         term2 = self.rotate_half(x) * sin_b
 
-        sum = term1.to(torch.float32) + term2.to(torch.float32)
-        return sum.to(x.dtype)
+        sum_val = term1.to(torch.float32) + term2.to(torch.float32)
+        return sum_val.to(x.dtype)
 
 
 class FeedForward(Module):
-    def __init__(self, dim, mult=4, dropout=0.0):
+    def __init__(self, dim: int, mult: int = 4, dropout: float = 0.0):
         super().__init__()
         dim_inner = int(dim * mult)
         self.net = nn.Sequential(
@@ -79,22 +145,22 @@ class FeedForward(Module):
             nn.Dropout(dropout),
         )
 
-    def forward(self, x):
+    def forward(self, x: Tensor) -> Tensor:
         return self.net(x)
 
 
 class Attention(Module):
     def __init__(
         self,
-        dim,
-        heads=8,
-        dim_head=64,
-        dropout=0.0,
-        shared_qkv_bias=None,
-        shared_out_bias=None,
+        dim: int,
+        heads: int = 8,
+        dim_head: int = 64,
+        dropout: float = 0.0,
+        shared_qkv_bias: nn.Parameter | None = None,
+        shared_out_bias: nn.Parameter | None = None,
         rotary_embed: RotaryEmbedding | None = None,
-        flash=True,
-        sage_attention=False,
+        flash: bool = True,
+        sage_attention: bool = False,
     ):
         super().__init__()
         self.heads = heads
@@ -104,9 +170,9 @@ class Attention(Module):
         self.rotary_embed = rotary_embed
 
         if sage_attention:
-            self.attend = AttendSage(flash=flash, dropout=dropout)  # type: ignore
+            self.attend = AttendSage(flash=flash, dropout=dropout)
         else:
-            self.attend = Attend(flash=flash, dropout=dropout)  # type: ignore
+            self.attend = Attend(flash=flash, dropout=dropout)
 
         self.norm = CustomNorm(dim)
         self.to_qkv = nn.Linear(dim, dim_inner * 3, bias=(shared_qkv_bias is not None))
@@ -122,7 +188,7 @@ class Attention(Module):
         if shared_out_bias is not None:
             self.to_out[0].bias = shared_out_bias
 
-    def forward(self, x):
+    def forward(self, x: Tensor) -> Tensor:
         x = self.norm(x)
 
         qkv = self.to_qkv(x)
@@ -153,13 +219,13 @@ class LinearAttention(Module):
     def __init__(
         self,
         *,
-        dim,
-        dim_head=32,
-        heads=8,
-        scale=8,
-        flash=False,
-        dropout=0.0,
-        sage_attention=False,
+        dim: int,
+        dim_head: int = 32,
+        heads: int = 8,
+        scale: int = 8,
+        flash: bool = False,
+        dropout: float = 0.0,
+        sage_attention: bool = False,
     ):
         super().__init__()
         dim_inner = dim_head * heads
@@ -175,13 +241,13 @@ class LinearAttention(Module):
         if sage_attention:
             self.attend = AttendSage(scale=scale, dropout=dropout, flash=flash)  # type: ignore
         else:
-            self.attend = Attend(scale=scale, dropout=dropout, flash=flash)
+            self.attend = Attend(scale=scale, dropout=dropout, flash=flash)  # type: ignore
 
         self.to_out = nn.Sequential(
             Rearrange("b h d n -> b n (h d)"), nn.Linear(dim_inner, dim, bias=False)
         )
 
-    def forward(self, x):
+    def forward(self, x: Tensor) -> Tensor:
         x = self.norm(x)
 
         q, k, v = self.to_qkv(x)
@@ -198,20 +264,20 @@ class Transformer(Module):
     def __init__(
         self,
         *,
-        dim,
-        depth,
-        dim_head=64,
-        heads=8,
-        attn_dropout=0.0,
-        ff_dropout=0.0,
-        ff_mult=4,
-        norm_output=True,
+        dim: int,
+        depth: int,
+        dim_head: int = 64,
+        heads: int = 8,
+        attn_dropout: float = 0.0,
+        ff_dropout: float = 0.0,
+        ff_mult: int = 4,
+        norm_output: bool = True,
         rotary_embed: RotaryEmbedding | None = None,
-        flash_attn=True,
-        linear_attn=False,
-        sage_attention=False,
-        shared_qkv_bias=None,
-        shared_out_bias=None,
+        flash_attn: bool = True,
+        linear_attn: bool = False,
+        sage_attention: bool = False,
+        shared_qkv_bias: nn.Parameter | None = None,
+        shared_out_bias: nn.Parameter | None = None,
     ):
         super().__init__()
         self.layers = ModuleList([])
@@ -246,7 +312,7 @@ class Transformer(Module):
 
         self.norm = CustomNorm(dim) if norm_output else nn.Identity()
 
-    def forward(self, x):
+    def forward(self, x: Tensor) -> Tensor:
         for attn, ff in self.layers:  # type: ignore
             x = attn(x) + x
             x = ff(x) + x
@@ -258,24 +324,21 @@ class Transformer(Module):
 
 class BandSplit(Module):
     @beartype
-    def __init__(self, dim, dim_inputs: tuple[int, ...]):
+    def __init__(self, dim: int, dim_inputs: tuple[int, ...]):
         super().__init__()
         self.dim_inputs = dim_inputs
         self.to_features = ModuleList([])
 
         for dim_in in dim_inputs:
             net = nn.Sequential(CustomNorm(dim_in), nn.Linear(dim_in, dim))
-
             self.to_features.append(net)
 
-    def forward(self, x):
-        x = x.split(self.dim_inputs, dim=-1)
-
+    def forward(self, x: Tensor) -> Tensor:
+        x_split = x.split(self.dim_inputs, dim=-1)
         outs = []
-        for split_input, to_feature in zip(x, self.to_features):
-            split_output = to_feature(split_input)
+        for split_input, to_feature_net in zip(x_split, self.to_features):
+            split_output = to_feature_net(split_input)
             outs.append(split_output)
-
         return torch.stack(outs, dim=-2)
 
 
@@ -284,12 +347,12 @@ def MLP(
     dim_out: int,
     dim_hidden: int | None = None,
     depth: int = 1,
-    activation=nn.Tanh,
-):
-    dim_hidden = dim_hidden or dim_in
+    activation: type[Module] = nn.Tanh,
+) -> nn.Sequential:
+    dim_hidden_ = dim_hidden or dim_in
 
-    net = []
-    dims = (dim_in, *((dim_hidden,) * (depth - 1)), dim_out)
+    net: list[Module] = []
+    dims = (dim_in, *((dim_hidden_,) * (depth - 1)), dim_out)
 
     for ind, (layer_dim_in, layer_dim_out) in enumerate(zip(dims[:-1], dims[1:])):
         is_last = ind == (len(dims) - 2)
@@ -306,7 +369,9 @@ def MLP(
 
 class MaskEstimator(Module):
     @beartype
-    def __init__(self, dim, dim_inputs: tuple[int, ...], depth, mlp_expansion_factor=4):
+    def __init__(
+        self, dim: int, dim_inputs: tuple[int, ...], depth: int, mlp_expansion_factor: int
+    ):
         super().__init__()
         self.dim_inputs = dim_inputs
         self.to_freqs = ModuleList([])
@@ -316,183 +381,131 @@ class MaskEstimator(Module):
             mlp = nn.Sequential(
                 MLP(dim, dim_in * 2, dim_hidden=dim_hidden, depth=depth), nn.GLU(dim=-1)
             )
-
             self.to_freqs.append(mlp)
 
-    def forward(self, x):
-        x = x.unbind(dim=-2)
+    def forward(self, x: Tensor) -> Tensor:
+        x_unbound = x.unbind(dim=-2)
 
         outs = []
 
-        for band_features, mlp in zip(x, self.to_freqs):
+        for band_features, mlp in zip(x_unbound, self.to_freqs):
             freq_out = mlp(band_features)
             outs.append(freq_out)
 
         return torch.cat(outs, dim=-1)
 
 
-# fmt: off
-DEFAULT_FREQS_PER_BANDS = (
-    2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
-    4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
-    12, 12, 12, 12, 12, 12, 12, 12,
-    24, 24, 24, 24, 24, 24, 24, 24,
-    48, 48, 48, 48, 48, 48, 48, 48,
-    128, 129
-)
-# fmt: on
-
-
 class BSRoformer(Module):
     @beartype
-    def __init__(
-        self,
-        dim,
-        *,
-        depth,
-        stereo=False,
-        num_stems=1,
-        time_transformer_depth=2,
-        freq_transformer_depth=2,
-        linear_transformer_depth=0,
-        freqs_per_bands: tuple[
-            int, ...
-        ] = DEFAULT_FREQS_PER_BANDS,  # in the paper, they divide into ~60 bands, test with 1 for starters
-        dim_head=64,
-        heads=8,
-        attn_dropout=0.0,
-        ff_dropout=0.0,
-        flash_attn=True,
-        stft_n_fft=2048,
-        stft_hop_length=512,  # 10ms at 44100Hz, from sections 4.1, 4.4 in the paper - @faroit recommends // 2 or // 4 for better reconstruction
-        stft_win_length=2048,
-        stft_normalized=False,
-        stft_window_fn: Callable | None = None,
-        mask_estimator_depth=2,
-        multi_stft_resolution_loss_weight=1.0,
-        multi_stft_resolutions_window_sizes: tuple[int, ...] = (
-            4096,
-            2048,
-            1024,
-            512,
-            256,
-        ),
-        multi_stft_hop_size=147,
-        multi_stft_normalized=False,
-        multi_stft_window_fn: Callable = torch.hann_window,
-        mlp_expansion_factor=4,
-        use_torch_checkpoint=False,
-        skip_connection=False,
-        sage_attention=False,
-        use_shared_bias=False,
-        chunk_size: int = 588800,
-    ):
+    def __init__(self, cfg: BSRoformerConfig):
         super().__init__()
-
-        self.stereo = stereo
-        self.audio_channels = 2 if stereo else 1
-        self.num_stems = num_stems
-        self.use_torch_checkpoint = use_torch_checkpoint
-        self.skip_connection = skip_connection
+        self.stereo = cfg.stereo
+        self.audio_channels = 2 if cfg.stereo else 1
+        self.num_stems = len(cfg.stem_names)
+        self.use_torch_checkpoint = cfg.use_torch_checkpoint
+        self.skip_connection = cfg.skip_connection
 
         self.layers = ModuleList([])
 
-        if sage_attention:
-            print("Use Sage Attention")
-
-        if use_shared_bias:
-            dim_inner = heads * dim_head
+        self.shared_qkv_bias: nn.Parameter | None = None
+        self.shared_out_bias: nn.Parameter | None = None
+        if cfg.use_shared_bias:
+            dim_inner = cfg.heads * cfg.dim_head
             self.shared_qkv_bias = nn.Parameter(torch.ones(dim_inner * 3))
-            self.shared_out_bias = nn.Parameter(torch.ones(dim))
+            self.shared_out_bias = nn.Parameter(torch.ones(cfg.dim))
 
         transformer_kwargs = dict(
-            dim=dim,
-            heads=heads,
-            dim_head=dim_head,
-            attn_dropout=attn_dropout,
-            ff_dropout=ff_dropout,
-            flash_attn=flash_attn,
+            dim=cfg.dim,
+            heads=cfg.heads,
+            dim_head=cfg.dim_head,
+            attn_dropout=cfg.attn_dropout,
+            ff_dropout=cfg.ff_dropout,
+            flash_attn=cfg.flash_attn,
             norm_output=False,
-            sage_attention=sage_attention,
+            sage_attention=cfg.sage_attention,
             shared_qkv_bias=self.shared_qkv_bias,
             shared_out_bias=self.shared_out_bias,
         )
 
-        t_frames = chunk_size // stft_hop_length + 1  # e.g. 588800 // 512 + 1 = 1151
-        self.cos_emb_time = nn.Parameter(torch.zeros(t_frames, dim_head))
-        self.sin_emb_time = nn.Parameter(torch.zeros(t_frames, dim_head))
+        t_frames = cfg.chunk_size // cfg.stft_hop_length + 1  # e.g. 588800 // 512 + 1 = 1151
+        self.cos_emb_time = nn.Parameter(torch.zeros(t_frames, cfg.dim_head))
+        self.sin_emb_time = nn.Parameter(torch.zeros(t_frames, cfg.dim_head))
         time_rotary_embed = RotaryEmbedding(cos_emb=self.cos_emb_time, sin_emb=self.sin_emb_time)
 
-        num_bands = len(freqs_per_bands)  # e.g. 62
-        self.cos_emb_freq = nn.Parameter(torch.zeros(num_bands, dim_head))
-        self.sin_emb_freq = nn.Parameter(torch.zeros(num_bands, dim_head))
+        num_bands = len(cfg.freqs_per_bands)  # e.g. 62
+        self.cos_emb_freq = nn.Parameter(torch.zeros(num_bands, cfg.dim_head))
+        self.sin_emb_freq = nn.Parameter(torch.zeros(num_bands, cfg.dim_head))
         freq_rotary_embed = RotaryEmbedding(cos_emb=self.cos_emb_freq, sin_emb=self.sin_emb_freq)
 
-        for _ in range(depth):
+        for _ in range(cfg.depth):
             tran_modules = []
-            if linear_transformer_depth > 0:
+            if cfg.linear_transformer_depth > 0:
                 tran_modules.append(
                     Transformer(
-                        depth=linear_transformer_depth,
+                        depth=cfg.linear_transformer_depth,
                         linear_attn=True,
-                        **transformer_kwargs,
+                        **transformer_kwargs,  # type: ignore
                     )
                 )
             tran_modules.append(
                 Transformer(
-                    depth=time_transformer_depth,
+                    depth=cfg.time_transformer_depth,
                     rotary_embed=time_rotary_embed,
-                    **transformer_kwargs,
+                    **transformer_kwargs,  # type: ignore
                 )
             )
             tran_modules.append(
                 Transformer(
-                    depth=freq_transformer_depth,
+                    depth=cfg.freq_transformer_depth,
                     rotary_embed=freq_rotary_embed,
-                    **transformer_kwargs,
+                    **transformer_kwargs,  # type: ignore
                 )
             )
             self.layers.append(nn.ModuleList(tran_modules))
 
-        self.final_norm = CustomNorm(dim)
+        self.final_norm = CustomNorm(cfg.dim)
 
         self.stft_kwargs = dict(
-            n_fft=stft_n_fft,
-            hop_length=stft_hop_length,
-            win_length=stft_win_length,
-            normalized=stft_normalized,
+            n_fft=cfg.stft_n_fft,
+            hop_length=cfg.stft_hop_length,
+            win_length=cfg.stft_win_length,
+            normalized=cfg.stft_normalized,
         )
 
-        self.stft_window_fn = partial(stft_window_fn or torch.hann_window, stft_win_length)
+        self.stft_window_fn = partial(cfg.stft_window_fn, cfg.stft_win_length)
 
-        freqs_per_bands_with_complex = tuple(2 * f * self.audio_channels for f in freqs_per_bands)
+        freqs_per_bands_with_complex = tuple(
+            2 * f * self.audio_channels for f in cfg.freqs_per_bands
+        )
 
-        self.band_split = BandSplit(dim=dim, dim_inputs=freqs_per_bands_with_complex)
+        self.band_split = BandSplit(dim=cfg.dim, dim_inputs=freqs_per_bands_with_complex)
 
         self.mask_estimators = nn.ModuleList([])
 
-        for _ in range(num_stems):
+        for _ in range(cfg.num_stems):
             mask_estimator = MaskEstimator(
-                dim=dim,
+                dim=cfg.dim,
                 dim_inputs=freqs_per_bands_with_complex,
-                depth=mask_estimator_depth,
-                mlp_expansion_factor=mlp_expansion_factor,
+                depth=cfg.mask_estimator_depth,
+                mlp_expansion_factor=cfg.mlp_expansion_factor,
             )
 
             self.mask_estimators.append(mask_estimator)
 
         # for the multi-resolution stft loss
 
-        self.multi_stft_resolution_loss_weight = multi_stft_resolution_loss_weight
-        self.multi_stft_resolutions_window_sizes = multi_stft_resolutions_window_sizes
-        self.multi_stft_n_fft = stft_n_fft
-        self.multi_stft_window_fn = multi_stft_window_fn
+        self.multi_stft_resolution_loss_weight = cfg.multi_stft_resolution_loss_weight
+        self.multi_stft_resolutions_window_sizes = cfg.multi_stft_resolutions_window_sizes
+        self.multi_stft_n_fft = cfg.stft_n_fft
+        self.multi_stft_window_fn = cfg.multi_stft_window_fn
 
         self.multi_stft_kwargs = dict(
-            hop_length=multi_stft_hop_size, normalized=multi_stft_normalized
+            hop_length=cfg.multi_stft_hop_size, normalized=cfg.multi_stft_normalized
         )
 
-    def forward(self, raw_audio, target=None, return_loss_breakdown=False):
+    def forward(
+        self, raw_audio: Tensor, target: Tensor | None = None, return_loss_breakdown: bool = False
+    ) -> Tensor | tuple[Tensor, tuple[Tensor, float]]:
         """
         einops
 
@@ -527,17 +540,17 @@ class BSRoformer(Module):
         # RuntimeError: FFT operations are only supported on MacOS 14+
         # Since it's tedious to define whether we're on correct MacOS version - simple try-catch is used
         try:
-            stft_repr = torch.stft(
+            stft_repr_complex = torch.stft(
                 raw_audio, **self.stft_kwargs, window=stft_window, return_complex=True
             )
-        except Exception:
-            stft_repr = torch.stft(
+        except RuntimeError:
+            stft_repr_complex = torch.stft(
                 raw_audio.cpu() if x_is_mps else raw_audio,
                 **self.stft_kwargs,
                 window=stft_window.cpu() if x_is_mps else stft_window,
                 return_complex=True,
             ).to(device)
-        stft_repr = torch.view_as_real(stft_repr)
+        stft_repr = torch.view_as_real(stft_repr_complex)
 
         stft_repr = unpack(stft_repr, batch_audio_channel_packed_shape, "* f t c")[0]
 
@@ -641,7 +654,7 @@ class BSRoformer(Module):
                 return_complex=False,
                 length=raw_audio.shape[-1],
             )
-        except Exception:
+        except RuntimeError:
             recon_audio = torch.istft(
                 stft_repr.cpu() if x_is_mps else stft_repr,
                 **self.stft_kwargs,

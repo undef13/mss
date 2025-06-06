@@ -6,8 +6,8 @@ from pathlib import Path
 import torch
 
 from mss import PATH_MODELS
-from mss.mil import BlobFile, parse_mil_program, resolve_path
-from mss.models.bs_roformer import BSRoformer
+from mss.models.bs_roformer import BSRoformer, BSRoformerConfig
+from mss.utils.mil import BlobFile, parse_mil_program, resolve_path
 
 PATH_RAW = PATH_MODELS / "roformer.mlmodelc"
 FP_MIL = PATH_RAW / "model.mil"
@@ -22,7 +22,7 @@ program = parse_mil_program(mil_content)
 # %% torch preprocessing
 
 torch.set_default_dtype(torch.float16)
-model = BSRoformer(
+model_cfg = BSRoformerConfig(
     dim=256,
     depth=12,
     stereo=True,
@@ -32,6 +32,7 @@ model = BSRoformer(
     freq_transformer_depth=1,
     chunk_size=588800,
 )
+model = BSRoformer(model_cfg)
 
 alias = {
     "cos_emb_time": "op_1429_to_fp16",  # (1151, 64)
