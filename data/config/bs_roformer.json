@@ -1,0 +1,59 @@
+{
+    "identifier": "bs_roformer",
+    "model_type": "bs_roformer",
+    "model": {
+        "chunk_size": 352800,
+        "output_stem_names": [
+            "drums",
+            "bass",
+            "guitar",
+            "piano",
+            "other",
+            "vocals"
+        ],
+        "dim": 512,
+        "depth": 12,
+        "stereo": true,
+        "time_transformer_depth": 1,
+        "freq_transformer_depth": 1,
+        "stft_n_fft": 2048,
+        "stft_hop_length": 441
+    },
+    "audio_io": {
+        "target_sample_rate": 44100,
+        "force_channels": 2
+    },
+    "inference": {
+        "normalize_input_audio": true,
+        "batch_size": 4,
+        "apply_tta": true
+    },
+    "chunking": {
+        "method": "overlap_add_windowed",
+        "chunk_duration_ms": 8000,
+        "overlap_ratio": 0.5,
+        "window_shape": "hann"
+    },
+    "derived_stems": {
+        "instrumental": {
+            "operation": "subtract",
+            "stem_name": "mixture",
+            "by_stem_name": "vocals"
+        },
+        "drums_and_bass": {
+            "operation": "sum",
+            "stem_names": [
+                "drums",
+                "bass"
+            ]
+        }
+    },
+    "output": {
+        "stem_names": [
+            "instrumental",
+            "vocals"
+        ],
+        "file_format": "flac",
+        "pcm_type": "PCM_24"
+    }
+}
