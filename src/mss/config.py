@@ -1,6 +1,11 @@
+"""Configuration"""
+
+# NOTE: since this contains heavy validation logic with type annotations,
+# we are not using `typing.TYPE_CHECKING` here.
 from __future__ import annotations
 
 from typing import (
+    TYPE_CHECKING,
     Annotated,
     Any,
     Hashable,
@@ -24,10 +29,13 @@ from pydantic import (
     model_validator,
 )
 from pydantic_core import PydanticCustomError
-from typing_extensions import Self
 
 from .models import ModelConfigLike, ModelType
 from .models import ModelOutputStemName as _ModelOutputStemName
+
+if TYPE_CHECKING:
+    from typing_extensions import Self
+    # TODO: continue moving down, but only if we are confident.
 
 _Item = TypeVar("_Item", bound=Hashable)
 
@@ -96,7 +104,7 @@ class LazyModelConfig(BaseModel):
 
 assert isinstance(
     LazyModelConfig(chunk_size=1024, output_stem_names=("dummy",)), ModelConfigLike
-), "make sure LazyModelConfig has all fields to ModelConfigLike"
+), "make sure LazyModelConfig has all fields to ModelConfigLike"  # TODO: move this to tests instead
 
 
 class AudioIOConfig(BaseModel):
@@ -113,7 +121,7 @@ class InferenceConfig(BaseModel):
 
 class ChunkingConfig(BaseModel):
     method: Literal["overlap_add_windowed"] = "overlap_add_windowed"
-    chunk_duration_ms: Annotated[int, Gt(0)] = 8000
+    chunk_duration: Annotated[float, Gt(0)] = 8
     overlap_ratio: Annotated[float, Ge(0), Le(1)] = 0.5
     window_shape: Literal["hann", "hamming", "linear_fade"] = "hann"
 

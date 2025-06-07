@@ -8,9 +8,14 @@ nav:
   # - Tutorial: "tutorial.md"
   - Configurations: "config.md"
   - Examples: "examples.md"
+  - Concepts & Definitions: "concepts.md"
   - API Reference:
     - All: "api/index.md"
     - Models: "api/models.md"
+    - Config: "api/config.md"
+    - Core: "api/core.md"
+    - Inference: "api/inference.md"
+    - Training: "api/training.md"
 theme:
   name: material
   features:
@@ -39,6 +44,7 @@ plugins:
           inventories:
             - https://docs.python.org/3/objects.inv
             - https://numpy.org/doc/stable/objects.inv
+            - https://docs.pytorch.org/docs/stable/objects.inv
           options:
             docstring_section_style: table
             docstring_style: sphinx
@@ -79,9 +85,11 @@ markdown_extensions:
           case: lower
   - pymdownx.tasklist:
       custom_checkbox: true
+  - pymdownx.arithmatex:
+      generic: true
 extra_javascript:
   - assets/js/katex.js
   - https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.js
   - https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/contrib/auto-render.min.js
 extra_css:
-  - https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.csss
+  - https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.css

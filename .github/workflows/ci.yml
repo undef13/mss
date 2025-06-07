@@ -55,7 +55,7 @@ jobs:
           python-version: "3.13"
 
       - name: Install the project
-        run: uv sync --dev --all-extras
+        run: uv sync --all-groups --all-extras
 
       - name: Run tests
         run: uv run pytest

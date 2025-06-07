@@ -38,6 +38,6 @@ jobs:
             mkdocs-material-
 
       - name: Install the project
-        run: uv sync
+        run: uv sync --all-groups --all-extras
 
       - run: uv run mkdocs gh-deploy --force
