@@ -4,14 +4,17 @@
     This module is incomplete. they only contain annotations for future use.
 """
 
-from typing import NewType, TypeAlias
+from __future__ import annotations
 
-from .core import BatchSize
+from typing import TYPE_CHECKING, Annotated, TypeAlias
+
+if TYPE_CHECKING:
+    from annotated_types import Gt
 
 Epoch: TypeAlias = int
 """The number of times the model has seen the entire training dataset."""
 
-TrainingBatchSize = NewType("TrainingBatchSize", BatchSize)
+TrainingBatchSize: TypeAlias = Annotated[int, Gt(0)]
 """Number of training examples (audio chunks) processed in one iteration before the weight update.
 
 - Larger batch sizes may lead to more stable gradients and faster convergence, but require more
@@ -19,7 +22,7 @@ TrainingBatchSize = NewType("TrainingBatchSize", BatchSize)
 - Smaller batch sizes may result in a noisier gradient estimate
 """
 
-GradientAccumulationSteps: TypeAlias = int
+GradientAccumulationSteps: TypeAlias = Annotated[int, Gt(0)]
 """Number of batches to process before performing a weight update.
 
 A technique to simulate larger batch sizes without increasing memory consumption.

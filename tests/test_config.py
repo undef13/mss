@@ -76,13 +76,15 @@ def test_model_config_to_concrete_extra_fields() -> None:
     )
     assert isinstance(lazy_model_config_extra, LazyModelConfig)  # lazy allows extra invalid fields
     # extra fields are now not allowed on `to_concrete`
+    # this would also mean that if MyModelConfig doesn't conform to ModelConfigLike, it will raise an error
+    # when `to_concrete` is called
     with pytest.raises(ValidationError):
         lazy_model_config_extra.to_concrete(MyModelConfig)
 
 
 def test_config_required() -> None:
     config_data: dict[str, Any] = {
-        # simulate user forgetting to define a model id
+        # simulate user forgetting to define a model id and stem names
         "model_type": "roformer",
         "model": MODEL_CONFIG_BASE,
     }

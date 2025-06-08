@@ -1,55 +1,70 @@
-"""Operations for reading and writing to disk.
-
-!!! warning
-    This module is incomplete.
-"""
+"""Operations for reading and writing to disk. All side effects should go here."""
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Literal
+from pathlib import Path
+from typing import TYPE_CHECKING, BinaryIO
 
 import torch
-import torch.nn as nn
+import torchaudio
 
-from .core import Audio
+from .core import Audio, RawAudioTensor, SampleRate
+from .models import ModelT
 
 if TYPE_CHECKING:
-    from pathlib import Path
     from typing import TypeAlias
 
-    from .core import RawAudioTensor, SampleRate
+
+FileLike: TypeAlias = Path | str | BinaryIO
 
 
 def read_audio(
-    path: Path,
+    file: FileLike,
     target_sr: SampleRate,
     target_channels: int | None,
     device: torch.device | None = None,
 ) -> Audio[RawAudioTensor]:
-    """Loads, resamples, converts channels"""
-    # we should probably just use torchaudio, not soundfile or librosa
-    raise NotImplementedError
+    """Loads, resamples and converts channels."""
+    waveform, sr = torchaudio.load(file, channels_first=True)
+    waveform = waveform.to(device)
+
+    if sr != target_sr:
+        resampler = torchaudio.transforms.Resample(orig_freq=sr, new_freq=target_sr).to(device)
+        waveform = resampler(waveform)
+
+    current_channels = waveform.shape[0]
+    if target_channels is not None and current_channels != target_channels:
+        if target_channels == 1:  # stereo -> mono
+            waveform = torch.mean(waveform, dim=0, keepdim=True)
+        elif target_channels == 2:  # mono -> stereo
+            waveform = waveform.repeat(2, 1)
+        else:
+            raise ValueError(
+                f"expected target_channels to be 1 or 2, got {target_channels=} with {current_channels=}."
+            )
+
+    return Audio(RawAudioTensor(waveform), target_sr)
 
 
-def write_audio(
-    path: Path, audio: Audio[RawAudioTensor], file_format: FileFormat, audio_format: AudioFormat
-) -> None:
-    """Writes audio to disk"""
-    raise NotImplementedError
+# NOTE: torchaudio.save is simple enough and a wrapper is not needed.
 
 
-def read_model_from_checkpoint(
-    identifier: str, model_params_dict: dict[str, Any], checkpoint_path: Path, device: torch.device
-) -> nn.Module:
-    # uses a registry or if/else to get ModelClass and ModelParamsDataclass from identifier.
-    # params_instance = ModelParamsDataclass(**model_params_dict).
-    # model = ModelClass(params_instance).
-
-    raise NotImplementedError
-    # for simplicity, do not handle mismatches (yet)
+#
+# model loading
+#
 
 
-FileFormat: TypeAlias = Literal["flac", "wav"]  # TODO: support more, mp3 etc.
-AudioFormat: TypeAlias = Literal[
-    "PCM_16", "PCM_24", "FLOAT"
-]  # TODO: consider https://trac.ffmpeg.org/wiki/audio%20types
+def load_weights(
+    model: ModelT,
+    checkpoint_file: FileLike,
+    device: torch.device,
+) -> ModelT:
+    """Load the weights from a checkpoint into the given model."""
+
+    state_dict = torch.load(checkpoint_file, map_location=device, weights_only=True)
+
+    # TODO: DataParallel and `module.` prefix
+    model.load_state_dict(state_dict)
+    # NOTE: do not torch.compile here!
+
+    return model.to(device)

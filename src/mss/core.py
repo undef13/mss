@@ -1,14 +1,12 @@
-"""Reusable, pure algorithmic components for inference and training.
-
-!!! warning
-    This module is incomplete.
-"""
+"""Reusable, pure algorithmic components for inference and training."""
 
 from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Annotated, Generic, Iterator, Literal, NewType, TypeVar
 
+import torch
+import torch.nn.functional as F
 from annotated_types import Ge, Gt, Lt
 from torch import Tensor
 
@@ -104,8 +102,18 @@ def generate_chunks(
 
     :return: An iterator that yields batches of chunks of shape (B, C, chunk_T).
     """
-    # handles padding
-    raise NotImplementedError
+    padding = chunk_size - hop_size
+    padded_audio = F.pad(audio_data, (padding, padding), mode=padding_mode)
+
+    unfolded = padded_audio.unfold(
+        dimension=-1, size=chunk_size, step=hop_size
+    )  # (C, num_chunks, chunk_size)
+
+    num_chunks = unfolded.shape[1]
+    unfolded = unfolded.permute(1, 0, 2)  # (num_chunks, C, chunk_size)
+
+    for i in range(0, num_chunks, batch_size):
+        yield PaddedChunkedAudioTensor(unfolded[i : i + batch_size])
 
 
 def stitch_chunks(
@@ -117,26 +125,58 @@ def stitch_chunks(
     *,
     window: WindowTensor,
 ) -> RawSeparatedTensor:
-    """Stitches processed audio chunks back together using the [overlap-add method](https://en.wikipedia.org/wiki/Overlap%E2%80%93add_method).
+    r"""Stitches processed audio chunks back together using the [overlap-add method](https://en.wikipedia.org/wiki/Overlap%E2%80%93add_method).
 
-    When chunks overlap, the overlapping sections are processed multiple times.
-    To reconstruct the full audio signal without clicks or discontinuities at chunk boundaries, the
-    overlapping parts are smoothly faded in and out.
+    Reconstructs the full audio signal from a sequence of overlapping, processed chunks.
+    To avoid artifacts at chunk boundaries, each chunk is multiplied by a synthesis window $g[n]$
+    before being added to the final output buffer.
 
-    1. Multiply each processed chunk by a [window function][mss.core.WindowShape].
-    2. Add the windowed chunks together at their original positions.
-    3. The overlapping sections were added, so their amplitude is higher.
-       Divide by the sum of all applied windows to restore the correct amplitude.
-       Such a constant is precalculated as the window is constant.
-
-    Dimensions:
-
-    - `B`: [batch size][mss.core.BatchSize]
-    - `C`: [channels][mss.core.Channels]
-    - `chunk_T`: [chunk length][mss.core.ChunkSize]
-    - `target_T`: target length of the original audio signal
+    We must ensure that the sum of all overlapping windows $w[n]$ is constant at every time step:
+    $$
+    \sum_{m=-\infty}^{\infty} w[n - mH] = C
+    $$
+    where $H$ is the [hop size][mss.core.HopSize] and $C$ is a constant, ideally 1. Not to be
+    confused with the condition for *power-complementary* windows ($\sum w^2 = C$), which is used to
+    reconstruct the signal's *power*.
     """
-    raise NotImplementedError
+    all_chunks = torch.cat(tuple(processed_chunks), dim=0)
+    total_chunks, _N, num_channels, _chunk_T = all_chunks.shape
+    windowed_chunks = all_chunks * window.view(1, 1, 1, -1)
+
+    # folding: (B, N * C * chunk_T) -> (1, N * C * chunk_T, total_chunks)
+    reshaped_for_fold = windowed_chunks.permute(1, 2, 3, 0).reshape(
+        1, num_stems * num_channels * chunk_size, total_chunks
+    )
+
+    total_length = (total_chunks - 1) * hop_size + chunk_size
+
+    folded = F.fold(
+        reshaped_for_fold,
+        output_size=(1, total_length),
+        kernel_size=(1, chunk_size),
+        stride=(1, hop_size),
+    )  # (1, N * C, 1, total_length)
+    stitched = folded.view(num_stems, num_channels, total_length)
+
+    # normalization for overlap-add
+    ones_template = torch.ones(1, 1, total_length, device=window.device)
+    unfolded_ones = ones_template.unfold(dimension=-1, size=chunk_size, step=hop_size)
+    windowed_unfolded_ones = unfolded_ones * window
+    reshaped_for_fold_norm = windowed_unfolded_ones.permute(0, 1, 3, 2).reshape(
+        1, chunk_size, total_chunks
+    )
+    norm_window = F.fold(
+        reshaped_for_fold_norm,
+        output_size=(1, total_length),
+        kernel_size=(1, chunk_size),
+        stride=(1, hop_size),
+    ).squeeze()
+
+    norm_window.clamp_min_(1e-8)  # for edges where the window sum might be zero
+    stitched /= norm_window
+
+    padding = chunk_size - hop_size
+    return RawSeparatedTensor(stitched[..., padding : padding + target_num_samples])
 
 
 #
@@ -148,10 +188,43 @@ def derive_stems(
     stem_rules: DerivedStemsConfig,
 ) -> dict[StemName, RawAudioTensor]:
     """
+    It is the caller's responsibility to ensure that all tensors are aligned and have the same shape.
+
     !!! note
         Mixture input and separated stems must first be [denormalized][mss.core.denormalize_audio].
     """
-    raise NotImplementedError
+    stems = {
+        "mixture": RawAudioTensor(mixture_input),  # for subtraction
+        **separated_stems,
+    }
+
+    for derived_name, rule in stem_rules.items():
+        if rule.operation == "subtract":
+            minuend = stems.get(rule.stem_name, mixture_input)
+            subtrahend = stems.get(rule.by_stem_name, mixture_input)
+            stems[derived_name] = RawAudioTensor(minuend - subtrahend)
+        elif rule.operation == "sum":
+            to_sum = tuple(stems[s] for s in rule.stem_names)
+            stems[derived_name] = RawAudioTensor(torch.stack(to_sum).sum(dim=0))
+
+    stems.pop("mixture", None)
+    return stems
+
+
+#
+# misc
+#
+
+
+def get_dtype(dtype: Dtype) -> torch.dtype:
+    if dtype == "float32":
+        return torch.float32
+    elif dtype == "float16":
+        return torch.float16
+    elif dtype == "bfloat16":
+        return torch.bfloat16
+    else:
+        raise ValueError(f"unsupported {dtype=}")
 
 
 #
@@ -347,6 +420,9 @@ BatchSize: TypeAlias = Annotated[int, Gt(0)]
 Increasing the batch size can improve GPU utilisation and speed up training, but it requires more
 memory.
 """
+
+Dtype: TypeAlias = Literal["float32", "float16", "bfloat16"]
+
 # preprocessing
 
 PaddingMode: TypeAlias = Literal["reflect", "constant", "replicate"]

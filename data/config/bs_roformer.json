@@ -2,22 +2,22 @@
     "identifier": "bs_roformer",
     "model_type": "bs_roformer",
     "model": {
-        "chunk_size": 352800,
+        "chunk_size": 588800,
         "output_stem_names": [
-            "drums",
             "bass",
-            "guitar",
-            "piano",
+            "drums",
             "other",
-            "vocals"
+            "vocals",
+            "guitar",
+            "piano"
         ],
-        "dim": 512,
+        "dim": 256,
         "depth": 12,
         "stereo": true,
         "time_transformer_depth": 1,
         "freq_transformer_depth": 1,
         "stft_n_fft": 2048,
-        "stft_hop_length": 441
+        "stft_hop_length": 512
     },
     "audio_io": {
         "target_sample_rate": 44100,
@@ -26,11 +26,10 @@
     "inference": {
         "normalize_input_audio": true,
         "batch_size": 4,
-        "apply_tta": true
+        "compute_dtype": "float16"
     },
     "chunking": {
         "method": "overlap_add_windowed",
-        "chunk_duration": 8.0,
         "overlap_ratio": 0.5,
         "window_shape": "hann"
     },
@@ -49,11 +48,8 @@
         }
     },
     "output": {
-        "stem_names": [
-            "instrumental",
-            "vocals"
-        ],
+        "stem_names": "all",
         "file_format": "flac",
-        "audio_format": "PCM_24"
+        "bit_depth": 24
     }
 }

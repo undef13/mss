@@ -39,13 +39,13 @@ class Attend(nn.Module):
         if device_version >= version.parse("8.0"):
             if os.name == "nt":
                 cuda_backends = [SDPBackend.EFFICIENT_ATTENTION, SDPBackend.MATH]
-                logger.info(f"windows detected, {cuda_backends=}")
+                logger.debug(f"windows detected, using {cuda_backends=}")
             else:
                 cuda_backends = [SDPBackend.FLASH_ATTENTION]
-                logger.info(f"gpu compute capability >= 8.0, {cuda_backends=}")
+                logger.debug(f"gpu compute capability >= 8.0, using {cuda_backends=}")
         else:
             cuda_backends = [SDPBackend.EFFICIENT_ATTENTION, SDPBackend.MATH]
-            logger.info(f"gpu compute capability < 8.0, {cuda_backends=}")
+            logger.debug(f"gpu compute capability < 8.0, using {cuda_backends=}")
 
         self.cuda_backends = cuda_backends
 

@@ -36,7 +36,6 @@ from .core import (
     BatchSize,
     BitDepth,
     Channels,
-    ChunkDuration,
     ChunkSize,
     FileFormat,
     OverlapRatio,
@@ -108,8 +107,9 @@ class LazyModelConfig(BaseModel):
     ) -> ModelConfigLikeT:
         """Validate against a real model configuration and convert to it.
 
-        By default, extra fields are not allowed."""
-
+        :raises pydantic.ValidationError: if extra fields are present in the model configuration
+            that doesn't exist in the concrete model configuration.
+        """
         model_config_concrete: ModelConfigLikeT = TypeAdapter(
             type(
                 f"{model_config.__name__}Validator",
@@ -124,7 +124,9 @@ class LazyModelConfig(BaseModel):
         """Returns the model's input and output stem names."""
         return (*_INPUT_STEM_NAMES, *self.output_stem_names)
 
-    model_config = ConfigDict(extra="allow")  # extra fields are not validated until `to_concrete`
+    model_config = ConfigDict(
+        strict=True, extra="allow"
+    )  # extra fields are not validated until `to_concrete`
 
 
 class AudioIOConfig(BaseModel):
@@ -138,6 +140,11 @@ class AudioIOConfig(BaseModel):
 class InferenceConfig(BaseModel):
     normalize_input_audio: bool = False
     batch_size: BatchSize = 4
+    compute_dtype: Literal["float32", "float16", "bfloat16"] = "float32"
+    # NOTE: we should split this up:
+    # - cast input audio to `compute_dtype` (FIXME: not implemented yet)
+    # - call model.to(dtype=compute_dtype) to ensure weights are loaded properly
+    # - let torch.autocast() know
     apply_tta: bool = False
 
     model_config = _PYDANTIC_STRICT_CONFIG
@@ -145,7 +152,6 @@ class InferenceConfig(BaseModel):
 
 class ChunkingConfig(BaseModel):
     method: Literal["overlap_add_windowed"] = "overlap_add_windowed"
-    chunk_duration: ChunkDuration = 8
     overlap_ratio: OverlapRatio = 0.5
     window_shape: WindowShape = "hann"
     padding_mode: PaddingMode = "reflect"
@@ -179,7 +185,7 @@ DerivedStemsConfig: TypeAlias = dict[DerivedStemName, DerivedStemRule]
 
 
 class OutputConfig(BaseModel):
-    stem_names: NonEmptyUnique[Tuple[StemName]]
+    stem_names: Literal["all"] | NonEmptyUnique[Tuple[StemName]] = "all"
     file_format: FileFormat = "wav"
     audio_encoding: AudioEncoding = "PCM_F"
     bit_depth: BitDepth = 32
@@ -200,7 +206,7 @@ class Config(BaseModel):
     inference: InferenceConfig = Field(default_factory=InferenceConfig)
     chunking: ChunkingConfig = Field(default_factory=ChunkingConfig)
     derived_stems: DerivedStemsConfig | None = None
-    output: OutputConfig | None = None
+    output: OutputConfig = Field(default_factory=OutputConfig)
     experimental: dict[str, Any] | None = None
     """Any extra experimental configurations outside of the `mss` core."""
 

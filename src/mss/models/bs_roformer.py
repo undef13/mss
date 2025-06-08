@@ -56,7 +56,7 @@ class BSRoformerConfig(ModelConfigLike):
     mlp_expansion_factor: int = 4
     use_torch_checkpoint: bool = False
     sage_attention: bool = False
-    use_shared_bias: bool = False
+    use_shared_bias: bool = True
     skip_connection: bool = False
 
     multi_stft_resolution_loss_weight: float = 1.0
@@ -396,12 +396,11 @@ class MaskEstimator(Module):
 
 
 class BSRoformer(Module):
-    @beartype
     def __init__(self, cfg: BSRoformerConfig):
         super().__init__()
         self.stereo = cfg.stereo
         self.audio_channels = 2 if cfg.stereo else 1
-        self.num_stems = len(cfg.stem_names)
+        self.num_stems = len(cfg.output_stem_names)
         self.use_torch_checkpoint = cfg.use_torch_checkpoint
         self.skip_connection = cfg.skip_connection
 
@@ -482,7 +481,7 @@ class BSRoformer(Module):
 
         self.mask_estimators = nn.ModuleList([])
 
-        for _ in range(cfg.num_stems):
+        for _ in range(len(cfg.output_stem_names)):
             mask_estimator = MaskEstimator(
                 dim=cfg.dim,
                 dim_inputs=freqs_per_bands_with_complex,
