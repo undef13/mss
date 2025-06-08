@@ -7,16 +7,26 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Callable, Iterator, Sequence, TypeAlias
+from typing import TYPE_CHECKING, Annotated, Generic, Iterator, Literal, NewType, TypeVar
 
+from annotated_types import Ge, Gt, Lt
 from torch import Tensor
 
-from .config import DerivedStemsConfig
+if TYPE_CHECKING:
+    from typing import Mapping, Sequence, TypeAlias
+
+    from .config import DerivedStemsConfig, StemName
+    from .models import ModelOutputStemName
+
+
+_AudioTensorLike = TypeVar("_AudioTensorLike")
 
 
 @dataclass
-class Audio:
-    data: Tensor
+class Audio(Generic[_AudioTensorLike]):
+    data: _AudioTensorLike
+    """This should either be an [raw][mss.core.RawAudioTensor] or a
+    [normalized][mss.core.NormalizedAudioTensor] audio tensor."""
     sample_rate: SampleRate
 
 
@@ -35,7 +45,7 @@ class NormalizationStats:
 
     mean: float
     r"""Mean $\mu$ of the mixture"""
-    std: float
+    std: Annotated[float, Gt(0)]
     r"""Standard deviation $\sigma$ of the mixture"""
 
 
@@ -43,22 +53,38 @@ class NormalizationStats:
 class NormalizedAudio:
     """Container for normalized audio and its original stats."""
 
-    data: Tensor
+    audio: Audio[NormalizedAudioTensor]  # NOTE: composition over inheritance.
     stats: NormalizationStats
 
 
-def normalize_audio(audio_data: Tensor) -> NormalizedAudio:
+def normalize_audio(audio: Audio[RawAudioTensor]) -> NormalizedAudio:
     """Preprocess the raw audio in the time domain to have a mean of 0 and a std of 1
     before passing it to the model.
 
     Operates on the mean of the [channels][mss.core.Channels].
     """
-    raise NotImplementedError
+    mono_audio = audio.data.mean(dim=0)
+    mean = float(mono_audio.mean())
+    std = float(mono_audio.std())
+
+    if std <= 1e-8:  # silent audio
+        return NormalizedAudio(
+            audio=Audio(data=NormalizedAudioTensor(audio.data), sample_rate=audio.sample_rate),
+            stats=NormalizationStats(mean, 1.0),
+        )
+
+    normalized_data = (audio.data - mean) / std
+    return NormalizedAudio(
+        audio=Audio(data=NormalizedAudioTensor(normalized_data), sample_rate=audio.sample_rate),
+        stats=NormalizationStats(mean, std),
+    )
 
 
-def denormalize_audio(normalized_audio: NormalizedAudio) -> Tensor:
+def denormalize_audio(
+    audio_data: NormalizedAudioTensor, stats: NormalizationStats
+) -> RawAudioTensor:
     """Take the model output and restore them to their original loudness."""
-    return (normalized_audio.data * normalized_audio.stats.std) + normalized_audio.stats.mean
+    return RawAudioTensor((audio_data * stats.std) + stats.mean)
 
 
 #
@@ -67,13 +93,13 @@ def denormalize_audio(normalized_audio: NormalizedAudio) -> Tensor:
 
 
 def generate_chunks(
-    audio: Tensor,
+    audio_data: RawAudioTensor | NormalizedAudioTensor,
     chunk_size: ChunkSize,
     hop_size: HopSize,
     batch_size: BatchSize,
     *,
-    padding_mode: str = "reflect",
-) -> Iterator[Tensor]:
+    padding_mode: PaddingMode = "reflect",
+) -> Iterator[PaddedChunkedAudioTensor]:
     """Generates batches of overlapping chunks from an audio tensor.
 
     :return: An iterator that yields batches of chunks of shape (B, C, chunk_T).
@@ -83,20 +109,21 @@ def generate_chunks(
 
 
 def stitch_chunks(
-    processed_chunks: Sequence[Tensor],
+    processed_chunks: Sequence[SeparatedChunkedTensor],
     num_stems: NumModelStems,
-    target_length: int,
     chunk_size: ChunkSize,
     hop_size: HopSize,
-    window: Tensor,
-) -> Tensor:
-    """Stitches processed audio chunks back together using the overlap-add method.
+    target_num_samples: Samples,
+    *,
+    window: WindowTensor,
+) -> RawSeparatedTensor:
+    """Stitches processed audio chunks back together using the [overlap-add method](https://en.wikipedia.org/wiki/Overlap%E2%80%93add_method).
 
     When chunks overlap, the overlapping sections are processed multiple times.
     To reconstruct the full audio signal without clicks or discontinuities at chunk boundaries, the
     overlapping parts are smoothly faded in and out.
 
-    1. Multiply each processed chunk by a [window function][mss.core.WindowFunction].
+    1. Multiply each processed chunk by a [window function][mss.core.WindowShape].
     2. Add the windowed chunks together at their original positions.
     3. The overlapping sections were added, so their amplitude is higher.
        Divide by the sum of all applied windows to restore the correct amplitude.
@@ -105,7 +132,7 @@ def stitch_chunks(
     Dimensions:
 
     - `B`: [batch size][mss.core.BatchSize]
-    - `C`: [number of channels][mss.core.Channels]
+    - `C`: [channels][mss.core.Channels]
     - `chunk_T`: [chunk length][mss.core.ChunkSize]
     - `target_T`: target length of the original audio signal
     """
@@ -116,21 +143,33 @@ def stitch_chunks(
 # derive stems
 #
 def derive_stems(
-    separated_stems: dict[str, Tensor], mixture_input: Tensor, stem_rules: DerivedStemsConfig
-) -> dict[str, Tensor]:
+    separated_stems: Mapping[ModelOutputStemName, RawAudioTensor],
+    mixture_input: RawAudioTensor,
+    stem_rules: DerivedStemsConfig,
+) -> dict[StemName, RawAudioTensor]:
+    """
+    !!! note
+        Mixture input and separated stems must first be [denormalized][mss.core.denormalize_audio].
+    """
     raise NotImplementedError
 
 
 #
 # The following used purely for type annotations and documentation.
-# they are put right at the bottom for brevity and no logic shall be placed below this point.
+# they provide semantic meaning *only* and we additionally use `NewType` for strong semantic distinction.
+# to avoid mixing up different kinds of tensors.
+#
+# they are put right at the bottom for brevity and so no code implementations shall be placed beyond this point.
 #
 
 #
 # key time domain concepts
 #
 
-SampleRate: TypeAlias = int
+Samples: TypeAlias = int
+"""Number of samples in the audio signal."""
+
+SampleRate: TypeAlias = Annotated[int, Gt(0)]
 """The number of samples of audio recorded per second (hertz).
 
 According to the [Nyquist-Shannon sampling theorem](https://en.wikipedia.org/wiki/Nyquist%E2%80%93Shannon_sampling_theorem),
@@ -142,7 +181,25 @@ human hearing is approximately 20 Hz to 20000 Hz.
 - 16000 Hz: Common for voice recordings as it sufficiently captures the human voice
 """
 
-BitDepth: TypeAlias = int
+Channels: TypeAlias = int
+"""Number of audio streams.
+
+- 1: Mono audio
+- 2: Stereo (left and right). Models are usually trained on stereo audio.
+"""
+
+
+FileFormat: TypeAlias = Literal["flac", "wav", "ogg"]
+AudioEncoding: TypeAlias = Literal["PCM_S", "PCM_U", "PCM_F", "ULAW", "ALAW"]
+"""
+[Audio encoding](https://trac.ffmpeg.org/wiki/audio%20types)
+- `PCM_S`: Signed integer linear pulse-code modulation
+- `PCM_U`: Unsigned integer linear pulse-code modulation
+- `PCM_F`: Floating-point pulse-code modulation
+- `ULAW`: [μ-law](https://en.wikipedia.org/wiki/%CE%9C-law_algorithm)
+- `ALAW`: [a-law](https://en.wikipedia.org/wiki/A-law_algorithm)
+"""
+BitDepth: TypeAlias = Literal[8, 16, 24, 32, 64]
 """Number of bits of information in each sample.
 
 It determines the dynamic range of the audio signal: the difference between the quietest and loudest
@@ -155,29 +212,31 @@ possible sounds.
     from exceeding the maximum value). This library primarily works with fp32 tensors.
 """
 
-Channels: TypeAlias = int
-"""Number of audio streams.
+RawAudioTensor = NewType("RawAudioTensor", Tensor)
+"""Time domain tensor of audio samples.
+Shape ([channels][mss.core.Channels], [samples][mss.core.Samples])"""
 
-- 1: Mono audio
-- 2: Stereo (left and right). Models are usually trained on stereo audio.
-"""
+NormalizedAudioTensor = NewType("NormalizedAudioTensor", Tensor)
+"""A mixture tensor that has been normalized using [on-the-fly statistics][mss.core.NormalizationStats].
+Shape ([channels][mss.core.Channels], [samples][mss.core.Samples])"""
 
 #
 # key time-frequency domain concepts
 #
 
-Spectrogram: TypeAlias = Tensor
-r"""A 2D representation of audio's frequency content over time.
+ComplexSpectrogram = NewType("ComplexSpectrogram", Tensor)
+r"""A complex-valued representation of audio's frequency content over time.
 
+Shape ([channels][mss.core.Channels], [frequency bins][mss.core.FftSize], [time frames][mss.core.ChunkSize], 2)
 
 While the time domain gives us the amplitude over time, it doesn't explicitly tell us about
 frequency content. The [Short-Time Fourier Transform](https://en.wikipedia.org/wiki/Short-time_Fourier_transform)
 (STFT) is the cornerstone of transforming a 1D discrete-time signal $x[n]$ into a 2D time-frequency
-representation $X(m, k)$ of shape `(frequency_bins, time_frames, 2)`).
+representation $X[m, k]$ of shape `(frequency_bins, time_frames, 2)`).
 
-The STFT coefficient $X(m, k)$ is a complex number that can be decomposed into:
+The STFT coefficient $X[m, k]$ is a complex number that can be decomposed into:
 
-- the **magnitude** $|X(m, k)|$ (tells us "how much" of a frequency is present)
+- the **magnitude** $|X[m, k]|$ (tells us "how much" of a frequency is present)
 - the **phase** $\phi(m, k)$ (tells us "how it's aligned" in time)
 
 of a specific time frame, where $m$ is the time frame index and $k$ is the frequency bin index.
@@ -188,18 +247,18 @@ perception.
 Freq (Hz)                                                  Magnitude
      ^                                                   -------------
 8000 |   @  :  :  +  @   @@:#     @  :  +  =               @  high    
-4000 |   @  :  +  @-#@#@## ##@#   @  :  :  +               #  medium  
-2000 |   @+ : @#@-## @+    =  @#@@@+ :  +  =               -  low     
-1000 |   @##+@-#  +  @##+= +     @@##+= :  :             -------------
- 500 |   @@%%%###++= @@%%%###++=  @@%%%###++=    
+4000 |  :@  :  +  @-#@#@## ##@#   @  :  :  +               #  medium  
+2000 | : @+ : @#@-## @+    =  @#@@@+ :  +  =               -  low     
+1000 |  +@##+@-#  +  @##+= +     @@##+= :  :             -------------
+ 500 | #+@@%%%###+== @@%%%###++=  @@%%%###+==    
    0 +----------------------------------------> time (s)
 
 Freq (Hz)                                                    Phase
-     ^ - ++++ -  -    -  +-   +-+- --+  - +-+ +          -------------
-8000 |  +- +     -+-+-- +-  -  +    ++    +   +            +   2pi    
-4000 | + +  -  + - +- - --+++-+- +-+ +-  +- --+                       
+     ^ - ++++ -  -    -  +-   +-+- --+  - +-+            -------------
+8000 |  +- +     -+-+-- +-  -  +    ++    +                +   2pi    
+4000 | + +  -  + - +- - --+++-+- +-+ +-  +- --                        
 2000 |      +-+++ - -++ + +   -----   + -+  ++             -   -2pi   
-1000 | -++--+ +  --  - ++  +-++--  - ---   +  +          -------------
+1000 | -++--+ +  --  - ++  +-++--  - ---   +             -------------
  500 | +-++ + +  +  + --- ++     - -  +  + - -    
    0 +----------------------------------------> Time (s)
 ```
@@ -220,7 +279,7 @@ Practically, the process involves:
 
 1. Dividing the audio signal into short, overlapping segments in time (chunks), parameterised by the
    [hop size][mss.core.HopSize] $H$
-2. Applying a [window function][mss.core.WindowFunction] $w[n]$ (e.g.
+2. Applying a [window function][mss.core.WindowShape] $w[n]$ (e.g.
    [Hann window][torch.hann_window]) to each chunk to reduce spectral leakage
 3. Computing the Fast Fourier Transform (FFT) on each windowed segment to get its complex frequency
    spectrum. The [FFT size][mss.core.FftSize] $N_\text{fft}$ determines the number of frequency
@@ -245,8 +304,10 @@ overlap amount is `ChunkSize - HopSize`.
 """
 
 
-WindowFunction: TypeAlias = Callable[[Tensor], Tensor]
-# TODO: add docs
+WindowShape: TypeAlias = Literal["hann", "hamming", "linear_fade"]
+r"""The shape of the window function applied to each chunk before computing the STFT.
+
+Reduces spectral leakage"""  # NOTE: sharing both for stft and overlap-add stitching for now
 
 
 FftSize: TypeAlias = int
@@ -280,13 +341,51 @@ frequency regions, which often correspond to musical harmonics or instrument cha
 #
 # miscallaneous
 #
+BatchSize: TypeAlias = Annotated[int, Gt(0)]
+"""The number of chunks processed simultaneously by the GPU.
 
-ChunkSize: TypeAlias = int
+Increasing the batch size can improve GPU utilisation and speed up training, but it requires more
+memory.
+"""
+# preprocessing
+
+PaddingMode: TypeAlias = Literal["reflect", "constant", "replicate"]
+"""The method used to pad the audio before chunking, crucial for handling the edges of the audio signal.
+
+- `reflect`: Pads the signal by reflecting the audio at the boundary. This creates a smooth
+  continuation and often yields the best results for music.
+- `constant`: Pads with zeros. Simpler, but can introduce silence at the edges.
+- `replicate`: Repeats the last sample at the edge.
+"""
+# TODO: we should intelligently decide whether to choose reflect or constant.
+# for songs that start with silence, we should use constant padding.
+
+ChunkSize: TypeAlias = Annotated[int, Gt(0)]
 """The length of an audio segment, in samples, processed by the model at one time.
 
 A full audio track is often too long to fit into GPU, instead we process it in fixed-size chunks.
 A larger chunk size may allow the model to capture more temporal context at the cost of increased
 memory usage.
+"""
+
+ChunkDuration: TypeAlias = Annotated[float, Gt(0)]
+"""The length of an audio segment, in seconds, processed by the model at one time.
+
+Equivalent to [chunk size][mss.core.ChunkSize] divided by the [sample rate][mss.core.SampleRate].
+"""
+
+OverlapRatio: TypeAlias = Annotated[float, Ge(0), Lt(1)]
+r"""The fraction of a chunk that overlaps with the next one.
+
+The relationship with [hop size][mss.core.HopSize] is:
+$$
+\text{hop\_size} = \text{chunk\_size} \cdot (1 - \text{overlap\_ratio})
+$$
+
+- A ratio of `0.0` means no overlap (hop_size = chunk_size).
+- A ratio of `0.5` means 50% overlap (hop_size = chunk_size / 2).
+- A higher overlap ratio increases computational cost as more chunks are processed, but it can lead
+  to smoother results by averaging more predictions for each time frame.
 """
 
 Padding: TypeAlias = int
@@ -298,15 +397,26 @@ Padding: TypeAlias = int
   the hop size. 
 """
 
-BatchSize: TypeAlias = int
-"""The number of chunks processed simultaneously by the GPU.
-
-Increasing the batch size can improve GPU utilisation and speed up training, but it requires more
-memory.
-"""
+PaddedChunkedAudioTensor = NewType("PaddedChunkedAudioTensor", Tensor)
+"""A batch of audio chunks from a padded source.
+Shape ([batch size][mss.core.BatchSize], [channels][mss.core.Channels], [chunk size][mss.core.ChunkSize])"""
 
 NumModelStems: TypeAlias = int
 """The number of stems the model outputs. This should be the length of [mss.models.ModelConfigLike.output_stem_names]."""
+
+# post separation stitching
+
+SeparatedChunkedTensor = NewType("SeparatedChunkedTensor", Tensor)
+"""A batch of separated audio chunks from the model.
+Shape ([batch size][mss.core.BatchSize], [number of stems][mss.core.NumModelStems], [channels][mss.core.Channels], [chunk size][mss.core.ChunkSize])"""
+
+WindowTensor = NewType("WindowTensor", Tensor)
+"""A 1D tensor representing a window function.
+Shape ([chunk size][mss.core.ChunkSize])"""
+
+RawSeparatedTensor = NewType("RawSeparatedTensor", Tensor)
+"""The final, stitched, raw-domain separated audio.
+Shape ([number of stems][mss.core.NumModelStems], [channels][mss.core.Channels], [samples][mss.core.Samples])"""
 
 #
 # evaluation metrics
@@ -332,11 +442,9 @@ where:
 SISDR: TypeAlias = float
 r"""Scale-Invariant SDR (SI-SDR) is invariant to scaling errors (decibels). Higher is better.
 
-It projects the estimate onto the reference to find the best possible scaling:
-
-- Target projection: $\mathbf{s}_\text{target} = \frac{\langle\mathbf{s},
-\mathbf{\hat{s}}\rangle}{||\mathbf{\hat{s}}||^2} \mathbf{\hat{s}}$, where $\langle\cdot, \cdot\rangle$ is the inner
-product.
+It projects the estimate onto the reference to find the optimal scaling factor $\alpha$, creating a scaled reference that best matches the estimate's amplitude.
+- Optimal scaling factor: $\alpha = \frac{\langle\mathbf{\hat{s}}, \mathbf{s}\rangle}{||\mathbf{s}||^2}$
+- Scaled reference: $\mathbf{s}_\text{target} = \alpha \cdot \mathbf{s}$
 - Error: $\mathbf{e} = \mathbf{\hat{s}} - \mathbf{s}_\text{target}$
 - $\text{SI-SDR} = 10 \log_{10} \frac{||\mathbf{s}_\text{target}||^2}{||\mathbf{e}||^2}$
 """

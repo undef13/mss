@@ -1,3 +1,5 @@
+"""High level orchestrator for model inference"""
+
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -5,6 +7,9 @@ import torch
 from torch import Tensor, nn
 
 from .core import (
+    Audio,
+    NormalizedAudio,
+    RawAudioTensor,
     denormalize_audio,
     derive_stems,
     generate_chunks,
@@ -15,7 +20,14 @@ from .io import read_audio, write_audio
 
 if TYPE_CHECKING:
     from .config import ChunkingConfig, Config
-    from .core import Audio, BatchSize, NormalizedAudio, NumModelStems
+    from .core import (
+        Audio,
+        BatchSize,
+        NormalizationStats,
+        NormalizedAudioTensor,
+        NumModelStems,
+    )
+    from .models import ModelOutputStemName
 
 
 def run_inference_on_file(
@@ -30,30 +42,34 @@ def run_inference_on_file(
         mixture_path,
         config.audio_io.target_sample_rate,
         config.audio_io.force_channels,
+        device=device,
     )
-    mixture_data = mixture.data.to(device)
-
-    norm_audio: NormalizedAudio | None = None
+    mixture_data: RawAudioTensor | NormalizedAudioTensor = mixture.data
+    mixture_stats: NormalizationStats | None = None
     if config.inference.normalize_input_audio:
-        norm_audio = normalize_audio(mixture_data)
-        mixture_data = norm_audio.data
+        norm_audio = normalize_audio(mixture)
+        mixture_data = norm_audio.audio.data
+        mixture_stats = norm_audio.stats
 
     separated_data = _core_separation_process(
         model=model,
-        audio_data=mixture_data,
+        mixture_data=mixture_data,  # upload to gpu
         chunk_cfg=config.chunking,
         batch_size=config.inference.batch_size,
         num_model_stems=len(config.model.output_stem_names),
     )  # -> (num_model_stems, C, T)
 
-    denormalized_stems = {}
+    denormalized_stems: dict[ModelOutputStemName, RawAudioTensor] = {}
     for i, stem_name in enumerate(config.model.output_stem_names):
-        stem_tensor = separated_data[i, ...]
-        if norm_audio:
-            stem_tensor = denormalize_audio(
-                NormalizedAudio(data=stem_tensor, stats=norm_audio.stats)
+        stem_data = separated_data[i, ...]
+        if mixture_stats is not None:
+            stem_data = denormalize_audio(
+                audio_data=NormalizedAudioTensor(stem_data),
+                stats=mixture_stats,
             )
-        denormalized_stems[stem_name] = stem_tensor
+            denormalized_stems[stem_name] = stem_data
+        else:
+            denormalized_stems[stem_name] = RawAudioTensor(stem_data)
 
     if config.inference.apply_tta:
         raise NotImplementedError
@@ -62,7 +78,7 @@ def run_inference_on_file(
     if config.derived_stems:
         output_stems = derive_stems(
             denormalized_stems,
-            mixture.data.to(device),
+            mixture.data,
             config.derived_stems,
         )
 
@@ -76,15 +92,15 @@ def run_inference_on_file(
 
         write_audio(
             output_dir / f"{stem_name}",
-            Audio(stem_data.cpu(), mixture.sample_rate),
+            Audio(RawAudioTensor(stem_data.cpu()), mixture.sample_rate),
             config.output.file_format,
-            config.output.pcm_type,
+            config.output.audio_format,
         )
 
 
 def _core_separation_process(
     model: nn.Module,
-    audio_data: Tensor,
+    mixture_data: RawAudioTensor | NormalizedAudioTensor,
     chunk_cfg: ChunkingConfig | None,
     batch_size: BatchSize,
     num_model_stems: NumModelStems,
@@ -101,8 +117,8 @@ def _core_separation_process(
     :param num_model_stems: The number of stems the model outputs.
     :return: The separated audio tensor of shape (N, C, T).
     """
-    device = audio_data.device
-    original_length = audio_data.shape[-1]
+    device = mixture_data.device
+    original_num_samples = mixture_data.shape[-1]
 
     if chunk_cfg is None:
         raise NotImplementedError
@@ -114,7 +130,7 @@ def _core_separation_process(
     window = torch.hann_window(chunk_size, device=device)
 
     chunk_generator = generate_chunks(
-        audio=audio_data,
+        audio_data=mixture_data,
         chunk_size=chunk_size,
         hop_size=hop_size,
         batch_size=batch_size,
@@ -131,8 +147,8 @@ def _core_separation_process(
     return stitch_chunks(
         processed_chunks=processed_chunks,
         num_stems=num_model_stems,
-        target_length=original_length,
         chunk_size=chunk_size,
         hop_size=hop_size,
+        target_num_samples=original_num_samples,
         window=window,
     )

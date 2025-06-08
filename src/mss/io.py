@@ -4,29 +4,36 @@
     This module is incomplete.
 """
 
-import json
-from pathlib import Path
-from typing import Any
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Any, Literal
 
 import torch
 import torch.nn as nn
 
-from .config import Config
 from .core import Audio
 
+if TYPE_CHECKING:
+    from pathlib import Path
+    from typing import TypeAlias
 
-def read_config(path: Path) -> Config:
-    with open(path, "r") as f:
-        config_data = json.load(f)
-    return Config.model_validate(config_data)
+    from .core import RawAudioTensor, SampleRate
 
 
-def read_audio(path: Path, target_sr: int, target_channels: int | None) -> Audio:
+def read_audio(
+    path: Path,
+    target_sr: SampleRate,
+    target_channels: int | None,
+    device: torch.device | None = None,
+) -> Audio[RawAudioTensor]:
     """Loads, resamples, converts channels"""
+    # we should probably just use torchaudio, not soundfile or librosa
     raise NotImplementedError
 
 
-def write_audio(path: Path, audio: Audio, format: str, pcm_type: str) -> None:
+def write_audio(
+    path: Path, audio: Audio[RawAudioTensor], file_format: FileFormat, audio_format: AudioFormat
+) -> None:
     """Writes audio to disk"""
     raise NotImplementedError
 
@@ -34,8 +41,15 @@ def write_audio(path: Path, audio: Audio, format: str, pcm_type: str) -> None:
 def read_model_from_checkpoint(
     identifier: str, model_params_dict: dict[str, Any], checkpoint_path: Path, device: torch.device
 ) -> nn.Module:
-    # Uses a registry or if/else to get ModelClass and ModelParamsDataclass from identifier.
+    # uses a registry or if/else to get ModelClass and ModelParamsDataclass from identifier.
     # params_instance = ModelParamsDataclass(**model_params_dict).
     # model = ModelClass(params_instance).
-    # Loads checkpoint, handling potential mismatches.
+
     raise NotImplementedError
+    # for simplicity, do not handle mismatches (yet)
+
+
+FileFormat: TypeAlias = Literal["flac", "wav"]  # TODO: support more, mp3 etc.
+AudioFormat: TypeAlias = Literal[
+    "PCM_16", "PCM_24", "FLOAT"
+]  # TODO: consider https://trac.ffmpeg.org/wiki/audio%20types

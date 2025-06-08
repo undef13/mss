@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "mss"
 version = "0.0.2"
-description = "Music source separation inference."
+description = "Lightweight utilities for music source separation."
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
@@ -17,11 +17,12 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-inference = ["pydantic>=2.11.5"]
+config = ["pydantic>=2.11.5"]
+inference = ["torchaudio>=2.7.1"]
 sageattention = ["sageattention>=1.0.6"]
 youtube = ["yt-dlp>=2025.5.22"]
-cli = ["typer>=0.16.0"]
 networking = ["httpx[http2,zstd]>=0.28.1"]
+cli = ["typer>=0.16.0"]
 
 [dependency-groups]
 dev = ["ipykernel>=6.29.5"]

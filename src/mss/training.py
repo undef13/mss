@@ -1,4 +1,4 @@
-"""Model training.
+"""High level orchestrator for model training
 
 !!! warning
     This module is incomplete. they only contain annotations for future use.

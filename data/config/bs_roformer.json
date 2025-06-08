@@ -30,7 +30,7 @@
     },
     "chunking": {
         "method": "overlap_add_windowed",
-        "chunk_duration_ms": 8000,
+        "chunk_duration": 8.0,
         "overlap_ratio": 0.5,
         "window_shape": "hann"
     },
@@ -54,6 +54,6 @@
             "vocals"
         ],
         "file_format": "flac",
-        "pcm_type": "PCM_24"
+        "audio_format": "PCM_24"
     }
 }

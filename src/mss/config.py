@@ -1,11 +1,10 @@
 """Configuration"""
 
-# NOTE: since this contains heavy validation logic with type annotations,
-# we are not using `typing.TYPE_CHECKING` here.
 from __future__ import annotations
 
+import json
+from pathlib import Path
 from typing import (
-    TYPE_CHECKING,
     Annotated,
     Any,
     Hashable,
@@ -17,10 +16,11 @@ from typing import (
     get_args,
 )
 
-from annotated_types import Ge, Gt, Le, Len
+from annotated_types import Len
 from pydantic import (
     AfterValidator,
     BaseModel,
+    BeforeValidator,
     ConfigDict,
     Discriminator,
     Field,
@@ -29,24 +29,47 @@ from pydantic import (
     model_validator,
 )
 from pydantic_core import PydanticCustomError
+from typing_extensions import Self
 
-from .models import ModelConfigLike, ModelType
+from .core import (
+    AudioEncoding,
+    BatchSize,
+    BitDepth,
+    Channels,
+    ChunkDuration,
+    ChunkSize,
+    FileFormat,
+    OverlapRatio,
+    PaddingMode,
+    SampleRate,
+    WindowShape,
+)
+from .models import ModelConfigLikeT, ModelType
 from .models import ModelOutputStemName as _ModelOutputStemName
 
-if TYPE_CHECKING:
-    from typing_extensions import Self
-    # TODO: continue moving down, but only if we are confident.
+# NOTE: we are not using typing.TYPE_CHECKING because pydantic relies on that
+
+_PYDANTIC_STRICT_CONFIG = ConfigDict(strict=True, extra="forbid")
 
 _Item = TypeVar("_Item", bound=Hashable)
 
 
+def _to_tuple(sequence: Sequence[_Item]) -> tuple[_Item, ...]:
+    # this is so json arrays are converted to tuples
+    return tuple(sequence)
+
+
+Tuple = Annotated[tuple[_Item, ...], BeforeValidator(_to_tuple)]
+
+
 def _validate_unique_sequence(sequence: Sequence[_Item]) -> Sequence[_Item]:
+    # e.g. to ensure there are no duplicate stem names
     if len(sequence) != len(set(sequence)):
         raise PydanticCustomError("unique_sequence", "Sequence must contain unique items")
     return sequence
 
 
-_S = TypeVar("_S", bound=Sequence[Hashable])
+_S = TypeVar("_S")
 NonEmptyUnique = Annotated[
     _S,
     Len(min_length=1),
@@ -59,40 +82,42 @@ ModelOutputStemName: TypeAlias = Annotated[_ModelOutputStemName, StringConstrain
 _INPUT_STEM_NAMES = get_args(ModelInputStemName)
 
 
-# NOTE: the ideal case would be to use an ADT whose variants are known at "compile" time:
+# NOTE: the ideal case would be to use an ADT whose variants are known at "compile" time, e.g. in Rust:
 # enum ModelConfig {
 #     BsRoformer { param_x: ..., param_y: ... },
 #     Demucs { param_x: ..., params_z: ... },
 # }
 # but downstream users may want to register their own models with different configurations,
-# something that enums do not support.
-# so, instead of validating the model configuration eagerly, defer it until it is actually needed.
+# so a discriminated enum wouldn't work here.
+# so, we effectively let Config.model_config be dyn ModelConfigLike (i.e. dict[str, Any])
+# and defer the validation of the model configuration until it is actually needed instead of doing it eagerly.
 class LazyModelConfig(BaseModel):
     """A lazily validated model configuration.
 
     Note that it is not guaranteed to be fully valid until `to_concrete` is called.
     """
 
-    chunk_size: int
-    output_stem_names: NonEmptyUnique[tuple[ModelOutputStemName, ...]]
+    chunk_size: ChunkSize
+    output_stem_names: NonEmptyUnique[Tuple[ModelOutputStemName]]
 
     def to_concrete(
         self,
-        model_config: type[ModelConfigLike],
+        model_config: type[ModelConfigLikeT],
         *,
         pydantic_config: ConfigDict = ConfigDict(extra="forbid"),
-    ) -> ModelConfigLike:
+    ) -> ModelConfigLikeT:
         """Validate against a real model configuration and convert to it.
 
         By default, extra fields are not allowed."""
 
-        return TypeAdapter(
+        model_config_concrete: ModelConfigLikeT = TypeAdapter(
             type(
                 f"{model_config.__name__}Validator",
                 (model_config,),
                 {"__pydantic_config__": pydantic_config},
-            )  #  needed for https://docs.pydantic.dev/latest/errors/usage_errors/#type-adapter-config-unused
-        ).validate_python(self.model_dump())
+            )  # needed for https://docs.pydantic.dev/latest/errors/usage_errors/#type-adapter-config-unused
+        ).validate_python(self.model_dump())  # type: ignore
+        return model_config_concrete
 
     @property
     def stem_names(self) -> tuple[ModelInputStemName | ModelOutputStemName, ...]:
@@ -102,28 +127,30 @@ class LazyModelConfig(BaseModel):
     model_config = ConfigDict(extra="allow")  # extra fields are not validated until `to_concrete`
 
 
-assert isinstance(
-    LazyModelConfig(chunk_size=1024, output_stem_names=("dummy",)), ModelConfigLike
-), "make sure LazyModelConfig has all fields to ModelConfigLike"  # TODO: move this to tests instead
-
-
 class AudioIOConfig(BaseModel):
-    target_sample_rate: Annotated[int, Gt(0)] = 44100
-    force_channels: Literal[1, 2] | None = 2
+    target_sample_rate: SampleRate = 44100
+    force_channels: Channels | None = 2
     """Whether to force mono or stereo audio input. If None, keep original."""
+
+    model_config = _PYDANTIC_STRICT_CONFIG
 
 
 class InferenceConfig(BaseModel):
     normalize_input_audio: bool = False
-    batch_size: Annotated[int, Gt(0)] = 4
+    batch_size: BatchSize = 4
     apply_tta: bool = False
+
+    model_config = _PYDANTIC_STRICT_CONFIG
 
 
 class ChunkingConfig(BaseModel):
     method: Literal["overlap_add_windowed"] = "overlap_add_windowed"
-    chunk_duration: Annotated[float, Gt(0)] = 8
-    overlap_ratio: Annotated[float, Ge(0), Le(1)] = 0.5
-    window_shape: Literal["hann", "hamming", "linear_fade"] = "hann"
+    chunk_duration: ChunkDuration = 8
+    overlap_ratio: OverlapRatio = 0.5
+    window_shape: WindowShape = "hann"
+    padding_mode: PaddingMode = "reflect"
+
+    model_config = _PYDANTIC_STRICT_CONFIG
 
 
 DerivedStemName: TypeAlias = Annotated[str, StringConstraints(min_length=1)]
@@ -137,10 +164,14 @@ class SubtractConfig(BaseModel):
     stem_name: StemName
     by_stem_name: StemName
 
+    model_config = _PYDANTIC_STRICT_CONFIG
+
 
 class SumConfig(BaseModel):
     operation: Literal["sum"]
-    stem_names: NonEmptyUnique[tuple[StemName, ...]]
+    stem_names: NonEmptyUnique[Tuple[StemName]]
+
+    model_config = _PYDANTIC_STRICT_CONFIG
 
 
 DerivedStemRule: TypeAlias = Annotated[Union[SubtractConfig, SumConfig], Discriminator("operation")]
@@ -148,9 +179,12 @@ DerivedStemsConfig: TypeAlias = dict[DerivedStemName, DerivedStemRule]
 
 
 class OutputConfig(BaseModel):
-    stem_names: NonEmptyUnique[tuple[StemName, ...]]  # TODO: make sure these are valid stems
-    file_format: Literal["wav", "flac"] = "flac"
-    pcm_type: Literal["PCM_16", "PCM_24", "FLOAT"] = "PCM_24"  # TODO: validate this
+    stem_names: NonEmptyUnique[Tuple[StemName]]
+    file_format: FileFormat = "wav"
+    audio_encoding: AudioEncoding = "PCM_F"
+    bit_depth: BitDepth = 32
+
+    model_config = _PYDANTIC_STRICT_CONFIG
 
 
 # if we were to implement a model registry (which we shouldn't need)
@@ -164,7 +198,7 @@ class Config(BaseModel):
     model: LazyModelConfig
     audio_io: AudioIOConfig = Field(default_factory=AudioIOConfig)
     inference: InferenceConfig = Field(default_factory=InferenceConfig)
-    chunking: ChunkingConfig | None = None
+    chunking: ChunkingConfig = Field(default_factory=ChunkingConfig)
     derived_stems: DerivedStemsConfig | None = None
     output: OutputConfig | None = None
     experimental: dict[str, Any] | None = None
@@ -204,6 +238,12 @@ class Config(BaseModel):
                     )
             existing_stem_names.append(derived_stem_name)
         return self
+
+    @classmethod
+    def from_file(cls, path: Path) -> Config:
+        with open(path, "r") as f:
+            config_data = json.load(f)
+        return Config.model_validate(config_data)
 
     model_config = ConfigDict(
         arbitrary_types_allowed=True,  # for .model
