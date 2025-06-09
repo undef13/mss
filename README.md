@@ -23,7 +23,11 @@ Key principles:
     - [x] Flexible ruleset for stem deriving: add/subtract model outputs or any intermediate output (e.g., creating an `instrumental` track by subtracting `vocals` from the `mixture`).
 - [x] **Web-based Documentation**: Generated with `mkdocs` with excellent crossrefs.
 - [x] **Command-Line Interface**: A simple CLI for inferencing on a single audio file.
-- [ ] **True fp16 support for BSRoformer**: Partially done.
+- [ ] Simple file-based cache
+- [ ] **BS-Roformer Optimizations**:
+  - [x] fp16 support
+  - [ ] remove complex multiplication
+  - [ ] support cormeltools and torch compilation
 - [ ] **Evaluation Metrics**: Implement standardized evaluation metrics (SDR, bleedless, fullness, etc.).
 - [ ] **Data Augmentation**: Introduce a data augmentation pipeline
 - [ ] **Full Training Pipeline**: Implement a complete, configurable training loop.
@@ -32,7 +36,88 @@ Key principles:
 
 PRs are very welcome!
 
-## Installation
+## Installation & Usage
+
+- [I just want to run it](#cli)
+- [I want to add it as a library to my Python project](#library)
+- [I want to hack around](#development)
+
+Documentation on the config (amongst other details) can be found [here](https://undef13.github.io/mss/api/config/)
+
+### CLI
+
+There are three steps. You do not need to have Python installed.
+
+1. Install [uv](https://docs.astral.sh/uv/getting-started/installation/) if you haven't already. It is an awesome Python package and library manager with `uv pip` comptability.
+```sh
+# Linux / MacOS
+wget -qO- https://astral.sh/uv/install.sh | sh
+# Windows
+powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
+```
+
+2. Open a new terminal and install the current project as a tool. It will install the Python interpreter and all necessary packages if you haven't already:
+```sh
+uv tool install "git+https://github.com/undef13/mss.git[config,inference,cli]"
+```
+
+3. Go into a new directory and place the [model checkpoint](https://github.com/undef13/mss/releases/download/v0.0.1/roformer-fp16.pt) and [configuration](https://raw.githubusercontent.com/undef13/mss/refs/heads/main/data/config/bs_roformer.json) inside it. Assuming your current directory has this structure (doesn't have to be exactly this):
+
+<details>
+   <summary>Grab an example audio from YouTube</summary>
+
+```sh
+uv tool install yt-dlp
+yt-dlp -f bestaudio -o data/audio/input/3BFTio5296w.flac 3BFTio5296w
+```
+</details>
+
+```
+.
+└── data
+    ├── audio
+    │   ├── input
+    │   │   └── 3BFTio5296w.flac
+    │   └── output
+    ├── config
+    │   └── bs_roformer.json
+    └── models
+        └── roformer-fp16.pt
+```
+
+Run:
+```sh
+mss separate data/audio/input/3BFTio5296w.flac --config data/config/bs_roformer.json --checkpoint data/models/roformer-fp16.pt
+```
+<details>
+   <summary>Console output</summary>
+
+```php
+[00:00:41] INFO     using device=device(type='cuda')                                                 __main__.py:117
+           INFO     loading configuration from                                                       __main__.py:119
+                    config_path=PosixPath('data/config/bs_roformer.json')                                           
+           INFO     loading model metadata `BSRoformer` from module `mss.models.bs_roformer`         __main__.py:122
+[00:00:42] INFO     loading weights from checkpoint_path=PosixPath('data/models/roformer-fp16.pt')   __main__.py:131
+           INFO     processing audio file:                                                           __main__.py:138
+                    mixture_path=PosixPath('data/audio/input/3BFTio5296w.flac')                                     
+[00:00:56] INFO     wrote stem `bass` to data/audio/output/3BFTio5296w/bass.flac                     __main__.py:168
+           INFO     wrote stem `drums` to data/audio/output/3BFTio5296w/drums.flac                   __main__.py:168
+           INFO     wrote stem `other` to data/audio/output/3BFTio5296w/other.flac                   __main__.py:168
+[00:00:57] INFO     wrote stem `vocals` to data/audio/output/3BFTio5296w/vocals.flac                 __main__.py:168
+           INFO     wrote stem `guitar` to data/audio/output/3BFTio5296w/guitar.flac                 __main__.py:168
+           INFO     wrote stem `piano` to data/audio/output/3BFTio5296w/piano.flac                   __main__.py:168
+[00:00:58] INFO     wrote stem `instrumental` to data/audio/output/3BFTio5296w/instrumental.flac     __main__.py:168
+           INFO     wrote stem `drums_and_bass` to data/audio/output/3BFTio5296w/drums_and_bass.flac __main__.py:168
+```
+</details>
+
+To update the tool:
+
+```sh
+uv tool upgrade mss --force-reinstall
+```
+
+### Library
 
 Add the latest bleeding edge to your project:
 
@@ -47,7 +132,9 @@ This only installs absolutely minimal core dependencies for the `src/mss/models/
 uv add "git+https://github.com/undef13/mss.git[config,inference,cli]"
 ```
 
-For a local dev build enabling all optional dependencies and dev groups:
+### Development
+
+For a local dev build enabling all optional and developer dependencies:
 
 ```sh
 git clone https://github.com/undef13/mss.git
@@ -56,9 +143,7 @@ uv venv
 uv sync --all-extras --all-groups
 ```
 
-You may want to install with `--editable`.
-
-## Development
+If you're using mss from another project, you may also want to use `--editable`.
 
 ```sh
 # lint
@@ -71,21 +156,7 @@ uv run mkdocs serve
 uv run mypy src tests
 ```
 
-## Usage
-
-First, [setup a local dev build](#installation) and cd into the root directory. v0.0.2 is compatible with v0.0.1 weights:
-
-```sh
-# download v0.0.1 model.
-wget -P data/models/roformer.pt https://github.com/undef13/mss/releases/download/v0.0.1/roformer-fp16.pt
-# download example audio.
-uv tool install yt-dlp
-yt-dlp -f bestaudio -o data/audio/input/3BFTio5296w.flac 3BFTio5296w
-# process it.
-uv run python3 -m src.mss data/audio/input/3BFTio5296w.flac --config data/config/bs_roformer.json --checkpoint data/models/roformer.pt
-```
-
-This repo is no longer compatible with zfturbo's repo. The last version that does so is [`v0.0.1`](https://github.com/undef13/mss/tree/v0.0.1). To pin the version in uv, change your `pyproject.toml`:
+This repo is no longer compatible with zfturbo's repo. The last version that does so is [`v0.0.1`](https://github.com/undef13/mss/tree/v0.0.1). To pin a specific version in `uv`, change your `pyproject.toml`:
 
 ```toml
 [tool.uv.sources]

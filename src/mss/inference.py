@@ -19,17 +19,14 @@ from .core import (
     stitch_chunks,
 )
 
-if TYPE_CHECKING:
-    from torch import dtype
+try:
+    from tqdm import tqdm
+except ImportError:
+    tqdm = None
 
+if TYPE_CHECKING:
     from .config import ChunkingConfig, Config, StemName
-    from .core import (
-        Audio,
-        BatchSize,
-        ChunkSize,
-        NormalizationStats,
-        NumModelStems,
-    )
+    from .core import Audio, BatchSize, ChunkSize, Dtype, NormalizationStats, NumModelStems
     from .models import ModelOutputStemName
 
 
@@ -45,7 +42,6 @@ def run_inference_on_file(
         mixture_data = norm_audio.audio.data
         mixture_stats = norm_audio.stats
 
-    compute_dtype = get_dtype(config.inference.compute_dtype)
     separated_data = separate(
         mixture_data=mixture_data,
         chunk_cfg=config.chunking,
@@ -53,7 +49,7 @@ def run_inference_on_file(
         batch_size=config.inference.batch_size,
         num_model_stems=len(config.model.output_stem_names),
         chunk_size=config.model.chunk_size,
-        compute_dtype=compute_dtype,
+        use_autocast_dtype=config.inference.use_autocast_dtype,
     )
 
     denormalized_stems: dict[ModelOutputStemName, RawAudioTensor] = {}
@@ -89,7 +85,8 @@ def separate(
     batch_size: BatchSize,
     num_model_stems: NumModelStems,
     chunk_size: ChunkSize,
-    compute_dtype: dtype,
+    *,
+    use_autocast_dtype: Dtype | None = None,
 ) -> Tensor:  # FIXME: update type hint.
     """Chunk, predict and stitch."""
     device = mixture_data.device
@@ -109,16 +106,24 @@ def separate(
         batch_size=batch_size,
         padding_mode=chunk_cfg.padding_mode,
     )
+    if tqdm is not None:
+        chunk_generator = tqdm(
+            chunk_generator,
+            desc="Processing chunks",
+        )
 
     processed_chunks = []
     with (
         torch.inference_mode(),
         torch.autocast(
-            device_type=device.type, dtype=compute_dtype, enabled=(compute_dtype != torch.float32)
+            device_type=device.type,
+            enabled=use_autocast_dtype is not None,
+            dtype=(
+                get_dtype(use_autocast_dtype) if use_autocast_dtype is not None else torch.float32
+            ),
         ),
     ):
         for chunk_batch in chunk_generator:
-            # TODO: input should be cast to `compute_dtype`
             separated_batch = model(chunk_batch)
             processed_chunks.append(separated_batch)
 

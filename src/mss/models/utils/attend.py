@@ -1,24 +1,32 @@
+from __future__ import annotations
+
 import logging
 import os
+from typing import TYPE_CHECKING
 
 import torch
 import torch.nn.functional as F
-from packaging import version
 from torch import Tensor, einsum, nn
 from torch.nn.attention import SDPBackend, sdpa_kernel
 
+from . import log_once, parse_version
+
+if TYPE_CHECKING:
+    from torch._C import _SDPBackend
 logger = logging.getLogger(__name__)
 
 
 class Attend(nn.Module):
-    def __init__(self, dropout: float = 0.0, flash: bool = False, scale=None):
+    def __init__(
+        self, dropout: float = 0.0, flash: bool = False, scale: float | None = None
+    ) -> None:
         super().__init__()
         self.scale = scale
         self.dropout = dropout
         self.attn_dropout = nn.Dropout(dropout)
 
         self.flash = flash
-        assert not (flash and version.parse(torch.__version__) < version.parse("2.0.0")), (
+        assert not (flash and parse_version(torch.__version__) < (2, 0, 0)), (
             "expected pytorch >= 2.0.0 to use flash attention"
         )
 
@@ -28,24 +36,24 @@ class Attend(nn.Module):
             SDPBackend.EFFICIENT_ATTENTION,
             SDPBackend.MATH,
         ]
-        self.cuda_backends: list | None = None
+        self.cuda_backends: list[_SDPBackend] | None = None
 
         if not torch.cuda.is_available() or not flash:
             return
 
         device_properties = torch.cuda.get_device_properties(torch.device("cuda"))
-        device_version = version.parse(f"{device_properties.major}.{device_properties.minor}")
+        device_version = parse_version(f"{device_properties.major}.{device_properties.minor}")
 
-        if device_version >= version.parse("8.0"):
+        if device_version >= (8, 0):
             if os.name == "nt":
                 cuda_backends = [SDPBackend.EFFICIENT_ATTENTION, SDPBackend.MATH]
-                logger.debug(f"windows detected, using {cuda_backends=}")
+                log_once(logger, f"windows detected, using {cuda_backends=}")
             else:
                 cuda_backends = [SDPBackend.FLASH_ATTENTION]
-                logger.debug(f"gpu compute capability >= 8.0, using {cuda_backends=}")
+                log_once(logger, f"gpu compute capability >= 8.0, using {cuda_backends=}")
         else:
             cuda_backends = [SDPBackend.EFFICIENT_ATTENTION, SDPBackend.MATH]
-            logger.debug(f"gpu compute capability < 8.0, using {cuda_backends=}")
+            log_once(logger, f"gpu compute capability < 8.0, using {cuda_backends=}")
 
         self.cuda_backends = cuda_backends
 

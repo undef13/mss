@@ -11,11 +11,11 @@ from torch import Tensor, nn
 from torch.nn import Module, ModuleList
 from torch.utils.checkpoint import checkpoint
 
-from ..utils.attend import Attend
 from . import ModelConfigLike
+from .utils.attend import Attend
 
 try:
-    from ..utils.attend_sage import AttendSage
+    from .utils.attend_sage import AttendSage
 except ImportError:
     pass
 
@@ -66,6 +66,9 @@ class BSRoformerConfig(ModelConfigLike):
     multi_stft_hop_size: int = 147
     multi_stft_normalized: bool = False
     multi_stft_window_fn_name: str = "torch.hann_window"
+
+    debug: bool = False
+    """Whether to check for nan/inf in model outputs. Keep it off for [torch.compile][]."""
 
     @property
     def stft_window_fn(self) -> Callable[[int], Tensor]:
@@ -501,6 +504,7 @@ class BSRoformer(Module):
         self.multi_stft_kwargs = dict(
             hop_length=cfg.multi_stft_hop_size, normalized=cfg.multi_stft_normalized
         )
+        self.debug = cfg.debug
 
     def forward(
         self, raw_audio: Tensor, target: Tensor | None = None, return_loss_breakdown: bool = False
@@ -558,7 +562,7 @@ class BSRoformer(Module):
 
         x = rearrange(stft_repr, "b f t c -> b t (f c)")
 
-        if torch.isnan(x).any() or torch.isinf(x).any():
+        if self.debug and (torch.isnan(x).any() or torch.isinf(x).any()):
             raise RuntimeError(
                 f"NaN/Inf in x after stft: {x.isnan().sum()} NaNs, {x.isinf().sum()} Infs"
             )
@@ -568,7 +572,7 @@ class BSRoformer(Module):
         else:
             x = self.band_split(x)
 
-        if torch.isnan(x).any() or torch.isinf(x).any():
+        if self.debug and (torch.isnan(x).any() or torch.isinf(x).any()):
             raise RuntimeError(
                 f"NaN/Inf in x after band_split: {x.isnan().sum()} NaNs, {x.isinf().sum()} Infs"
             )

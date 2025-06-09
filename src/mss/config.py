@@ -37,6 +37,7 @@ from .core import (
     BitDepth,
     Channels,
     ChunkSize,
+    Dtype,
     FileFormat,
     OverlapRatio,
     PaddingMode,
@@ -137,14 +138,20 @@ class AudioIOConfig(BaseModel):
     model_config = _PYDANTIC_STRICT_CONFIG
 
 
+class TorchCompileConfig(BaseModel):
+    fullgraph: bool = True
+    dynamic: bool = True
+    mode: Literal["default", "reduce-overhead", "max-autotune", "max-autotune-no-cudagraphs"] = (
+        "reduce-overhead"
+    )
+
+
 class InferenceConfig(BaseModel):
     normalize_input_audio: bool = False
-    batch_size: BatchSize = 4
-    compute_dtype: Literal["float32", "float16", "bfloat16"] = "float32"
-    # NOTE: we should split this up:
-    # - cast input audio to `compute_dtype` (FIXME: not implemented yet)
-    # - call model.to(dtype=compute_dtype) to ensure weights are loaded properly
-    # - let torch.autocast() know
+    batch_size: BatchSize = 8
+    force_weights_dtype: Dtype | None = None
+    use_autocast_dtype: Dtype | None = None
+    compile_model: TorchCompileConfig | None = None
     apply_tta: bool = False
 
     model_config = _PYDANTIC_STRICT_CONFIG

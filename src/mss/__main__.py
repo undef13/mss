@@ -14,6 +14,7 @@ app = typer.Typer(
     no_args_is_help=True,
 )
 
+
 # TODO: migrate away from hardcoding.
 _DEFAULT_MODULE_NAME = "mss.models.bs_roformer"
 _DEFAULT_CLASS_NAME = "BSRoformer"
@@ -27,7 +28,7 @@ def separate(
             ...,
             exists=True,
             file_okay=True,
-            dir_okay=False,
+            dir_okay=True,
             readable=True,
             help="Path to the audio file to be separated.",
         ),
@@ -58,22 +59,26 @@ def separate(
         str,
         typer.Option(
             "--module",
-            help=(
-                "Python module containing the model and configuration class."
-                f" Defaults to `{_DEFAULT_MODULE_NAME}` if not specified."
-            ),
+            help="Python module containing the model and configuration class.",
         ),
     ] = _DEFAULT_MODULE_NAME,
     class_name: Annotated[
         str,
         typer.Option(
             "--class",
-            help=(
-                "Name of the model class to load from the module."
-                f" Defaults to `{_DEFAULT_CLASS_NAME}` if not specified."
-            ),
+            help="Name of the model class to load from the module.",
         ),
     ] = _DEFAULT_CLASS_NAME,
+    package_name: Annotated[
+        Optional[str],
+        typer.Option(
+            "--package",
+            help=(
+                "The package to use as the anchor point from which to resolve the relative import "
+                "to an absolute import. This is only required when performing a relative import."
+            ),
+        ),
+    ] = None,
     output_dir: Annotated[
         Optional[Path],
         typer.Option(
@@ -111,47 +116,81 @@ def separate(
         module_name=module_name,
         model_cls_name=class_name,
         model_type=config.model_type,
+        package=package_name,
     )
     config_model_concrete = config.model.to_concrete(model_metadata.config)
     model = model_metadata.model(config_model_concrete)
+    if config.inference.force_weights_dtype:
+        model = model.to(get_dtype(config.inference.force_weights_dtype))
     logger.info(f"loading weights from {checkpoint_path=}")
-    model = load_weights(model, checkpoint_path, device)
-    model.to(get_dtype(config.inference.compute_dtype)).eval()
+    model = load_weights(model, checkpoint_path, device).eval()
+    if (c := config.inference.compile_model) is not None:
+        logger.info("enabled torch compilation")
+        model = torch.compile(model, fullgraph=c.fullgraph, dynamic=c.dynamic, mode=c.mode)  # type: ignore
 
-    logger.info(f"processing audio file: {mixture_path=}")
-    mixture = read_audio(
-        mixture_path,
-        config.audio_io.target_sample_rate,
-        config.audio_io.force_channels,
-        device=device,
-    )
-    output_stems = run_inference_on_file(
-        mixture,
-        config=config,
-        model=model,
-    )
-    if not config.output:
-        return
-    output_dir = output_dir or Path("./data/audio/output") / mixture_path.stem
-    output_dir.mkdir(parents=True, exist_ok=True)
-    for stem_name, stem_data in output_stems.items():
-        if config.output.stem_names != "all" and stem_name not in config.output.stem_names:
-            logger.info(
-                f"skipping stem `{stem_name}` as it is not in the configured output stems: {config.output.stem_names=}"
-            )
-            continue
-
-        output_file = (output_dir / stem_name).with_suffix(f".{config.output.file_format}")
-        torchaudio.save(
-            output_file,
-            stem_data.cpu(),
-            mixture.sample_rate,
-            format=config.output.file_format,
-            encoding=config.output.audio_encoding,
-            bits_per_sample=config.output.bit_depth,
-            # TODO: compression, backend
+    mixture_paths = mixture_path.glob("*") if mixture_path.is_dir() else [mixture_path]
+    for mixture_path in mixture_paths:
+        logger.info(f"processing audio file: {mixture_path=}")
+        mixture = read_audio(
+            mixture_path,
+            config.audio_io.target_sample_rate,
+            config.audio_io.force_channels,
+            device=device,
         )
-        logger.info(f"wrote stem `{stem_name}` to {output_file}")
+        output_stems = run_inference_on_file(
+            mixture,
+            config=config,
+            model=model,
+        )
+        if not config.output:
+            return
+        curr_output_dir = output_dir or Path("./data/audio/output") / mixture_path.stem
+        curr_output_dir.mkdir(parents=True, exist_ok=True)
+        for stem_name, stem_data in output_stems.items():
+            if config.output.stem_names != "all" and stem_name not in config.output.stem_names:
+                continue
+
+            output_file = (curr_output_dir / stem_name).with_suffix(f".{config.output.file_format}")
+            torchaudio.save(
+                output_file,
+                stem_data.cpu(),
+                mixture.sample_rate,
+                format=config.output.file_format,
+                encoding=config.output.audio_encoding,
+                bits_per_sample=config.output.bit_depth,
+                # TODO: compression, backend
+            )
+            logger.info(f"wrote stem `{stem_name}` to {output_file}")
+
+
+@app.command()
+def debug() -> None:
+    """Prints detailed information about the environment, dependencies, and hardware
+    for debugging purposes."""
+    import sys
+
+    logger.info(f"{sys.version=}")
+    logger.info(f"{sys.executable=}")
+    logger.info(f"{sys.platform=}")
+    import platform
+
+    logger.info(f"{platform.system()=} ({platform.release()})")
+    logger.info(f"{platform.machine()=}")
+    import torch
+
+    logger.info(f"{torch.__version__=}")
+    logger.info(f"{torch.cuda.is_available()=}")
+    if torch.cuda.is_available():
+        logger.info(f"{torch.cuda.device_count()=}")
+        logger.info(f"{torch.cuda.current_device()=}")
+        device = torch.cuda.current_device()
+        logger.info(f"{torch.cuda.get_device_name(device)=}")
+        logger.info(f"{torch.cuda.get_device_capability(device)=}")
+        logger.info(f"{torch.cuda.get_device_properties(device)=}")
+    import torchaudio
+
+    logger.info(f"{torchaudio.__version__=}")
+    logger.info(f"{torchaudio.list_audio_backends()=}")
 
 
 if __name__ == "__main__":

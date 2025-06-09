@@ -1,10 +1,13 @@
+from __future__ import annotations
+
 import logging
 
 import torch
 import torch.nn.functional as F
-from packaging import version
 from torch import Tensor, einsum, nn
 from torch.nn.attention import SDPBackend, sdpa_kernel
+
+from . import log_once, parse_version
 
 logger = logging.getLogger(__name__)
 
@@ -14,8 +17,9 @@ try:
     _has_sage_attention = True
 except ImportError:
     _has_sage_attention = False
-    logger.info(
-        "SageAttention not found. Will fall back to PyTorch SDPA (if available) or manual einsum."
+    log_once(
+        logger,
+        "sageattention not found. Will fall back to PyTorch SDPA (if available) or manual einsum.",
     )
 
 
@@ -39,14 +43,16 @@ class AttendSage(nn.Module):
 
         if flash and not self.use_sage:
             if not self._sdpa_checked:
-                if version.parse(torch.__version__) >= version.parse("2.0.0"):
+                if parse_version(torch.__version__) >= (2, 0, 0):
                     self.use_pytorch_sdpa = True
-                    logger.info(
-                        "Using PyTorch SDPA backend (FlashAttention-2, Memory-Efficient, or Math)."
+                    log_once(
+                        logger,
+                        "Using PyTorch SDPA backend (FlashAttention-2, Memory-Efficient, or Math).",
                     )
                 else:
-                    logger.info(
-                        "Flash attention requested but Pytorch < 2.0 and SageAttention not found. Falling back to einsum."
+                    log_once(
+                        logger,
+                        "Flash attention requested but Pytorch < 2.0 and SageAttention not found. Falling back to einsum.",
                     )
                 self._sdpa_checked = True
 
@@ -74,7 +80,7 @@ class AttendSage(nn.Module):
             # assumes dropout is NOT handled by sageattn kernel
             # is_causal=False based on how Attend is called in mel_band_roformer
             out = sageattn(q, k, v, tensor_layout="HND", is_causal=False)  # type: ignore
-            return out
+            return out  # type: ignore
             try:
                 out = sageattn(q, k, v, tensor_layout="HND", is_causal=False)
                 return out
@@ -82,11 +88,11 @@ class AttendSage(nn.Module):
                 logger.error(f"SageAttention failed with error: {e}. Falling back.")
                 self.use_sage = False
                 if not self._sdpa_checked:
-                    if version.parse(torch.__version__) >= version.parse("2.0.0"):
+                    if parse_version(torch.__version__) >= (2, 0, 0):
                         self.use_pytorch_sdpa = True
-                        logger.info("Falling back to PyTorch SDPA")
+                        log_once(logger, "falling back to PyTorch SDPA")
                     else:
-                        logger.info("Falling back to einsum.")
+                        log_once(logger, "falling back to einsum.")
 
                     self._sdpa_checked = True
 
@@ -107,8 +113,12 @@ class AttendSage(nn.Module):
                     )
                 return out
             except Exception as e:
-                logger.error(f"pytorch SDPA failed with error: {e}. Falling back to einsum.")
-                self.use_pytorch_sdpa = False  # fallback to einsum on error
+                log_once(
+                    logger,
+                    f"pytorch SDPA failed with error: {e}. falling back to einsum.",
+                    level=logging.ERROR,
+                )
+                self.use_pytorch_sdpa = False
 
         scale = self.scale or q.shape[-1] ** -0.5
 
