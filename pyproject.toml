@@ -13,24 +13,28 @@ dependencies = [
     "einops>=0.8.1",
     "hyper-connections>=0.1.15",
     "numpy>=2.2.6",
+    "soundfile>=0.13.1 ; sys_platform == 'Windows'",
     "torch>=2.7.1",
 ]
 
 [project.optional-dependencies]
 config = ["pydantic>=2.11.5"]
-inference = [
-    "torchaudio>=2.7.1",
-    "tqdm>=4.67.1",
-]
+inference = ["torchaudio>=2.7.1", "tqdm>=4.67.1"]
 cli = ["typer>=0.16.0"]
 sageattention = ["sageattention>=1.0.6"]
-# networking = ["httpx[http2,zstd]>=0.28.1"]
+# the following are experimental, used only in scripts
+networking = [
+    "aiolimiter>=1.2.1",
+    "httpx[http2,zstd,socks]>=0.28.1",
+    "orjson>=3.10.18",
+]
+analysis = ["matplotlib>=3.10.3", "polars>=1.30.0"]
 
 [project.scripts]
 mss = "mss.__main__:app"
 
 [dependency-groups]
-dev = ["ipykernel>=6.29.5"]
+dev = ["ipykernel>=6.29.5", "pandas>=2.3.0"]
 docs = ["mkdocs-material[imaging]>=9.6.14", "mkdocstrings-python>=1.16.12"]
 lint = ["ruff>=0.11.12"]
 test = ["pytest>=8.4.0"]
