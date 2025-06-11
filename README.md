@@ -1,5 +1,11 @@
 # SpliFFT
 
+[![image](https://img.shields.io/pypi/v/splifft.svg)](https://pypi.python.org/pypi/splifft)
+[![image](https://img.shields.io/pypi/l/splifft.svg)](https://pypi.python.org/pypi/splifft)
+[![image](https://img.shields.io/pypi/pyversions/splifft.svg)](https://pypi.python.org/pypi/splifft)
+[![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
+[![MIT Licence](https://img.shields.io/badge/license-MIT-blue)](https://github.com/undef13/splifft/blob/main/LICENSE)
+
 Lightweight utilities for music source separation.
 
 This library is a ground-up rewrite of the [zfturbo's MSST repo](https://github.com/ZFTurbo/Music-Source-Separation-Training), with a strong focus on robustness, simplicity and extensibility. While it is a fantastic collection of models and training scripts, this rewrite adopts a different architecture to address common pain points in research code.

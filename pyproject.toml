@@ -6,8 +6,32 @@ build-backend = "hatchling.build"
 name = "splifft"
 version = "0.0.2"
 description = "Lightweight utilities for music source separation."
-readme = "README.md"
+authors = [{ name = "undef13" }]
 requires-python = ">=3.10"
+license = { file = "LICENSE" }
+keywords = [
+    "artificial intelligence",
+    "deep learning",
+    "audio",
+    "music",
+    "source separation",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "Operating System :: OS Independent",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Multimedia :: Sound/Audio :: Analysis",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+readme = "README.md"
 dependencies = [
     "beartype>=0.21.0",
     "einops>=0.8.1",
@@ -15,6 +39,11 @@ dependencies = [
     "numpy>=2.2.6",
     "torch>=2.7.1",
 ]
+
+[project.urls]
+Documentation = "https://undef13.github.io/splifft/"
+Repository = "https://github.com/undef13/splifft"
+Releases = "https://github.com/undef13/splifft/releases"
 
 [project.optional-dependencies]
 config = ["pydantic>=2.11.5"]

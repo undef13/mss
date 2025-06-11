@@ -5,7 +5,6 @@ repo_url: https://github.com/undef13/splifft
 site_url: https://undef13.github.io/splifft/
 nav:
   - Home: "index.md"
-  # - Tutorial: "tutorial.md"
   - Configurations: "config.md"
   - Examples: "examples.md"
   - Concepts & Definitions: "concepts.md"
