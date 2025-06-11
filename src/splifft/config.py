@@ -36,7 +36,6 @@ from .core import (
     BatchSize,
     BitDepth,
     Channels,
-    ChunkSize,
     Dtype,
     FileFormat,
     OverlapRatio,
@@ -44,7 +43,7 @@ from .core import (
     SampleRate,
     WindowShape,
 )
-from .models import ModelConfigLikeT, ModelType
+from .models import ChunkSize, ModelConfigLikeT, ModelType
 from .models import ModelOutputStemName as _ModelOutputStemName
 
 # NOTE: we are not using typing.TYPE_CHECKING because pydantic relies on that

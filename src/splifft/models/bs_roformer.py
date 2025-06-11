@@ -11,7 +11,7 @@ from torch import Tensor, nn
 from torch.nn import Module, ModuleList
 from torch.utils.checkpoint import checkpoint
 
-from . import ModelConfigLike
+from . import ChunkSize, ModelConfigLike, ModelOutputStemName
 from .utils.attend import Attend
 
 try:
@@ -33,8 +33,8 @@ DEFAULT_FREQS_PER_BANDS = (
 
 @dataclass
 class BSRoformerConfig(ModelConfigLike):
-    chunk_size: int
-    output_stem_names: tuple[str, ...]
+    chunk_size: ChunkSize
+    output_stem_names: tuple[ModelOutputStemName, ...]
     dim: int
     depth: int
     stereo: bool = False

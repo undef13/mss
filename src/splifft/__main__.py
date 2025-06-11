@@ -1,3 +1,5 @@
+"""Command line interface for `splifft`."""
+
 import logging
 from pathlib import Path
 from typing import Annotated, Optional

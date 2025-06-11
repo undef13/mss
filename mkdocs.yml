@@ -5,8 +5,8 @@ repo_url: https://github.com/undef13/splifft
 site_url: https://undef13.github.io/splifft/
 nav:
   - Home: "index.md"
-  - Configurations: "config.md"
-  - Examples: "examples.md"
+  - Models: "models.md"
+  - Library Tutorial: "tutorial.md"
   - Concepts & Definitions: "concepts.md"
   - API Reference:
     - All: "api/index.md"
@@ -65,6 +65,7 @@ plugins:
       enable_inventory: true
   - search
   - social
+  - inline-select-svg
 markdown_extensions:
   - abbr
   - attr_list
@@ -73,6 +74,7 @@ markdown_extensions:
   - md_in_html
   - pymdownx.blocks.admonition
   - pymdownx.blocks.details
+  - pymdownx.details
   - pymdownx.tilde
   - pymdownx.highlight:
       pygments_lang_class: true
@@ -93,4 +95,5 @@ extra_javascript:
   - https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.js
   - https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/contrib/auto-render.min.js
 extra_css:
+  - assets/css/plots.css
   - https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.css

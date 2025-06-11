@@ -14,7 +14,7 @@ if TYPE_CHECKING:
     from typing import Mapping, Sequence, TypeAlias
 
     from .config import DerivedStemsConfig, StemName
-    from .models import ModelOutputStemName
+    from .models import ChunkSize, ModelOutputStemName
 
 
 _AudioTensorLike = TypeVar("_AudioTensorLike")
@@ -35,10 +35,8 @@ class Audio(Generic[_AudioTensorLike]):
 
 @dataclass
 class NormalizationStats:
-    """Statistics for normalizing and denormalizing audio.
-
-    Neural networks are sensitive to the scale of input data and often perform better with inputs
-    that have a consistent statistical distribution. Normalization helps to achieve this.
+    """Statistics for [normalizing](https://en.wikipedia.org/wiki/Feature_scaling#Standardization_(Z-score_Normalization))
+    and denormalizing audio.
     """
 
     mean: float
@@ -127,17 +125,9 @@ def stitch_chunks(
 ) -> RawSeparatedTensor:
     r"""Stitches processed audio chunks back together using the [overlap-add method](https://en.wikipedia.org/wiki/Overlap%E2%80%93add_method).
 
-    Reconstructs the full audio signal from a sequence of overlapping, processed chunks.
-    To avoid artifacts at chunk boundaries, each chunk is multiplied by a synthesis window $g[n]$
-    before being added to the final output buffer.
-
-    We must ensure that the sum of all overlapping windows $w[n]$ is constant at every time step:
-    $$
-    \sum_{m=-\infty}^{\infty} w[n - mH] = C
-    $$
-    where $H$ is the [hop size][splifft.core.HopSize] and $C$ is a constant, ideally 1. Not to be
-    confused with the condition for *power-complementary* windows ($\sum w^2 = C$), which is used to
-    reconstruct the signal's *power*.
+    Reconstructs the full audio signal from a sequence of overlapping, processed chunks. Ensures
+    that the sum of all overlapping windows is constant at every time step:
+    $\sum_{m=-\infty}^{\infty} w[n - mH] = C$ where $H$ is the [hop size][splifft.core.HopSize].
     """
     all_chunks = torch.cat(tuple(processed_chunks), dim=0)
     total_chunks, _N, num_channels, _chunk_T = all_chunks.shape
@@ -239,22 +229,16 @@ def get_dtype(dtype: Dtype) -> torch.dtype:
 # key time domain concepts
 #
 
-Samples: TypeAlias = int
+Samples: TypeAlias = Annotated[int, Gt(0)]
 """Number of samples in the audio signal."""
 
 SampleRate: TypeAlias = Annotated[int, Gt(0)]
 """The number of samples of audio recorded per second (hertz).
 
-According to the [Nyquist-Shannon sampling theorem](https://en.wikipedia.org/wiki/Nyquist%E2%80%93Shannon_sampling_theorem),
-the maximum frequency that can be accurately represented is half the sample rate. The full range of
-human hearing is approximately 20 Hz to 20000 Hz.
-
-- 44100 Hz: Standard for CD audio, most common sample rate for music.
-- 48000 Hz: Standard in professional audio
-- 16000 Hz: Common for voice recordings as it sufficiently captures the human voice
+See [concepts](../concepts.md#introduction) for more details.
 """
 
-Channels: TypeAlias = int
+Channels: TypeAlias = Annotated[int, Gt(0)]
 """Number of audio streams.
 
 - 1: Mono audio
@@ -264,8 +248,7 @@ Channels: TypeAlias = int
 
 FileFormat: TypeAlias = Literal["flac", "wav", "ogg"]
 AudioEncoding: TypeAlias = Literal["PCM_S", "PCM_U", "PCM_F", "ULAW", "ALAW"]
-"""
-[Audio encoding](https://trac.ffmpeg.org/wiki/audio%20types)
+"""[Audio encoding](https://trac.ffmpeg.org/wiki/audio%20types)
 
 - `PCM_S`: Signed integer linear pulse-code modulation
 - `PCM_U`: Unsigned integer linear pulse-code modulation
@@ -299,58 +282,16 @@ Shape ([channels][splifft.core.Channels], [samples][splifft.core.Samples])"""
 #
 
 ComplexSpectrogram = NewType("ComplexSpectrogram", Tensor)
-r"""A complex-valued representation of audio's frequency content over time.
+r"""A complex-valued representation of audio's frequency content over time
+via the [STFT](https://en.wikipedia.org/wiki/Short-time_Fourier_transform)
 
-Shape ([channels][splifft.core.Channels], [frequency bins][splifft.core.FftSize], [time frames][splifft.core.ChunkSize], 2)
+Shape ([channels][splifft.core.Channels], [frequency bins][splifft.core.FftSize], [time frames][splifft.models.ChunkSize], 2)
 
-While the time domain gives us the amplitude over time, it doesn't explicitly tell us about
-frequency content. The [Short-Time Fourier Transform](https://en.wikipedia.org/wiki/Short-time_Fourier_transform)
-(STFT) is the cornerstone of transforming a 1D discrete-time signal $x[n]$ into a 2D time-frequency
-representation $X[m, k]$ of shape `(frequency_bins, time_frames, 2)`).
-
-The STFT coefficient $X[m, k]$ is a complex number that can be decomposed into:
-
-- the **magnitude** $|X[m, k]|$ (tells us "how much" of a frequency is present)
-- the **phase** $\phi(m, k)$ (tells us "how it's aligned" in time)
-
-of a specific time frame, where $m$ is the time frame index and $k$ is the frequency bin index.
-Human hearing is highly sensitive to phase differences, crucial for sound localisation and timbre
-perception.
-
-Phase is notoriously difficult to model: it behaves chaotically and wraps around from $-\pi$ to
-$\pi$. Early models discarded phase information, focusing only on the magnitude spectrogram,
-and used the [Griffin-Lim algorithm](https://ieeexplore.ieee.org/document/1164317) to estimate the
-plausible phase. Modern models like [SCNet](https://arxiv.org/abs/2401.13276) use the complex valued
-spectrogram as the loss function directly.
-
-Definition:
-$$
-X(m, k) = \sum_{n=-\infty}^{\infty} x[n] \cdot w[n - mH] \cdot e^{-j \frac{2\pi kn}{N_\text{fft}}},
-$$
-where:
-
-Practically, the process involves:
-
-1. Dividing the audio signal into short, overlapping segments in time (chunks), parameterised by the
-   [hop size][splifft.core.HopSize] $H$
-2. Applying a [window function][splifft.core.WindowShape] $w[n]$ (e.g.
-   [Hann window][torch.hann_window]) to each chunk to reduce spectral leakage
-3. Computing the Fast Fourier Transform (FFT) on each windowed segment to get its complex frequency
-   spectrum. The [FFT size][splifft.core.FftSize] $N_\text{fft}$ determines the number of frequency
-   bins.
-4. Stacking these spectra to form the 2D complex spectrogram.
-
-Some models like [BS-Roformer][splifft.models.bs_roformer.BSRoformer] use the linear frequency scale and
-learn their own perceptually relevant [bandings][splifft.core.Bands]. Other models like Mel-Roformer
-is based on the [Mel scale](https://en.wikipedia.org/wiki/Mel_scale), which is a perceptual scale
-of pitches that approximates human hearing.
-
-Neural networks in source separation essentially learn to approximate an ideal ratio mask (or its 
-complex equivalent): $\hat{S}_\text{source} = M_\text{complex} \odot S_\text{mixture}$.
+See [concepts](../concepts.md#complex-spectrogram) for more details.
 """
 
-HopSize: TypeAlias = int
-"""The step size, in samples, between the start of consecutive [chunks][splifft.core.ChunkSize].
+HopSize: TypeAlias = Annotated[int, Gt(0)]
+"""The step size, in samples, between the start of consecutive [chunks][splifft.models.ChunkSize].
 
 To avoid artifacts at the edges of chunks, we process them with overlap. The hop size is the
 distance we "slide" the chunking window forward. `ChunkSize < HopSize` implies overlap and the
@@ -358,39 +299,16 @@ overlap amount is `ChunkSize - HopSize`.
 """
 
 
+# NOTE: sharing both for stft and overlap-add stitching for now
 WindowShape: TypeAlias = Literal["hann", "hamming", "linear_fade"]
-r"""The shape of the window function applied to each chunk before computing the STFT.
-
-Reduces spectral leakage"""  # NOTE: sharing both for stft and overlap-add stitching for now
+"""The shape of the window function applied to each chunk before computing the STFT."""
 
 
-FftSize: TypeAlias = int
-r"""The number of frequency bins in the STFT.
-
-The [time-frequency uncertainty principle](https://en.wikipedia.org/wiki/Uncertainty_principle#Signal_processing)
-states that there is a fundamental tradeoff between the standard deviations in time and frequency
-energy concentrations:
-$$
-\sigma_t \sigma_f \ge \frac{1}{4\pi}
-$$
-
-- A short window (small $N_\text{fft}$) gives good time resolution, excellent for capturing sharp
-percussive sounds like drum hits (transients), but it blurs frequencies together, making it hard to
-separate instruments with close pitches.
-- A long window (large $N_\text{fft}$) gives good frequency resolution, excellent for separating the
-fine harmonics of tonal instruments like a violin or piano, but it blurs the exact timing.
-
-The `auraloss` library's `MultiResolutionSTFTLoss` calculates the loss on spectrograms with
-multiple FFT sizes, forcing the model to optimise for both transient and tonal sources.
-"""
+FftSize: TypeAlias = Annotated[int, Gt(0)]
+"""The number of frequency bins in the STFT, controlling the [frequency resolution](../concepts.md#fft-size)."""
 
 Bands: TypeAlias = Tensor
-"""Groups of adjacent frequency bins in the spectrogram.
-
-Instead of processing every single frequency bin independently, we can group them into "bands".
-This reduces the computational complexity and allows the model to learn relationships within
-frequency regions, which often correspond to musical harmonics or instrument characteristics.
-"""
+"""Groups of [adjacent frequency bins in the spectrogram](../concepts.md#bands)."""
 
 #
 # miscallaneous
@@ -417,18 +335,11 @@ PaddingMode: TypeAlias = Literal["reflect", "constant", "replicate"]
 # TODO: we should intelligently decide whether to choose reflect or constant.
 # for songs that start with silence, we should use constant padding.
 
-ChunkSize: TypeAlias = Annotated[int, Gt(0)]
-"""The length of an audio segment, in samples, processed by the model at one time.
-
-A full audio track is often too long to fit into GPU, instead we process it in fixed-size chunks.
-A larger chunk size may allow the model to capture more temporal context at the cost of increased
-memory usage.
-"""
 
 ChunkDuration: TypeAlias = Annotated[float, Gt(0)]
 """The length of an audio segment, in seconds, processed by the model at one time.
 
-Equivalent to [chunk size][splifft.core.ChunkSize] divided by the [sample rate][splifft.core.SampleRate].
+Equivalent to [chunk size][splifft.models.ChunkSize] divided by the [sample rate][splifft.core.SampleRate].
 """
 
 OverlapRatio: TypeAlias = Annotated[float, Ge(0), Lt(1)]
@@ -445,7 +356,7 @@ $$
   to smoother results by averaging more predictions for each time frame.
 """
 
-Padding: TypeAlias = int
+Padding: TypeAlias = Annotated[int, Gt(0)]
 """Samples to add to the beginning and end of each chunk.
 
 - To ensure that the very beginning and end of a track can be centerd within a chunk, we often may
@@ -456,20 +367,20 @@ Padding: TypeAlias = int
 
 PaddedChunkedAudioTensor = NewType("PaddedChunkedAudioTensor", Tensor)
 """A batch of audio chunks from a padded source.
-Shape ([batch size][splifft.core.BatchSize], [channels][splifft.core.Channels], [chunk size][splifft.core.ChunkSize])"""
+Shape ([batch size][splifft.core.BatchSize], [channels][splifft.core.Channels], [chunk size][splifft.models.ChunkSize])"""
 
-NumModelStems: TypeAlias = int
+NumModelStems: TypeAlias = Annotated[int, Gt(0)]
 """The number of stems the model outputs. This should be the length of [splifft.models.ModelConfigLike.output_stem_names]."""
 
 # post separation stitching
 
 SeparatedChunkedTensor = NewType("SeparatedChunkedTensor", Tensor)
 """A batch of separated audio chunks from the model.
-Shape ([batch size][splifft.core.BatchSize], [number of stems][splifft.core.NumModelStems], [channels][splifft.core.Channels], [chunk size][splifft.core.ChunkSize])"""
+Shape ([batch size][splifft.core.BatchSize], [number of stems][splifft.core.NumModelStems], [channels][splifft.core.Channels], [chunk size][splifft.models.ChunkSize])"""
 
 WindowTensor = NewType("WindowTensor", Tensor)
 """A 1D tensor representing a window function.
-Shape ([chunk size][splifft.core.ChunkSize])"""
+Shape ([chunk size][splifft.models.ChunkSize])"""
 
 RawSeparatedTensor = NewType("RawSeparatedTensor", Tensor)
 """The final, stitched, raw-domain separated audio.
@@ -478,9 +389,10 @@ Shape ([number of stems][splifft.core.NumModelStems], [channels][splifft.core.Ch
 #
 # evaluation metrics
 # We use bold letters like $\mathbf{s}$ to denote the entire signal tensor.
+# NOTE: once we implement these metrics, cut down on the docstrings.
 #
 
-SDR: TypeAlias = float
+Sdr: TypeAlias = float
 r"""Signal-to-Distortion Ratio (decibels). Higher is better.
 
 Measures the ratio of the power of clean reference signal to the power of all other error components
@@ -497,7 +409,7 @@ where:
 - $||\cdot||^2$: squared L2 norm (power) of the signal
 """
 
-SISDR: TypeAlias = float
+SiSdr: TypeAlias = float
 r"""Scale-Invariant SDR (SI-SDR) is invariant to scaling errors (decibels). Higher is better.
 
 It projects the estimate onto the reference to find the optimal scaling factor $\alpha$, creating a scaled reference that best matches the estimate's amplitude.

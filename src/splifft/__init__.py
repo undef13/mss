@@ -9,4 +9,7 @@ PATH_DATA = PATH_BASE / "data"
 PATH_CONFIG = PATH_DATA / "config"
 PATH_MODELS = PATH_DATA / "models"
 
+PATH_DOCS = PATH_BASE / "docs"
+PATH_DOCS_ASSETS = PATH_DOCS / "assets"
+
 # NOTE: not re-exporting because our structure is simple enough.

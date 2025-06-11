@@ -19,7 +19,8 @@ from pydantic import BaseModel, BeforeValidator
 from rich.logging import RichHandler
 from rich.progress import Progress, TaskID
 
-from splifft import PATH_DATA
+from splifft import PATH_DOCS_ASSETS
+from splifft.core import Sdr as _Sdr
 
 logging.basicConfig(level="INFO", format="%(message)s", datefmt="[%X]", handlers=[RichHandler()])
 logger = logging.getLogger(__name__)
@@ -31,7 +32,7 @@ app = typer.Typer(
 
 USER_AGENT = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.3"
 BASE_URL_API = "https://mvsep.com/api"
-PATH_MVSEP = PATH_DATA / "mvsep"
+PATH_MVSEP = PATH_DOCS_ASSETS / "mvsep"
 PATH_MVSEP_QUALITY = PATH_MVSEP / "quality"
 
 
@@ -108,7 +109,7 @@ def fetch(
 
 
 Sdr: TypeAlias = Annotated[
-    float | None, BeforeValidator(lambda v: None if v == 0 or v == -1000 else v)
+    _Sdr | None, BeforeValidator(lambda v: None if v == 0 or v == -1000 else v)
 ]
 
 
@@ -221,10 +222,6 @@ def process() -> None:
 #
 
 
-# --instruments instrum --id 7534 --id 7573 --id 7768 --id 8257 --id 8303 --id 8393 --id 8362
-# --instruments vocals --id 7475 --id 7706 --id 8093 --id 8265 --id 8337 --id 8377
-# --instruments drums --id 7886 --id 7898 --id 8374
-# --instruments bass --id 7669 --id 8374
 @app.command()
 def correlations(
     instruments: list[str] = ["instrum", "vocals", "drums", "bass", "other", "piano"],
@@ -252,14 +249,15 @@ def correlations(
     plt.rcParams.update(
         {
             "font.family": "sans-serif",
-            "font.sans-serif": ["DM Mono"],
-            "figure.facecolor": "#1e1e1e",
-            "axes.facecolor": "#1e1e1e",
+            "font.sans-serif": ["Roboto Mono"],
+            "figure.facecolor": "#1c1c1c",
+            "axes.facecolor": "#1c1c1c",
             "axes.labelcolor": "#d0d0d0",
             "xtick.color": "#d0d0d0",
             "ytick.color": "#d0d0d0",
             "text.color": "#d0d0d0",
             "grid.color": "#444444",
+            "svg.fonttype": "none",  # render as text, not paths
         }
     )
 
@@ -367,10 +365,10 @@ def correlations(
             )
 
         PATH_PLOTS.mkdir(parents=True, exist_ok=True)
-        output_path = PATH_PLOTS / f"correlations_{instrument}.png"
-        plt.savefig(output_path, dpi=300, bbox_inches="tight")
+        output_path = PATH_PLOTS / f"correlations_{instrument}.svg"
+        plt.savefig(output_path)
         plt.close(fig)
-        logger.info(f"correlation matrix saved to `{output_path}`")
+        logger.info(f"wrote correlation matrix `{output_path}`")
 
 
 if __name__ == "__main__":

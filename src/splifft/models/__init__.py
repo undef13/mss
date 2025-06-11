@@ -1,33 +1,24 @@
-"""Source separation models.
-
-When definining a new model, you may be accustomed to the common practice of defining all model
-configuration in the `__init__` method of a [torch.nn.Module][], then maybe add a `@beartype`
-decorator to verify types at runtime. But the problem is we want to easily serialize and deserialize
-it to/from a JSON file, and using `__init__` for 20+ arguments is not scalable.
-
-Instead, follow this convention:
-
-- each module lives in its own module, e.g. `src/splifft/models/{model_type}.py`.
-    - it should have a [**standard library** `dataclass`][dataclasses.dataclass] named
-      `{ModelName}Config` that implements the [splifft.models.ModelConfigLike][]
-      [protocol](https://typing.python.org/en/latest/spec/protocol.html).
-    - it should also have a top level [torch.nn.Module][] subclass named `ModelName` that
-      accepts the aforementioned dataclass as the *sole* argument to its `__init__` method.
-
-!!! question "Why do this???"
-
-    If you follow this convention, [splifft.config][] can easily read the `{ModelName}Config`
-    dataclass to 1) verify the configuration at runtime and 2) serialize/deserialize it to/from JSON
-    using [pydantic.TypeAdapter][].
-"""
+"""Source separation models."""
 
 from __future__ import annotations
 
 import importlib
 from dataclasses import dataclass
-from typing import Generic, Protocol, TypeAlias, TypeVar, runtime_checkable
+from typing import (
+    TYPE_CHECKING,
+    Annotated,
+    Generic,
+    Protocol,
+    TypeAlias,
+    TypeVar,
+    runtime_checkable,
+)
 
 from torch import nn
+
+if TYPE_CHECKING:
+    from annotated_types import Gt
+    from typing_extensions import TypeAlias
 
 ModelType: TypeAlias = str
 """The type of the model, e.g. `bs_roformer`, `demucs`"""
@@ -37,55 +28,29 @@ ModelType: TypeAlias = str
 class ModelConfigLike(Protocol):
     """A trait that must be implemented to be considered a model configuration."""
 
-    chunk_size: int
+    chunk_size: ChunkSize
     output_stem_names: tuple[ModelOutputStemName, ...]
 
+
+ChunkSize: TypeAlias = Annotated[int, Gt(0)]
+"""The length of an audio segment, in samples, processed by the model at one time.
+
+A full audio track is often too long to fit into GPU, instead we process it in fixed-size chunks.
+A larger chunk size may allow the model to capture more temporal context at the cost of increased
+memory usage.
+"""
+
+ModelOutputStemName: TypeAlias = str
+"""The output stem name, e.g. `vocals`, `drums`, `bass`, etc."""
 
 ModelConfigLikeT = TypeVar("ModelConfigLikeT", bound=ModelConfigLike)
 
 ModelT = TypeVar("ModelT", bound=nn.Module)
 
-ModelOutputStemName: TypeAlias = str
-"""The output stem name, e.g. `vocals`, `drums`, `bass`, etc."""
 
-
-# NOTE: a global state like
-# ```
-# MODEL_REGISTRY = {
-#     "bs_roformer": (BSRoformer, BSRoformerConfig),
-# }
-# ```
-# is a anti-pattern because it forces us to import all models at once. we dont want to force
-# the users to install the dependencies of unused models. neither a factory any good:
-# ```
-# def load_model(model_type: ModelType, model_config: LazyModelConfig) -> nn.Module:
-#     if model_type == "bs_roformer":
-#         from splifft.models.bs_roformer import BSRoformer, BSRoformerConfig
-#         return BSRoformer(model_config.to_concrete(BSRoformerConfig))
-#     elif ...
-# ```
-# because every new model would require a change in this function, violating OCP.
-#
 @dataclass
 class ModelMetadata(Generic[ModelT, ModelConfigLikeT]):
-    """Metadata about a model, including its type, configuration class, and model class.
-
-    To use it with a model that is part of the `splifft` library, first import the model and
-    construct an instance of this class, e.g.:
-    ```py
-    from splifft.io import ModelMetadata
-
-    def metadata_factory() -> ModelMetadata:
-        from your_library.models.bs_roformer import BSRoformer, BSRoformerConfig  # external
-
-        return ModelMetadata(
-            model_type="bs_roformer",
-            config=BSRoformerConfig,
-            model=BSRoformer,
-        )
-    ```
-    Alternatively, you can also use the [splifft.models.ModelMetadata.from_module][].
-    """
+    """Metadata about a model, including its type, configuration class, and model class."""
 
     model_type: ModelType
     config: type[ModelConfigLikeT]
@@ -103,16 +68,6 @@ class ModelMetadata(Generic[ModelT, ModelConfigLikeT]):
         """
         Dynamically import a model named `X` and its configuration dataclass `XConfig` under a
         given module name (e.g. `splifft.models.bs_roformer`).
-
-        This technique is used by the CLI to import arbitrary models that are not part of the
-        `splifft` package, e.g.
-        ```py
-        model_metadata = ModelMetadata.from_module(
-            "splifft.models.bs_roformer",
-            "BSRoformer",
-            model_type="bs_roformer"
-        )
-        ```
 
         :param model_cls_name: The name of the model class to import, e.g. `BSRoformer`.
         :param module_name: The name of the module to import, e.g. `splifft.models.bs_roformer`.

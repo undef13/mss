@@ -57,7 +57,7 @@ def read_audio(
 def load_weights(
     model: ModelT,
     checkpoint_file: FileLike,
-    device: torch.device,
+    device: torch.device | str,
 ) -> ModelT:
     """Load the weights from a checkpoint into the given model."""
 
