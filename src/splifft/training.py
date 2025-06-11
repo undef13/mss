@@ -26,7 +26,7 @@ GradientAccumulationSteps: TypeAlias = Annotated[int, Gt(0)]
 """Number of batches to process before performing a weight update.
 
 A technique to simulate larger batch sizes without increasing memory consumption.
-For example, a [batch size][mss.training.TrainingBatchSize] of 4 with gradient accumulation of 8 
+For example, a [batch size][splifft.training.TrainingBatchSize] of 4 with gradient accumulation of 8 
 results in an effective batch size of 32. Gradients are computed for each of the 8 mini-batches,
 and summed up before the optimizer updates the model weights. This may be useful for training
 large models on consumer hardware with limited memory.
@@ -39,7 +39,7 @@ LearningRateSchedulerName: TypeAlias = str
 """Algorithm used to adjust the learning rate during training.
 
 For example, `ReduceLROnPlateau` reduces the learning rate when a monitored metric (e.g. validation
-SDR) stops improving for a certain number of [epochs][mss.training.Epoch] (patience).
+SDR) stops improving for a certain number of [epochs][splifft.training.Epoch] (patience).
 """
 
 # TODO: patience

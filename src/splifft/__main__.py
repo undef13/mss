@@ -16,7 +16,7 @@ app = typer.Typer(
 
 
 # TODO: migrate away from hardcoding.
-_DEFAULT_MODULE_NAME = "mss.models.bs_roformer"
+_DEFAULT_MODULE_NAME = "splifft.models.bs_roformer"
 _DEFAULT_CLASS_NAME = "BSRoformer"
 
 

@@ -512,13 +512,13 @@ class BSRoformer(Module):
         """
         einops
 
-        b - batch
-        f - freq
-        t - time
-        s - audio channel (1 for mono, 2 for stereo)
-        n - number of 'stems'
-        c - complex (2)
-        d - feature dimension
+        - b: batch
+        - f: frequency
+        - t: time
+        - s: audio channel (1 for mono, 2 for stereo)
+        - n: number of stems
+        - c: complex (2)
+        - d: feature dimension
         """
 
         device = raw_audio.device

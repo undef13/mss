@@ -7,17 +7,17 @@ it to/from a JSON file, and using `__init__` for 20+ arguments is not scalable.
 
 Instead, follow this convention:
 
-- each module lives in its own module, e.g. `src/mss/models/{model_type}.py`.
-    - it should have a [**standard library** `dataclass`][dataclasses.dataclass][] named
-      `{ModelName}Config` that implements the [mss.models.ModelConfigLike][]
+- each module lives in its own module, e.g. `src/splifft/models/{model_type}.py`.
+    - it should have a [**standard library** `dataclass`][dataclasses.dataclass] named
+      `{ModelName}Config` that implements the [splifft.models.ModelConfigLike][]
       [protocol](https://typing.python.org/en/latest/spec/protocol.html).
     - it should also have a top level [torch.nn.Module][] subclass named `ModelName` that
       accepts the aforementioned dataclass as the *sole* argument to its `__init__` method.
 
 !!! question "Why do this???"
 
-    If you follow this convention, [mss.config][] can easily read the `{ModelName}Config` dataclass
-    to 1) verify the configuration at runtime and 2) serialize/deserialize it to/from JSON
+    If you follow this convention, [splifft.config][] can easily read the `{ModelName}Config`
+    dataclass to 1) verify the configuration at runtime and 2) serialize/deserialize it to/from JSON
     using [pydantic.TypeAdapter][].
 """
 
@@ -60,7 +60,7 @@ ModelOutputStemName: TypeAlias = str
 # ```
 # def load_model(model_type: ModelType, model_config: LazyModelConfig) -> nn.Module:
 #     if model_type == "bs_roformer":
-#         from mss.models.bs_roformer import BSRoformer, BSRoformerConfig
+#         from splifft.models.bs_roformer import BSRoformer, BSRoformerConfig
 #         return BSRoformer(model_config.to_concrete(BSRoformerConfig))
 #     elif ...
 # ```
@@ -70,10 +70,10 @@ ModelOutputStemName: TypeAlias = str
 class ModelMetadata(Generic[ModelT, ModelConfigLikeT]):
     """Metadata about a model, including its type, configuration class, and model class.
 
-    To use it with a model that is part of the `mss` library, first import the model and
+    To use it with a model that is part of the `splifft` library, first import the model and
     construct an instance of this class, e.g.:
     ```py
-    from mss.io import ModelMetadata
+    from splifft.io import ModelMetadata
 
     def metadata_factory() -> ModelMetadata:
         from your_library.models.bs_roformer import BSRoformer, BSRoformerConfig  # external
@@ -84,7 +84,7 @@ class ModelMetadata(Generic[ModelT, ModelConfigLikeT]):
             model=BSRoformer,
         )
     ```
-    Alternatively, you can also use the [mss.models.ModelMetadata.from_module][].
+    Alternatively, you can also use the [splifft.models.ModelMetadata.from_module][].
     """
 
     model_type: ModelType
@@ -102,20 +102,20 @@ class ModelMetadata(Generic[ModelT, ModelConfigLikeT]):
     ) -> ModelMetadata[nn.Module, ModelConfigLike]:
         """
         Dynamically import a model named `X` and its configuration dataclass `XConfig` under a
-        given module name (e.g. `mss.models.bs_roformer`).
+        given module name (e.g. `splifft.models.bs_roformer`).
 
         This technique is used by the CLI to import arbitrary models that are not part of the
-        `mss` package, e.g.
+        `splifft` package, e.g.
         ```py
         model_metadata = ModelMetadata.from_module(
-            "mss.models.bs_roformer",
+            "splifft.models.bs_roformer",
             "BSRoformer",
             model_type="bs_roformer"
         )
         ```
 
         :param model_cls_name: The name of the model class to import, e.g. `BSRoformer`.
-        :param module_name: The name of the module to import, e.g. `mss.models.bs_roformer`.
+        :param module_name: The name of the module to import, e.g. `splifft.models.bs_roformer`.
         :param package: The package to use as the anchor point from which to resolve the relative import.
         to an absolute import. This is only required when performing a relative import.
         """

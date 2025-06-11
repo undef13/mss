@@ -1,1 +1,1 @@
-::: mss.config
+::: splifft.config

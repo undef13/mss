@@ -23,8 +23,8 @@ _AudioTensorLike = TypeVar("_AudioTensorLike")
 @dataclass
 class Audio(Generic[_AudioTensorLike]):
     data: _AudioTensorLike
-    """This should either be an [raw][mss.core.RawAudioTensor] or a
-    [normalized][mss.core.NormalizedAudioTensor] audio tensor."""
+    """This should either be an [raw][splifft.core.RawAudioTensor] or a
+    [normalized][splifft.core.NormalizedAudioTensor] audio tensor."""
     sample_rate: SampleRate
 
 
@@ -59,7 +59,7 @@ def normalize_audio(audio: Audio[RawAudioTensor]) -> NormalizedAudio:
     """Preprocess the raw audio in the time domain to have a mean of 0 and a std of 1
     before passing it to the model.
 
-    Operates on the mean of the [channels][mss.core.Channels].
+    Operates on the mean of the [channels][splifft.core.Channels].
     """
     mono_audio = audio.data.mean(dim=0)
     mean = float(mono_audio.mean())
@@ -135,7 +135,7 @@ def stitch_chunks(
     $$
     \sum_{m=-\infty}^{\infty} w[n - mH] = C
     $$
-    where $H$ is the [hop size][mss.core.HopSize] and $C$ is a constant, ideally 1. Not to be
+    where $H$ is the [hop size][splifft.core.HopSize] and $C$ is a constant, ideally 1. Not to be
     confused with the condition for *power-complementary* windows ($\sum w^2 = C$), which is used to
     reconstruct the signal's *power*.
     """
@@ -191,7 +191,7 @@ def derive_stems(
     It is the caller's responsibility to ensure that all tensors are aligned and have the same shape.
 
     !!! note
-        Mixture input and separated stems must first be [denormalized][mss.core.denormalize_audio].
+        Mixture input and separated stems must first be [denormalized][splifft.core.denormalize_audio].
     """
     stems = {
         "mixture": RawAudioTensor(mixture_input),  # for subtraction
@@ -266,6 +266,7 @@ FileFormat: TypeAlias = Literal["flac", "wav", "ogg"]
 AudioEncoding: TypeAlias = Literal["PCM_S", "PCM_U", "PCM_F", "ULAW", "ALAW"]
 """
 [Audio encoding](https://trac.ffmpeg.org/wiki/audio%20types)
+
 - `PCM_S`: Signed integer linear pulse-code modulation
 - `PCM_U`: Unsigned integer linear pulse-code modulation
 - `PCM_F`: Floating-point pulse-code modulation
@@ -287,11 +288,11 @@ possible sounds.
 
 RawAudioTensor = NewType("RawAudioTensor", Tensor)
 """Time domain tensor of audio samples.
-Shape ([channels][mss.core.Channels], [samples][mss.core.Samples])"""
+Shape ([channels][splifft.core.Channels], [samples][splifft.core.Samples])"""
 
 NormalizedAudioTensor = NewType("NormalizedAudioTensor", Tensor)
-"""A mixture tensor that has been normalized using [on-the-fly statistics][mss.core.NormalizationStats].
-Shape ([channels][mss.core.Channels], [samples][mss.core.Samples])"""
+"""A mixture tensor that has been normalized using [on-the-fly statistics][splifft.core.NormalizationStats].
+Shape ([channels][splifft.core.Channels], [samples][splifft.core.Samples])"""
 
 #
 # key time-frequency domain concepts
@@ -300,7 +301,7 @@ Shape ([channels][mss.core.Channels], [samples][mss.core.Samples])"""
 ComplexSpectrogram = NewType("ComplexSpectrogram", Tensor)
 r"""A complex-valued representation of audio's frequency content over time.
 
-Shape ([channels][mss.core.Channels], [frequency bins][mss.core.FftSize], [time frames][mss.core.ChunkSize], 2)
+Shape ([channels][splifft.core.Channels], [frequency bins][splifft.core.FftSize], [time frames][splifft.core.ChunkSize], 2)
 
 While the time domain gives us the amplitude over time, it doesn't explicitly tell us about
 frequency content. The [Short-Time Fourier Transform](https://en.wikipedia.org/wiki/Short-time_Fourier_transform)
@@ -315,26 +316,6 @@ The STFT coefficient $X[m, k]$ is a complex number that can be decomposed into:
 of a specific time frame, where $m$ is the time frame index and $k$ is the frequency bin index.
 Human hearing is highly sensitive to phase differences, crucial for sound localisation and timbre
 perception.
-
-```text
-Freq (Hz)                                                  Magnitude
-     ^                                                   -------------
-8000 |   @  :  :  +  @   @@:#     @  :  +  =               @  high    
-4000 |  :@  :  +  @-#@#@## ##@#   @  :  :  +               #  medium  
-2000 | : @+ : @#@-## @+    =  @#@@@+ :  +  =               -  low     
-1000 |  +@##+@-#  +  @##+= +     @@##+= :  :             -------------
- 500 | #+@@%%%###+== @@%%%###++=  @@%%%###+==    
-   0 +----------------------------------------> time (s)
-
-Freq (Hz)                                                    Phase
-     ^ - ++++ -  -    -  +-   +-+- --+  - +-+            -------------
-8000 |  +- +     -+-+-- +-  -  +    ++    +                +   2pi    
-4000 | + +  -  + - +- - --+++-+- +-+ +-  +- --                        
-2000 |      +-+++ - -++ + +   -----   + -+  ++             -   -2pi   
-1000 | -++--+ +  --  - ++  +-++--  - ---   +             -------------
- 500 | +-++ + +  +  + --- ++     - -  +  + - -    
-   0 +----------------------------------------> Time (s)
-```
 
 Phase is notoriously difficult to model: it behaves chaotically and wraps around from $-\pi$ to
 $\pi$. Early models discarded phase information, focusing only on the magnitude spectrogram,
@@ -351,16 +332,16 @@ where:
 Practically, the process involves:
 
 1. Dividing the audio signal into short, overlapping segments in time (chunks), parameterised by the
-   [hop size][mss.core.HopSize] $H$
-2. Applying a [window function][mss.core.WindowShape] $w[n]$ (e.g.
+   [hop size][splifft.core.HopSize] $H$
+2. Applying a [window function][splifft.core.WindowShape] $w[n]$ (e.g.
    [Hann window][torch.hann_window]) to each chunk to reduce spectral leakage
 3. Computing the Fast Fourier Transform (FFT) on each windowed segment to get its complex frequency
-   spectrum. The [FFT size][mss.core.FftSize] $N_\text{fft}$ determines the number of frequency
+   spectrum. The [FFT size][splifft.core.FftSize] $N_\text{fft}$ determines the number of frequency
    bins.
 4. Stacking these spectra to form the 2D complex spectrogram.
 
-Some models like [BS-Roformer][mss.models.bs_roformer.BSRoformer] use the linear frequency scale and
-learn their own perceptually relevant [bandings][mss.core.Bands]. Other models like Mel-Roformer
+Some models like [BS-Roformer][splifft.models.bs_roformer.BSRoformer] use the linear frequency scale and
+learn their own perceptually relevant [bandings][splifft.core.Bands]. Other models like Mel-Roformer
 is based on the [Mel scale](https://en.wikipedia.org/wiki/Mel_scale), which is a perceptual scale
 of pitches that approximates human hearing.
 
@@ -369,7 +350,7 @@ complex equivalent): $\hat{S}_\text{source} = M_\text{complex} \odot S_\text{mix
 """
 
 HopSize: TypeAlias = int
-"""The step size, in samples, between the start of consecutive [chunks][mss.core.ChunkSize].
+"""The step size, in samples, between the start of consecutive [chunks][splifft.core.ChunkSize].
 
 To avoid artifacts at the edges of chunks, we process them with overlap. The hop size is the
 distance we "slide" the chunking window forward. `ChunkSize < HopSize` implies overlap and the
@@ -447,13 +428,13 @@ memory usage.
 ChunkDuration: TypeAlias = Annotated[float, Gt(0)]
 """The length of an audio segment, in seconds, processed by the model at one time.
 
-Equivalent to [chunk size][mss.core.ChunkSize] divided by the [sample rate][mss.core.SampleRate].
+Equivalent to [chunk size][splifft.core.ChunkSize] divided by the [sample rate][splifft.core.SampleRate].
 """
 
 OverlapRatio: TypeAlias = Annotated[float, Ge(0), Lt(1)]
 r"""The fraction of a chunk that overlaps with the next one.
 
-The relationship with [hop size][mss.core.HopSize] is:
+The relationship with [hop size][splifft.core.HopSize] is:
 $$
 \text{hop\_size} = \text{chunk\_size} \cdot (1 - \text{overlap\_ratio})
 $$
@@ -475,24 +456,24 @@ Padding: TypeAlias = int
 
 PaddedChunkedAudioTensor = NewType("PaddedChunkedAudioTensor", Tensor)
 """A batch of audio chunks from a padded source.
-Shape ([batch size][mss.core.BatchSize], [channels][mss.core.Channels], [chunk size][mss.core.ChunkSize])"""
+Shape ([batch size][splifft.core.BatchSize], [channels][splifft.core.Channels], [chunk size][splifft.core.ChunkSize])"""
 
 NumModelStems: TypeAlias = int
-"""The number of stems the model outputs. This should be the length of [mss.models.ModelConfigLike.output_stem_names]."""
+"""The number of stems the model outputs. This should be the length of [splifft.models.ModelConfigLike.output_stem_names]."""
 
 # post separation stitching
 
 SeparatedChunkedTensor = NewType("SeparatedChunkedTensor", Tensor)
 """A batch of separated audio chunks from the model.
-Shape ([batch size][mss.core.BatchSize], [number of stems][mss.core.NumModelStems], [channels][mss.core.Channels], [chunk size][mss.core.ChunkSize])"""
+Shape ([batch size][splifft.core.BatchSize], [number of stems][splifft.core.NumModelStems], [channels][splifft.core.Channels], [chunk size][splifft.core.ChunkSize])"""
 
 WindowTensor = NewType("WindowTensor", Tensor)
 """A 1D tensor representing a window function.
-Shape ([chunk size][mss.core.ChunkSize])"""
+Shape ([chunk size][splifft.core.ChunkSize])"""
 
 RawSeparatedTensor = NewType("RawSeparatedTensor", Tensor)
 """The final, stitched, raw-domain separated audio.
-Shape ([number of stems][mss.core.NumModelStems], [channels][mss.core.Channels], [samples][mss.core.Samples])"""
+Shape ([number of stems][splifft.core.NumModelStems], [channels][splifft.core.Channels], [samples][splifft.core.Samples])"""
 
 #
 # evaluation metrics
@@ -510,6 +491,7 @@ $$
 \text{SDR} = 10 \log_{10} \frac{|\mathbf{s}|^2}{|\mathbf{s} - \mathbf{\hat{s}}|^2},
 $$
 where:
+
 - $\mathbf{s}$: ground truth source signal
 - $\mathbf{\hat{s}}$: estimated source signal produced by the model
 - $||\cdot||^2$: squared L2 norm (power) of the signal
@@ -519,6 +501,7 @@ SISDR: TypeAlias = float
 r"""Scale-Invariant SDR (SI-SDR) is invariant to scaling errors (decibels). Higher is better.
 
 It projects the estimate onto the reference to find the optimal scaling factor $\alpha$, creating a scaled reference that best matches the estimate's amplitude.
+
 - Optimal scaling factor: $\alpha = \frac{\langle\mathbf{\hat{s}}, \mathbf{s}\rangle}{||\mathbf{s}||^2}$
 - Scaled reference: $\mathbf{s}_\text{target} = \alpha \cdot \mathbf{s}$
 - Error: $\mathbf{e} = \mathbf{\hat{s}} - \mathbf{s}_\text{target}$
@@ -546,7 +529,7 @@ $$
 Bleedless: TypeAlias = float
 r"""A metric to quantify the amount of "bleeding" from other sources. Higher is better.
 
-Measures the average energy of the parts of the [mel spectrogram][mss.core.DbDifferenceMel]
+Measures the average energy of the parts of the [mel spectrogram][splifft.core.DbDifferenceMel]
 that are louder than the reference.
 A high value indicates that the estimate contains unwanted energy (bleed) from other sources:
 $$
@@ -557,8 +540,8 @@ $$
 Fullness: TypeAlias = float
 r"""A metric to quantify how much of the original source is missing. Higher is better.
 
-Complementary to [Bleedless][mss.core.Bleedless].
-Measures the average energy of the parts of the [mel spectrogram][mss.core.DbDifferenceMel]
+Complementary to [Bleedless][splifft.core.Bleedless].
+Measures the average energy of the parts of the [mel spectrogram][splifft.core.DbDifferenceMel]
 that are quieter than the reference.
 A high value indicates that parts of the target loss were lost during the separation, indicating
 that more of the original source's character is preserved.

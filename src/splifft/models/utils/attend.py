@@ -81,10 +81,11 @@ class Attend(nn.Module):
     def forward(self, q: Tensor, k: Tensor, v: Tensor) -> Tensor:
         """
         einstein notation
-        b - batch
-        h - heads
-        n, i, j - sequence length (base sequence length, source, target)
-        d - feature dimension
+
+        - b: batch
+        - h: heads
+        - n, i, j: sequence length (base sequence length, source, target)
+        - d: feature dimension
         """
         _q_len, _k_len, _device = q.shape[-2], k.shape[-2], q.device
 

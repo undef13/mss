@@ -1,1 +1,1 @@
-::: mss.inference
+::: splifft.inference

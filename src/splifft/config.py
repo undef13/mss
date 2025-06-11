@@ -215,7 +215,7 @@ class Config(BaseModel):
     derived_stems: DerivedStemsConfig | None = None
     output: OutputConfig = Field(default_factory=OutputConfig)
     experimental: dict[str, Any] | None = None
-    """Any extra experimental configurations outside of the `mss` core."""
+    """Any extra experimental configurations outside of the `splifft` core."""
 
     @model_validator(mode="after")
     def check_derived_stems(self) -> Self:

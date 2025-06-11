@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "mss"
+name = "splifft"
 version = "0.0.2"
 description = "Lightweight utilities for music source separation."
 readme = "README.md"
@@ -13,13 +13,16 @@ dependencies = [
     "einops>=0.8.1",
     "hyper-connections>=0.1.15",
     "numpy>=2.2.6",
-    "soundfile>=0.13.1 ; sys_platform == 'Windows'",
     "torch>=2.7.1",
 ]
 
 [project.optional-dependencies]
 config = ["pydantic>=2.11.5"]
-inference = ["torchaudio>=2.7.1", "tqdm>=4.67.1"]
+inference = [
+    "torchaudio>=2.7.1",
+    "tqdm>=4.67.1",
+    "soundfile>=0.13.1 ; sys_platform == 'Windows'",
+]
 cli = ["typer>=0.16.0"]
 sageattention = ["sageattention>=1.0.6"]
 # the following are experimental, used only in scripts
@@ -31,7 +34,7 @@ networking = [
 analysis = ["matplotlib>=3.10.3", "polars>=1.30.0"]
 
 [project.scripts]
-mss = "mss.__main__:app"
+splifft = "splifft.__main__:app"
 
 [dependency-groups]
 dev = ["ipykernel>=6.29.5", "pandas>=2.3.0"]

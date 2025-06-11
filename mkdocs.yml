@@ -1,8 +1,8 @@
-site_name: mss
+site_name: splifft
 site_description: Lightweight utilities for music source separation.
-repo_name: undef13/mss
-repo_url: https://github.com/undef13/mss
-site_url: https://undef13.github.io/mss/
+repo_name: undef13/splifft
+repo_url: https://github.com/undef13/splifft
+site_url: https://undef13.github.io/splifft/
 nav:
   - Home: "index.md"
   # - Tutorial: "tutorial.md"

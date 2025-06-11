@@ -1155,97 +1155,6 @@ wheels = [
 ]
 
 [[package]]
-name = "mss"
-version = "0.0.2"
-source = { editable = "." }
-dependencies = [
-    { name = "beartype" },
-    { name = "einops" },
-    { name = "hyper-connections" },
-    { name = "numpy", version = "2.2.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
-    { name = "numpy", version = "2.3.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
-    { name = "soundfile", marker = "sys_platform == 'Windows'" },
-    { name = "torch" },
-]
-
-[package.optional-dependencies]
-analysis = [
-    { name = "matplotlib" },
-    { name = "polars" },
-]
-cli = [
-    { name = "typer" },
-]
-config = [
-    { name = "pydantic" },
-]
-inference = [
-    { name = "torchaudio" },
-    { name = "tqdm" },
-]
-networking = [
-    { name = "aiolimiter" },
-    { name = "httpx", extra = ["http2", "socks", "zstd"] },
-    { name = "orjson" },
-]
-sageattention = [
-    { name = "sageattention" },
-]
-
-[package.dev-dependencies]
-dev = [
-    { name = "ipykernel" },
-    { name = "pandas" },
-]
-docs = [
-    { name = "mkdocs-material", extra = ["imaging"] },
-    { name = "mkdocstrings-python" },
-]
-lint = [
-    { name = "ruff" },
-]
-test = [
-    { name = "pytest" },
-]
-typing = [
-    { name = "mypy" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "aiolimiter", marker = "extra == 'networking'", specifier = ">=1.2.1" },
-    { name = "beartype", specifier = ">=0.21.0" },
-    { name = "einops", specifier = ">=0.8.1" },
-    { name = "httpx", extras = ["http2", "zstd", "socks"], marker = "extra == 'networking'", specifier = ">=0.28.1" },
-    { name = "hyper-connections", specifier = ">=0.1.15" },
-    { name = "matplotlib", marker = "extra == 'analysis'", specifier = ">=3.10.3" },
-    { name = "numpy", specifier = ">=2.2.6" },
-    { name = "orjson", marker = "extra == 'networking'", specifier = ">=3.10.18" },
-    { name = "polars", marker = "extra == 'analysis'", specifier = ">=1.30.0" },
-    { name = "pydantic", marker = "extra == 'config'", specifier = ">=2.11.5" },
-    { name = "sageattention", marker = "extra == 'sageattention'", specifier = ">=1.0.6" },
-    { name = "soundfile", marker = "sys_platform == 'Windows'", specifier = ">=0.13.1" },
-    { name = "torch", specifier = ">=2.7.1" },
-    { name = "torchaudio", marker = "extra == 'inference'", specifier = ">=2.7.1" },
-    { name = "tqdm", marker = "extra == 'inference'", specifier = ">=4.67.1" },
-    { name = "typer", marker = "extra == 'cli'", specifier = ">=0.16.0" },
-]
-provides-extras = ["config", "inference", "cli", "sageattention", "networking", "analysis"]
-
-[package.metadata.requires-dev]
-dev = [
-    { name = "ipykernel", specifier = ">=6.29.5" },
-    { name = "pandas", specifier = ">=2.3.0" },
-]
-docs = [
-    { name = "mkdocs-material", extras = ["imaging"], specifier = ">=9.6.14" },
-    { name = "mkdocstrings-python", specifier = ">=1.16.12" },
-]
-lint = [{ name = "ruff", specifier = ">=0.11.12" }]
-test = [{ name = "pytest", specifier = ">=8.4.0" }]
-typing = [{ name = "mypy", specifier = ">=1.16.0" }]
-
-[[package]]
 name = "mypy"
 version = "1.16.0"
 source = { registry = "https://pypi.org/simple" }
@@ -2217,7 +2126,7 @@ wheels = [
 
 [[package]]
 name = "requests"
-version = "2.32.3"
+version = "2.32.4"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "certifi" },
@@ -2225,9 +2134,9 @@ dependencies = [
     { name = "idna" },
     { name = "urllib3" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/63/70/2bf7780ad2d390a8d301ad0b550f1581eadbd9a20f896afe06353c2a2913/requests-2.32.3.tar.gz", hash = "sha256:55365417734eb18255590a9ff9eb97e9e1da868d4ccd6402399eaf68af20a760", size = 131218, upload-time = "2024-05-29T15:37:49.536Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/e1/0a/929373653770d8a0d7ea76c37de6e41f11eb07559b103b1c02cafb3f7cf8/requests-2.32.4.tar.gz", hash = "sha256:27d0316682c8a29834d3264820024b62a36942083d52caf2f14c0591336d3422", size = 135258, upload-time = "2025-06-09T16:43:07.34Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/f9/9b/335f9764261e915ed497fcdeb11df5dfd6f7bf257d4a6a2a686d80da4d54/requests-2.32.3-py3-none-any.whl", hash = "sha256:70761cfe03c773ceb22aa2f671b4757976145175cdfca038c02654d061d6dcc6", size = 64928, upload-time = "2024-05-29T15:37:47.027Z" },
+    { url = "https://files.pythonhosted.org/packages/7c/e4/56027c4a6b4ae70ca9de302488c5ca95ad4a39e190093d6c1a8ace08341b/requests-2.32.4-py3-none-any.whl", hash = "sha256:27babd3cda2a6d50b30443204ee89830707d396671944c998b5975b031ac2b2c", size = 64847, upload-time = "2025-06-09T16:43:05.728Z" },
 ]
 
 [[package]]
@@ -2336,6 +2245,97 @@ sdist = { url = "https://files.pythonhosted.org/packages/e1/41/9b873a8c055582859
 wheels = [
     { url = "https://files.pythonhosted.org/packages/64/28/e2a36573ccbcf3d57c00626a21fe51989380636e821b341d36ccca0c1c3a/soundfile-0.13.1-py2.py3-none-any.whl", hash = "sha256:a23c717560da2cf4c7b5ae1142514e0fd82d6bbd9dfc93a50423447142f2c445", size = 25751, upload-time = "2025-01-25T09:16:44.235Z" },
 ]
+
+[[package]]
+name = "splifft"
+version = "0.0.2"
+source = { editable = "." }
+dependencies = [
+    { name = "beartype" },
+    { name = "einops" },
+    { name = "hyper-connections" },
+    { name = "numpy", version = "2.2.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
+    { name = "numpy", version = "2.3.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
+    { name = "torch" },
+]
+
+[package.optional-dependencies]
+analysis = [
+    { name = "matplotlib" },
+    { name = "polars" },
+]
+cli = [
+    { name = "typer" },
+]
+config = [
+    { name = "pydantic" },
+]
+inference = [
+    { name = "soundfile", marker = "sys_platform == 'Windows'" },
+    { name = "torchaudio" },
+    { name = "tqdm" },
+]
+networking = [
+    { name = "aiolimiter" },
+    { name = "httpx", extra = ["http2", "socks", "zstd"] },
+    { name = "orjson" },
+]
+sageattention = [
+    { name = "sageattention" },
+]
+
+[package.dev-dependencies]
+dev = [
+    { name = "ipykernel" },
+    { name = "pandas" },
+]
+docs = [
+    { name = "mkdocs-material", extra = ["imaging"] },
+    { name = "mkdocstrings-python" },
+]
+lint = [
+    { name = "ruff" },
+]
+test = [
+    { name = "pytest" },
+]
+typing = [
+    { name = "mypy" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "aiolimiter", marker = "extra == 'networking'", specifier = ">=1.2.1" },
+    { name = "beartype", specifier = ">=0.21.0" },
+    { name = "einops", specifier = ">=0.8.1" },
+    { name = "httpx", extras = ["http2", "zstd", "socks"], marker = "extra == 'networking'", specifier = ">=0.28.1" },
+    { name = "hyper-connections", specifier = ">=0.1.15" },
+    { name = "matplotlib", marker = "extra == 'analysis'", specifier = ">=3.10.3" },
+    { name = "numpy", specifier = ">=2.2.6" },
+    { name = "orjson", marker = "extra == 'networking'", specifier = ">=3.10.18" },
+    { name = "polars", marker = "extra == 'analysis'", specifier = ">=1.30.0" },
+    { name = "pydantic", marker = "extra == 'config'", specifier = ">=2.11.5" },
+    { name = "sageattention", marker = "extra == 'sageattention'", specifier = ">=1.0.6" },
+    { name = "soundfile", marker = "sys_platform == 'Windows' and extra == 'inference'", specifier = ">=0.13.1" },
+    { name = "torch", specifier = ">=2.7.1" },
+    { name = "torchaudio", marker = "extra == 'inference'", specifier = ">=2.7.1" },
+    { name = "tqdm", marker = "extra == 'inference'", specifier = ">=4.67.1" },
+    { name = "typer", marker = "extra == 'cli'", specifier = ">=0.16.0" },
+]
+provides-extras = ["config", "inference", "cli", "sageattention", "networking", "analysis"]
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "ipykernel", specifier = ">=6.29.5" },
+    { name = "pandas", specifier = ">=2.3.0" },
+]
+docs = [
+    { name = "mkdocs-material", extras = ["imaging"], specifier = ">=9.6.14" },
+    { name = "mkdocstrings-python", specifier = ">=1.16.12" },
+]
+lint = [{ name = "ruff", specifier = ">=0.11.12" }]
+test = [{ name = "pytest", specifier = ">=8.4.0" }]
+typing = [{ name = "mypy", specifier = ">=1.16.0" }]
 
 [[package]]
 name = "stack-data"

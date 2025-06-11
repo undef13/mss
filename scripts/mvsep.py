@@ -19,7 +19,7 @@ from pydantic import BaseModel, BeforeValidator
 from rich.logging import RichHandler
 from rich.progress import Progress, TaskID
 
-from mss import PATH_DATA
+from splifft import PATH_DATA
 
 logging.basicConfig(level="INFO", format="%(message)s", datefmt="[%X]", handlers=[RichHandler()])
 logger = logging.getLogger(__name__)

@@ -64,10 +64,11 @@ class AttendSage(nn.Module):
     def forward(self, q: Tensor, k: Tensor, v: Tensor) -> Tensor:
         """
         einstein notation
-        b - batch
-        h - heads
-        n, i, j - sequence length (base sequence length, source, target)
-        d - feature dimension
+
+        - b: batch
+        - h: heads
+        - n, i, j: sequence length (base sequence length, source, target)
+        - d: feature dimension
 
         Input tensors q, k, v expected in shape: (batch, heads, seq_len, dim_head) -> HND layout
         """

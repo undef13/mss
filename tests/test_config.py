@@ -3,7 +3,7 @@ from typing import Any
 import pytest
 from pydantic import ValidationError
 
-from mss.config import Config, LazyModelConfig
+from splifft.config import Config, LazyModelConfig
 
 #
 # model
@@ -157,7 +157,7 @@ def test_config_stem(derived_stems: dict[str, Any], expected_success: bool) -> N
 
 @pytest.fixture
 def config_roformer() -> Config:
-    from mss import PATH_CONFIG
+    from splifft import PATH_CONFIG
 
     config = Config.from_file(PATH_CONFIG / "bs_roformer.json")
     assert isinstance(config.model, LazyModelConfig)
@@ -165,7 +165,7 @@ def config_roformer() -> Config:
 
 
 def test_config_roformer_concrete(config_roformer: Config) -> None:
-    from mss.models.bs_roformer import BSRoformerConfig
+    from splifft.models.bs_roformer import BSRoformerConfig
 
     model_config = config_roformer.model.to_concrete(BSRoformerConfig)
     assert isinstance(model_config, BSRoformerConfig)
@@ -178,7 +178,7 @@ def test_config_roformer_concrete(config_roformer: Config) -> None:
 
 def test_lazy_model_config_protocol() -> None:
     # this is just to ensure we correctly implemented the ModelConfigLike protocol for LazyModelConfig.
-    from mss.models import ModelConfigLike
+    from splifft.models import ModelConfigLike
 
     config_instance = LazyModelConfig(chunk_size=1024, output_stem_names=("vocals", "drums"))
     assert isinstance(config_instance, ModelConfigLike)

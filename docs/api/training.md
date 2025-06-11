@@ -1,1 +1,1 @@
-::: mss.training
+::: splifft.training

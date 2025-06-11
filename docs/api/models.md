@@ -1,3 +1,3 @@
-::: mss.models
+::: splifft.models
     options:
         show_submodules: true

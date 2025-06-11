@@ -1,1 +1,1 @@
-::: mss.core
+::: splifft.core
