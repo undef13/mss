@@ -1,10 +1,9 @@
 from dataclasses import dataclass, field
 from functools import partial
+from typing import Callable
 
 import torch
 import torch.nn.functional as F
-from beartype import beartype
-from beartype.typing import Callable
 from einops import pack, rearrange, unpack
 from einops.layers.torch import Rearrange
 from torch import Tensor, nn
@@ -218,7 +217,6 @@ class LinearAttention(Module):
     this flavor of linear attention proposed in https://arxiv.org/abs/2106.09681 by El-Nouby et al.
     """
 
-    @beartype
     def __init__(
         self,
         *,
@@ -326,7 +324,6 @@ class Transformer(Module):
 
 
 class BandSplit(Module):
-    @beartype
     def __init__(self, dim: int, dim_inputs: tuple[int, ...]):
         super().__init__()
         self.dim_inputs = dim_inputs
@@ -371,7 +368,6 @@ def MLP(
 
 
 class MaskEstimator(Module):
-    @beartype
     def __init__(
         self, dim: int, dim_inputs: tuple[int, ...], depth: int, mlp_expansion_factor: int
     ):

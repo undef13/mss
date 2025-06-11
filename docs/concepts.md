@@ -12,7 +12,7 @@ Neural networks perform best when their input data has a consistent statistical 
 
 ### Time-Frequency Transformation
 
-The model operates not on raw samples, but in the time-frequency domain, which reveals the signal's frequency content over time. This is achieved via the Short-Time Fourier Transform (STFT), which converts the 1D audio signal into a 2D [`ComplexSpectrogram`][splifft.core.ComplexSpectrogram].
+Models usually operates not on raw time-domain samples, but in the time-frequency domain, which reveals the signal's frequency content over time. This is achieved via the [Short-Time Fourier Transform (STFT)](https://en.wikipedia.org/wiki/Short-time_Fourier_transform), which converts the 1D audio signal into a 2D [complex spectrogram][splifft.core.ComplexSpectrogram].
 
 #### Complex Spectrogram
 The [STFT coefficient][splifft.core.ComplexSpectrogram] $X[m, k]$ is a complex number that can be decomposed into:
@@ -36,7 +36,7 @@ approximate an ideal ratio mask or its complex equivalent:
 $\hat{S}_\text{source} = M_\text{complex} \odot S_\text{mixture}$.
 
 #### FFT Size
-The choice of [`FftSize`][splifft.core.FftSize] presents a fundamental [trade-off](https://en.wikipedia.org/wiki/Uncertainty_principle#Signal_processing) between the uncertainty in time: $\sigma_t \sigma_f \ge \frac{1}{4\pi}$
+The choice of [`FftSize`][splifft.core.FftSize] presents a fundamental [trade-off](https://en.wikipedia.org/wiki/Uncertainty_principle#Signal_processing) between the uncertainty in time $t$ and frequency $f$: $\sigma_t \sigma_f \ge \frac{1}{4\pi}$
 
 - a short window gives good time resolution, excellent for capturing sharp, percussive sounds (transients).
 - a long window gives good frequency resolution, ideal for separating fine harmonics of tonal instruments.

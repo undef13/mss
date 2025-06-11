@@ -14,10 +14,10 @@ from typing import (
     runtime_checkable,
 )
 
+from annotated_types import Gt
 from torch import nn
 
 if TYPE_CHECKING:
-    from annotated_types import Gt
     from typing_extensions import TypeAlias
 
 ModelType: TypeAlias = str

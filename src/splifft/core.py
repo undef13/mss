@@ -282,8 +282,7 @@ Shape ([channels][splifft.core.Channels], [samples][splifft.core.Samples])"""
 #
 
 ComplexSpectrogram = NewType("ComplexSpectrogram", Tensor)
-r"""A complex-valued representation of audio's frequency content over time
-via the [STFT](https://en.wikipedia.org/wiki/Short-time_Fourier_transform)
+r"""A complex-valued representation of audio's frequency content over time via the STFT.
 
 Shape ([channels][splifft.core.Channels], [frequency bins][splifft.core.FftSize], [time frames][splifft.models.ChunkSize], 2)
 

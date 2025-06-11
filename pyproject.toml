@@ -33,9 +33,8 @@ classifiers = [
 ]
 readme = "README.md"
 dependencies = [
-    "beartype>=0.21.0",
+    "annotated-types>=0.7.0",
     "einops>=0.8.1",
-    "hyper-connections>=0.1.15",
     "numpy>=2.2.6",
     "torch>=2.7.1",
 ]

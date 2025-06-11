@@ -81,15 +81,6 @@ wheels = [
 ]
 
 [[package]]
-name = "beartype"
-version = "0.21.0"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/0d/f9/21e5a9c731e14f08addd53c71fea2e70794e009de5b98e6a2c3d2f3015d6/beartype-0.21.0.tar.gz", hash = "sha256:f9a5078f5ce87261c2d22851d19b050b64f6a805439e8793aecf01ce660d3244", size = 1437066, upload-time = "2025-05-22T05:09:27.116Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/94/31/87045d1c66ee10a52486c9d2047bc69f00f2689f69401bb1e998afb4b205/beartype-0.21.0-py3-none-any.whl", hash = "sha256:b6a1bd56c72f31b0a496a36cc55df6e2f475db166ad07fa4acc7e74f4c7f34c0", size = 1191340, upload-time = "2025-05-22T05:09:24.606Z" },
-]
-
-[[package]]
 name = "beautifulsoup4"
 version = "4.13.4"
 source = { registry = "https://pypi.org/simple" }
@@ -604,19 +595,6 @@ socks = [
 ]
 zstd = [
     { name = "zstandard" },
-]
-
-[[package]]
-name = "hyper-connections"
-version = "0.1.15"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "einops" },
-    { name = "torch" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/3a/bb/f9e6a4de3739dbf68c1b7a7c6f2686d0f62357c6efe721232cbbeee3543c/hyper_connections-0.1.15.tar.gz", hash = "sha256:d36f9ea8803e82e14f233085653660ead52117ca1787186bd0fdb1970b65ce1c", size = 288793, upload-time = "2025-02-15T17:25:25.375Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/f4/c5/7f4008217d3c76b0c64817afa98219d619416ea79cc78cd99c9e971befec/hyper_connections-0.1.15-py3-none-any.whl", hash = "sha256:9eda4e58b4d0f4eb3e3accf2737cbc9b73193b61c7cc604ddea8afec056c6ea7", size = 15310, upload-time = "2025-02-15T17:25:23.329Z" },
 ]
 
 [[package]]
@@ -2369,9 +2347,8 @@ name = "splifft"
 version = "0.0.2"
 source = { editable = "." }
 dependencies = [
-    { name = "beartype" },
+    { name = "annotated-types" },
     { name = "einops" },
-    { name = "hyper-connections" },
     { name = "numpy", version = "2.2.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
     { name = "numpy", version = "2.3.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
     { name = "torch" },
@@ -2425,10 +2402,9 @@ typing = [
 [package.metadata]
 requires-dist = [
     { name = "aiolimiter", marker = "extra == 'networking'", specifier = ">=1.2.1" },
-    { name = "beartype", specifier = ">=0.21.0" },
+    { name = "annotated-types", specifier = ">=0.7.0" },
     { name = "einops", specifier = ">=0.8.1" },
     { name = "httpx", extras = ["http2", "zstd", "socks"], marker = "extra == 'networking'", specifier = ">=0.28.1" },
-    { name = "hyper-connections", specifier = ">=0.1.15" },
     { name = "matplotlib", marker = "extra == 'analysis'", specifier = ">=3.10.3" },
     { name = "numpy", specifier = ">=2.2.6" },
     { name = "orjson", marker = "extra == 'networking'", specifier = ">=3.10.18" },
