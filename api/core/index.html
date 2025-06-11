@@ -1,0 +1,4649 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Lightweight utilities for music source separation.">
+      
+      
+      
+        <link rel="canonical" href="https://undef13.github.io/splifft/api/core/">
+      
+      
+        <link rel="prev" href="../config/">
+      
+      
+        <link rel="next" href="../io/">
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.14">
+    
+    
+      
+        <title>Core - splifft</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.342714a4.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.06af60db.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/_mkdocstrings.css">
+    
+      <link rel="stylesheet" href="../../assets/css/plots.css">
+    
+      <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+      
+        <meta  property="og:type"  content="website" >
+      
+        <meta  property="og:title"  content="Core - splifft" >
+      
+        <meta  property="og:description"  content="Lightweight utilities for music source separation." >
+      
+        <meta  property="og:image"  content="https://undef13.github.io/splifft/assets/images/social/api/core.png" >
+      
+        <meta  property="og:image:type"  content="image/png" >
+      
+        <meta  property="og:image:width"  content="1200" >
+      
+        <meta  property="og:image:height"  content="630" >
+      
+        <meta  property="og:url"  content="https://undef13.github.io/splifft/api/core/" >
+      
+        <meta  name="twitter:card"  content="summary_large_image" >
+      
+        <meta  name="twitter:title"  content="Core - splifft" >
+      
+        <meta  name="twitter:description"  content="Lightweight utilities for music source separation." >
+      
+        <meta  name="twitter:image"  content="https://undef13.github.io/splifft/assets/images/social/api/core.png" >
+      
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#splifft.core" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="splifft" class="md-header__button md-logo" aria-label="splifft" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            splifft
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Core
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/undef13/splifft" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8M97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    undef13/splifft
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="splifft" class="md-nav__button md-logo" aria-label="splifft" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    splifft
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/undef13/splifft" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8M97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    undef13/splifft
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Home
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../models/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Models
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tutorial/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Library Tutorial
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../concepts/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Concepts & Definitions
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    API Reference
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            API Reference
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    All
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../models/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Models
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../config/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Config
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    Core
+    
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    Core
+    
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#splifft.core" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-module"></code>&nbsp;core
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label=" core">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#splifft.core.Audio" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-class"></code>&nbsp;Audio
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label=" Audio">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#splifft.core.Audio.data" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-attribute"></code>&nbsp;data
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#splifft.core.Audio.sample_rate" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-attribute"></code>&nbsp;sample_rate
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#splifft.core.NormalizationStats" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-class"></code>&nbsp;NormalizationStats
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label=" NormalizationStats">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#splifft.core.NormalizationStats.mean" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-attribute"></code>&nbsp;mean
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#splifft.core.NormalizationStats.std" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-attribute"></code>&nbsp;std
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#splifft.core.NormalizedAudio" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-class"></code>&nbsp;NormalizedAudio
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label=" NormalizedAudio">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#splifft.core.NormalizedAudio.audio" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-attribute"></code>&nbsp;audio
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#splifft.core.NormalizedAudio.stats" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-attribute"></code>&nbsp;stats
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#splifft.core.normalize_audio" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;normalize_audio
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#splifft.core.denormalize_audio" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;denormalize_audio
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#splifft.core.generate_chunks" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;generate_chunks
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#splifft.core.stitch_chunks" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;stitch_chunks
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#splifft.core.derive_stems" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;derive_stems
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#splifft.core.get_dtype" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;get_dtype
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#splifft.core.Samples" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-attribute"></code>&nbsp;Samples
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#splifft.core.SampleRate" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-attribute"></code>&nbsp;SampleRate
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#splifft.core.Channels" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-attribute"></code>&nbsp;Channels
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#splifft.core.FileFormat" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-attribute"></code>&nbsp;FileFormat
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#splifft.core.AudioEncoding" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-attribute"></code>&nbsp;AudioEncoding
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#splifft.core.BitDepth" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-attribute"></code>&nbsp;BitDepth
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#splifft.core.RawAudioTensor" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-attribute"></code>&nbsp;RawAudioTensor
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#splifft.core.NormalizedAudioTensor" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-attribute"></code>&nbsp;NormalizedAudioTensor
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#splifft.core.ComplexSpectrogram" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-attribute"></code>&nbsp;ComplexSpectrogram
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#splifft.core.HopSize" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-attribute"></code>&nbsp;HopSize
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#splifft.core.WindowShape" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-attribute"></code>&nbsp;WindowShape
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#splifft.core.FftSize" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-attribute"></code>&nbsp;FftSize
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#splifft.core.Bands" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-attribute"></code>&nbsp;Bands
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#splifft.core.BatchSize" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-attribute"></code>&nbsp;BatchSize
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#splifft.core.Dtype" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-attribute"></code>&nbsp;Dtype
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#splifft.core.PaddingMode" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-attribute"></code>&nbsp;PaddingMode
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#splifft.core.ChunkDuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-attribute"></code>&nbsp;ChunkDuration
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#splifft.core.OverlapRatio" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-attribute"></code>&nbsp;OverlapRatio
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#splifft.core.Padding" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-attribute"></code>&nbsp;Padding
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#splifft.core.PaddedChunkedAudioTensor" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-attribute"></code>&nbsp;PaddedChunkedAudioTensor
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#splifft.core.NumModelStems" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-attribute"></code>&nbsp;NumModelStems
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#splifft.core.SeparatedChunkedTensor" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-attribute"></code>&nbsp;SeparatedChunkedTensor
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#splifft.core.WindowTensor" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-attribute"></code>&nbsp;WindowTensor
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#splifft.core.RawSeparatedTensor" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-attribute"></code>&nbsp;RawSeparatedTensor
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#splifft.core.Sdr" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-attribute"></code>&nbsp;Sdr
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#splifft.core.SiSdr" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-attribute"></code>&nbsp;SiSdr
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#splifft.core.L1Norm" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-attribute"></code>&nbsp;L1Norm
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#splifft.core.DbDifferenceMel" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-attribute"></code>&nbsp;DbDifferenceMel
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#splifft.core.Bleedless" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-attribute"></code>&nbsp;Bleedless
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#splifft.core.Fullness" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-attribute"></code>&nbsp;Fullness
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../io/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    IO
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../inference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Inference
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../training/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Training
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#splifft.core" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-module"></code>&nbsp;core
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label=" core">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#splifft.core.Audio" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-class"></code>&nbsp;Audio
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label=" Audio">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#splifft.core.Audio.data" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-attribute"></code>&nbsp;data
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#splifft.core.Audio.sample_rate" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-attribute"></code>&nbsp;sample_rate
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#splifft.core.NormalizationStats" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-class"></code>&nbsp;NormalizationStats
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label=" NormalizationStats">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#splifft.core.NormalizationStats.mean" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-attribute"></code>&nbsp;mean
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#splifft.core.NormalizationStats.std" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-attribute"></code>&nbsp;std
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#splifft.core.NormalizedAudio" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-class"></code>&nbsp;NormalizedAudio
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label=" NormalizedAudio">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#splifft.core.NormalizedAudio.audio" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-attribute"></code>&nbsp;audio
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#splifft.core.NormalizedAudio.stats" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-attribute"></code>&nbsp;stats
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#splifft.core.normalize_audio" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;normalize_audio
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#splifft.core.denormalize_audio" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;denormalize_audio
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#splifft.core.generate_chunks" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;generate_chunks
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#splifft.core.stitch_chunks" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;stitch_chunks
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#splifft.core.derive_stems" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;derive_stems
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#splifft.core.get_dtype" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;get_dtype
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#splifft.core.Samples" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-attribute"></code>&nbsp;Samples
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#splifft.core.SampleRate" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-attribute"></code>&nbsp;SampleRate
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#splifft.core.Channels" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-attribute"></code>&nbsp;Channels
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#splifft.core.FileFormat" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-attribute"></code>&nbsp;FileFormat
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#splifft.core.AudioEncoding" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-attribute"></code>&nbsp;AudioEncoding
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#splifft.core.BitDepth" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-attribute"></code>&nbsp;BitDepth
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#splifft.core.RawAudioTensor" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-attribute"></code>&nbsp;RawAudioTensor
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#splifft.core.NormalizedAudioTensor" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-attribute"></code>&nbsp;NormalizedAudioTensor
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#splifft.core.ComplexSpectrogram" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-attribute"></code>&nbsp;ComplexSpectrogram
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#splifft.core.HopSize" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-attribute"></code>&nbsp;HopSize
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#splifft.core.WindowShape" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-attribute"></code>&nbsp;WindowShape
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#splifft.core.FftSize" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-attribute"></code>&nbsp;FftSize
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#splifft.core.Bands" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-attribute"></code>&nbsp;Bands
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#splifft.core.BatchSize" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-attribute"></code>&nbsp;BatchSize
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#splifft.core.Dtype" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-attribute"></code>&nbsp;Dtype
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#splifft.core.PaddingMode" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-attribute"></code>&nbsp;PaddingMode
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#splifft.core.ChunkDuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-attribute"></code>&nbsp;ChunkDuration
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#splifft.core.OverlapRatio" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-attribute"></code>&nbsp;OverlapRatio
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#splifft.core.Padding" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-attribute"></code>&nbsp;Padding
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#splifft.core.PaddedChunkedAudioTensor" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-attribute"></code>&nbsp;PaddedChunkedAudioTensor
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#splifft.core.NumModelStems" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-attribute"></code>&nbsp;NumModelStems
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#splifft.core.SeparatedChunkedTensor" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-attribute"></code>&nbsp;SeparatedChunkedTensor
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#splifft.core.WindowTensor" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-attribute"></code>&nbsp;WindowTensor
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#splifft.core.RawSeparatedTensor" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-attribute"></code>&nbsp;RawSeparatedTensor
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#splifft.core.Sdr" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-attribute"></code>&nbsp;Sdr
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#splifft.core.SiSdr" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-attribute"></code>&nbsp;SiSdr
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#splifft.core.L1Norm" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-attribute"></code>&nbsp;L1Norm
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#splifft.core.DbDifferenceMel" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-attribute"></code>&nbsp;DbDifferenceMel
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#splifft.core.Bleedless" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-attribute"></code>&nbsp;Bleedless
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#splifft.core.Fullness" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-attribute"></code>&nbsp;Fullness
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+  <h1>Core</h1>
+
+<div class="doc doc-object doc-module">
+
+
+
+<h2 id="splifft.core" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-module"></code>            <span class="doc doc-object-name doc-module-name">core</span>
+
+
+</h2>
+
+    <div class="doc doc-contents first">
+
+        <p>Reusable, pure algorithmic components for inference and training.</p>
+
+
+
+
+
+
+
+
+<p><span class="doc-section-title">Classes:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td><code><a class="autorefs autorefs-internal" title="            Audio
+
+
+  
+      dataclass
+   (splifft.core.Audio)" href="#splifft.core.Audio">Audio</a></code></td>
+            <td>
+              <div class="doc-md-description">
+                
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><a class="autorefs autorefs-internal" title="            NormalizationStats
+
+
+  
+      dataclass
+   (splifft.core.NormalizationStats)" href="#splifft.core.NormalizationStats">NormalizationStats</a></code></td>
+            <td>
+              <div class="doc-md-description">
+                <p>Statistics for <a href="https://en.wikipedia.org/wiki/Feature_scaling#Standardization_(Z-score_Normalization)">normalizing</a></p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><a class="autorefs autorefs-internal" title="            NormalizedAudio
+
+
+  
+      dataclass
+   (splifft.core.NormalizedAudio)" href="#splifft.core.NormalizedAudio">NormalizedAudio</a></code></td>
+            <td>
+              <div class="doc-md-description">
+                <p>Container for normalized audio and its original stats.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+
+
+<p><span class="doc-section-title">Functions:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+            <tr class="doc-section-item">
+              <td><code><a class="autorefs autorefs-internal" title="            normalize_audio (splifft.core.normalize_audio)" href="#splifft.core.normalize_audio">normalize_audio</a></code></td>
+              <td>
+                <div class="doc-md-description">
+                  <p>Preprocess the raw audio in the time domain to have a mean of 0 and a std of 1</p>
+                </div>
+              </td>
+            </tr>
+            <tr class="doc-section-item">
+              <td><code><a class="autorefs autorefs-internal" title="            denormalize_audio (splifft.core.denormalize_audio)" href="#splifft.core.denormalize_audio">denormalize_audio</a></code></td>
+              <td>
+                <div class="doc-md-description">
+                  <p>Take the model output and restore them to their original loudness.</p>
+                </div>
+              </td>
+            </tr>
+            <tr class="doc-section-item">
+              <td><code><a class="autorefs autorefs-internal" title="            generate_chunks (splifft.core.generate_chunks)" href="#splifft.core.generate_chunks">generate_chunks</a></code></td>
+              <td>
+                <div class="doc-md-description">
+                  <p>Generates batches of overlapping chunks from an audio tensor.</p>
+                </div>
+              </td>
+            </tr>
+            <tr class="doc-section-item">
+              <td><code><a class="autorefs autorefs-internal" title="            stitch_chunks (splifft.core.stitch_chunks)" href="#splifft.core.stitch_chunks">stitch_chunks</a></code></td>
+              <td>
+                <div class="doc-md-description">
+                  <p>Stitches processed audio chunks back together using the <a href="https://en.wikipedia.org/wiki/Overlap%E2%80%93add_method">overlap-add method</a>.</p>
+                </div>
+              </td>
+            </tr>
+            <tr class="doc-section-item">
+              <td><code><a class="autorefs autorefs-internal" title="            derive_stems (splifft.core.derive_stems)" href="#splifft.core.derive_stems">derive_stems</a></code></td>
+              <td>
+                <div class="doc-md-description">
+                  <p>It is the caller's responsibility to ensure that all tensors are aligned and have the same shape.</p>
+                </div>
+              </td>
+            </tr>
+            <tr class="doc-section-item">
+              <td><code><a class="autorefs autorefs-internal" title="            get_dtype (splifft.core.get_dtype)" href="#splifft.core.get_dtype">get_dtype</a></code></td>
+              <td>
+                <div class="doc-md-description">
+                  
+                </div>
+              </td>
+            </tr>
+      </tbody>
+    </table>
+
+
+
+
+<p><span class="doc-section-title">Attributes:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td><code><a class="autorefs autorefs-internal" title="            Samples
+
+
+  
+      module-attribute
+   (splifft.core.Samples)" href="#splifft.core.Samples">Samples</a></code></td>
+            <td>
+                  <code><a class="autorefs autorefs-external" title="typing.TypeAlias" href="https://docs.python.org/3/library/typing.html#typing.TypeAlias">TypeAlias</a></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Number of samples in the audio signal.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><a class="autorefs autorefs-internal" title="            SampleRate
+
+
+  
+      module-attribute
+   (splifft.core.SampleRate)" href="#splifft.core.SampleRate">SampleRate</a></code></td>
+            <td>
+                  <code><a class="autorefs autorefs-external" title="typing.TypeAlias" href="https://docs.python.org/3/library/typing.html#typing.TypeAlias">TypeAlias</a></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The number of samples of audio recorded per second (hertz).</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><a class="autorefs autorefs-internal" title="            Channels
+
+
+  
+      module-attribute
+   (splifft.core.Channels)" href="#splifft.core.Channels">Channels</a></code></td>
+            <td>
+                  <code><a class="autorefs autorefs-external" title="typing.TypeAlias" href="https://docs.python.org/3/library/typing.html#typing.TypeAlias">TypeAlias</a></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Number of audio streams.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><a class="autorefs autorefs-internal" title="            FileFormat
+
+
+  
+      module-attribute
+   (splifft.core.FileFormat)" href="#splifft.core.FileFormat">FileFormat</a></code></td>
+            <td>
+                  <code><a class="autorefs autorefs-external" title="typing.TypeAlias" href="https://docs.python.org/3/library/typing.html#typing.TypeAlias">TypeAlias</a></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><a class="autorefs autorefs-internal" title="            AudioEncoding
+
+
+  
+      module-attribute
+   (splifft.core.AudioEncoding)" href="#splifft.core.AudioEncoding">AudioEncoding</a></code></td>
+            <td>
+                  <code><a class="autorefs autorefs-external" title="typing.TypeAlias" href="https://docs.python.org/3/library/typing.html#typing.TypeAlias">TypeAlias</a></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p><a href="https://trac.ffmpeg.org/wiki/audio%20types">Audio encoding</a></p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><a class="autorefs autorefs-internal" title="            BitDepth
+
+
+  
+      module-attribute
+   (splifft.core.BitDepth)" href="#splifft.core.BitDepth">BitDepth</a></code></td>
+            <td>
+                  <code><a class="autorefs autorefs-external" title="typing.TypeAlias" href="https://docs.python.org/3/library/typing.html#typing.TypeAlias">TypeAlias</a></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Number of bits of information in each sample.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><a class="autorefs autorefs-internal" title="            RawAudioTensor
+
+
+  
+      module-attribute
+   (splifft.core.RawAudioTensor)" href="#splifft.core.RawAudioTensor">RawAudioTensor</a></code></td>
+            <td>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Time domain tensor of audio samples.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><a class="autorefs autorefs-internal" title="            NormalizedAudioTensor
+
+
+  
+      module-attribute
+   (splifft.core.NormalizedAudioTensor)" href="#splifft.core.NormalizedAudioTensor">NormalizedAudioTensor</a></code></td>
+            <td>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>A mixture tensor that has been normalized using <a class="autorefs autorefs-internal" title="            NormalizationStats
+
+
+  
+      dataclass
+  " href="#splifft.core.NormalizationStats">on-the-fly statistics</a>.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><a class="autorefs autorefs-internal" title="            ComplexSpectrogram
+
+
+  
+      module-attribute
+   (splifft.core.ComplexSpectrogram)" href="#splifft.core.ComplexSpectrogram">ComplexSpectrogram</a></code></td>
+            <td>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>A complex-valued representation of audio's frequency content over time via the STFT.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><a class="autorefs autorefs-internal" title="            HopSize
+
+
+  
+      module-attribute
+   (splifft.core.HopSize)" href="#splifft.core.HopSize">HopSize</a></code></td>
+            <td>
+                  <code><a class="autorefs autorefs-external" title="typing.TypeAlias" href="https://docs.python.org/3/library/typing.html#typing.TypeAlias">TypeAlias</a></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The step size, in samples, between the start of consecutive <a class="autorefs autorefs-internal" title="            ChunkSize
+
+
+  
+      module-attribute
+  " href="../models/#splifft.models.ChunkSize">chunks</a>.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><a class="autorefs autorefs-internal" title="            WindowShape
+
+
+  
+      module-attribute
+   (splifft.core.WindowShape)" href="#splifft.core.WindowShape">WindowShape</a></code></td>
+            <td>
+                  <code><a class="autorefs autorefs-external" title="typing.TypeAlias" href="https://docs.python.org/3/library/typing.html#typing.TypeAlias">TypeAlias</a></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The shape of the window function applied to each chunk before computing the STFT.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><a class="autorefs autorefs-internal" title="            FftSize
+
+
+  
+      module-attribute
+   (splifft.core.FftSize)" href="#splifft.core.FftSize">FftSize</a></code></td>
+            <td>
+                  <code><a class="autorefs autorefs-external" title="typing.TypeAlias" href="https://docs.python.org/3/library/typing.html#typing.TypeAlias">TypeAlias</a></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The number of frequency bins in the STFT, controlling the <a href="../../concepts/#fft-size">frequency resolution</a>.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><a class="autorefs autorefs-internal" title="            Bands
+
+
+  
+      module-attribute
+   (splifft.core.Bands)" href="#splifft.core.Bands">Bands</a></code></td>
+            <td>
+                  <code><a class="autorefs autorefs-external" title="typing.TypeAlias" href="https://docs.python.org/3/library/typing.html#typing.TypeAlias">TypeAlias</a></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Groups of <a href="../../concepts/#bands">adjacent frequency bins in the spectrogram</a>.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><a class="autorefs autorefs-internal" title="            BatchSize
+
+
+  
+      module-attribute
+   (splifft.core.BatchSize)" href="#splifft.core.BatchSize">BatchSize</a></code></td>
+            <td>
+                  <code><a class="autorefs autorefs-external" title="typing.TypeAlias" href="https://docs.python.org/3/library/typing.html#typing.TypeAlias">TypeAlias</a></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The number of chunks processed simultaneously by the GPU.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><a class="autorefs autorefs-internal" title="            Dtype
+
+
+  
+      module-attribute
+   (splifft.core.Dtype)" href="#splifft.core.Dtype">Dtype</a></code></td>
+            <td>
+                  <code><a class="autorefs autorefs-external" title="typing.TypeAlias" href="https://docs.python.org/3/library/typing.html#typing.TypeAlias">TypeAlias</a></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><a class="autorefs autorefs-internal" title="            PaddingMode
+
+
+  
+      module-attribute
+   (splifft.core.PaddingMode)" href="#splifft.core.PaddingMode">PaddingMode</a></code></td>
+            <td>
+                  <code><a class="autorefs autorefs-external" title="typing.TypeAlias" href="https://docs.python.org/3/library/typing.html#typing.TypeAlias">TypeAlias</a></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The method used to pad the audio before chunking, crucial for handling the edges of the audio signal.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><a class="autorefs autorefs-internal" title="            ChunkDuration
+
+
+  
+      module-attribute
+   (splifft.core.ChunkDuration)" href="#splifft.core.ChunkDuration">ChunkDuration</a></code></td>
+            <td>
+                  <code><a class="autorefs autorefs-external" title="typing.TypeAlias" href="https://docs.python.org/3/library/typing.html#typing.TypeAlias">TypeAlias</a></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The length of an audio segment, in seconds, processed by the model at one time.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><a class="autorefs autorefs-internal" title="            OverlapRatio
+
+
+  
+      module-attribute
+   (splifft.core.OverlapRatio)" href="#splifft.core.OverlapRatio">OverlapRatio</a></code></td>
+            <td>
+                  <code><a class="autorefs autorefs-external" title="typing.TypeAlias" href="https://docs.python.org/3/library/typing.html#typing.TypeAlias">TypeAlias</a></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The fraction of a chunk that overlaps with the next one.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><a class="autorefs autorefs-internal" title="            Padding
+
+
+  
+      module-attribute
+   (splifft.core.Padding)" href="#splifft.core.Padding">Padding</a></code></td>
+            <td>
+                  <code><a class="autorefs autorefs-external" title="typing.TypeAlias" href="https://docs.python.org/3/library/typing.html#typing.TypeAlias">TypeAlias</a></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Samples to add to the beginning and end of each chunk.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><a class="autorefs autorefs-internal" title="            PaddedChunkedAudioTensor
+
+
+  
+      module-attribute
+   (splifft.core.PaddedChunkedAudioTensor)" href="#splifft.core.PaddedChunkedAudioTensor">PaddedChunkedAudioTensor</a></code></td>
+            <td>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>A batch of audio chunks from a padded source.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><a class="autorefs autorefs-internal" title="            NumModelStems
+
+
+  
+      module-attribute
+   (splifft.core.NumModelStems)" href="#splifft.core.NumModelStems">NumModelStems</a></code></td>
+            <td>
+                  <code><a class="autorefs autorefs-external" title="typing.TypeAlias" href="https://docs.python.org/3/library/typing.html#typing.TypeAlias">TypeAlias</a></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The number of stems the model outputs. This should be the length of [splifft.models.ModelConfigLike.output_stem_names].</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><a class="autorefs autorefs-internal" title="            SeparatedChunkedTensor
+
+
+  
+      module-attribute
+   (splifft.core.SeparatedChunkedTensor)" href="#splifft.core.SeparatedChunkedTensor">SeparatedChunkedTensor</a></code></td>
+            <td>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>A batch of separated audio chunks from the model.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><a class="autorefs autorefs-internal" title="            WindowTensor
+
+
+  
+      module-attribute
+   (splifft.core.WindowTensor)" href="#splifft.core.WindowTensor">WindowTensor</a></code></td>
+            <td>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>A 1D tensor representing a window function.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><a class="autorefs autorefs-internal" title="            RawSeparatedTensor
+
+
+  
+      module-attribute
+   (splifft.core.RawSeparatedTensor)" href="#splifft.core.RawSeparatedTensor">RawSeparatedTensor</a></code></td>
+            <td>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The final, stitched, raw-domain separated audio.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><a class="autorefs autorefs-internal" title="            Sdr
+
+
+  
+      module-attribute
+   (splifft.core.Sdr)" href="#splifft.core.Sdr">Sdr</a></code></td>
+            <td>
+                  <code><a class="autorefs autorefs-external" title="typing.TypeAlias" href="https://docs.python.org/3/library/typing.html#typing.TypeAlias">TypeAlias</a></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Signal-to-Distortion Ratio (decibels). Higher is better.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><a class="autorefs autorefs-internal" title="            SiSdr
+
+
+  
+      module-attribute
+   (splifft.core.SiSdr)" href="#splifft.core.SiSdr">SiSdr</a></code></td>
+            <td>
+                  <code><a class="autorefs autorefs-external" title="typing.TypeAlias" href="https://docs.python.org/3/library/typing.html#typing.TypeAlias">TypeAlias</a></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Scale-Invariant SDR (SI-SDR) is invariant to scaling errors (decibels). Higher is better.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><a class="autorefs autorefs-internal" title="            L1Norm
+
+
+  
+      module-attribute
+   (splifft.core.L1Norm)" href="#splifft.core.L1Norm">L1Norm</a></code></td>
+            <td>
+                  <code><a class="autorefs autorefs-external" title="typing.TypeAlias" href="https://docs.python.org/3/library/typing.html#typing.TypeAlias">TypeAlias</a></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>L1 norm (mean absolute error) between two signals (dimensionless). Lower is better.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><a class="autorefs autorefs-internal" title="            DbDifferenceMel
+
+
+  
+      module-attribute
+   (splifft.core.DbDifferenceMel)" href="#splifft.core.DbDifferenceMel">DbDifferenceMel</a></code></td>
+            <td>
+                  <code><a class="autorefs autorefs-external" title="typing.TypeAlias" href="https://docs.python.org/3/library/typing.html#typing.TypeAlias">TypeAlias</a></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Difference in the dB-scaled mel spectrogram.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><a class="autorefs autorefs-internal" title="            Bleedless
+
+
+  
+      module-attribute
+   (splifft.core.Bleedless)" href="#splifft.core.Bleedless">Bleedless</a></code></td>
+            <td>
+                  <code><a class="autorefs autorefs-external" title="typing.TypeAlias" href="https://docs.python.org/3/library/typing.html#typing.TypeAlias">TypeAlias</a></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>A metric to quantify the amount of "bleeding" from other sources. Higher is better.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><a class="autorefs autorefs-internal" title="            Fullness
+
+
+  
+      module-attribute
+   (splifft.core.Fullness)" href="#splifft.core.Fullness">Fullness</a></code></td>
+            <td>
+                  <code><a class="autorefs autorefs-external" title="typing.TypeAlias" href="https://docs.python.org/3/library/typing.html#typing.TypeAlias">TypeAlias</a></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>A metric to quantify how much of the original source is missing. Higher is better.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-object doc-class">
+
+
+
+<h3 id="splifft.core.Audio" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-class"></code>            <span class="doc doc-object-name doc-class-name">Audio</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-dataclass"><code>dataclass</code></small>
+  </span>
+
+</h3>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span class="nf">Audio</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="n"><span title="splifft.core._AudioTensorLike">_AudioTensorLike</span></span><span class="p">,</span> <span class="n">sample_rate</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="            SampleRate
+
+
+  
+      module-attribute
+   (splifft.core.SampleRate)" href="#splifft.core.SampleRate">SampleRate</a></span><span class="p">)</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+            <p class="doc doc-class-bases">
+              Bases: <code><a class="autorefs autorefs-external" title="typing.Generic" href="https://docs.python.org/3/library/typing.html#typing.Generic">Generic</a>[<span title="splifft.core._AudioTensorLike">_AudioTensorLike</span>]</code></p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<p><span class="doc-section-title">Attributes:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td><code><a class="autorefs autorefs-internal" title="            data
+
+
+  
+      instance-attribute
+   (splifft.core.Audio.data)" href="#splifft.core.Audio.data">data</a></code></td>
+            <td>
+                  <code><span title="splifft.core._AudioTensorLike">_AudioTensorLike</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>This should either be an <a class="autorefs autorefs-internal" title="            RawAudioTensor
+
+
+  
+      module-attribute
+  " href="#splifft.core.RawAudioTensor">raw</a> or a</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><a class="autorefs autorefs-internal" title="            sample_rate
+
+
+  
+      instance-attribute
+   (splifft.core.Audio.sample_rate)" href="#splifft.core.Audio.sample_rate">sample_rate</a></code></td>
+            <td>
+                  <code><a class="autorefs autorefs-internal" title="            SampleRate
+
+
+  
+      module-attribute
+   (splifft.core.SampleRate)" href="#splifft.core.SampleRate">SampleRate</a></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h4 id="splifft.core.Audio.data" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-attribute"></code>            <span class="doc doc-object-name doc-attribute-name">data</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-instance-attribute"><code>instance-attribute</code></small>
+  </span>
+
+</h4>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span class="n">data</span><span class="p">:</span> <span class="n"><span title="splifft.core._AudioTensorLike">_AudioTensorLike</span></span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>This should either be an <a class="autorefs autorefs-internal" title="            RawAudioTensor
+
+
+  
+      module-attribute
+  " href="#splifft.core.RawAudioTensor">raw</a> or a
+<a class="autorefs autorefs-internal" title="            NormalizedAudioTensor
+
+
+  
+      module-attribute
+  " href="#splifft.core.NormalizedAudioTensor">normalized</a> audio tensor.</p>
+
+    </div>
+
+</div>
+
+
+
+
+
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h4 id="splifft.core.Audio.sample_rate" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-attribute"></code>            <span class="doc doc-object-name doc-attribute-name">sample_rate</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-instance-attribute"><code>instance-attribute</code></small>
+  </span>
+
+</h4>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span class="n">sample_rate</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="            SampleRate
+
+
+  
+      module-attribute
+   (splifft.core.SampleRate)" href="#splifft.core.SampleRate">SampleRate</a></span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+    </div>
+
+</div>
+
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+
+
+
+
+
+<div class="doc doc-object doc-class">
+
+
+
+<h3 id="splifft.core.NormalizationStats" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-class"></code>            <span class="doc doc-object-name doc-class-name">NormalizationStats</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-dataclass"><code>dataclass</code></small>
+  </span>
+
+</h3>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span class="nf">NormalizationStats</span><span class="p">(</span>
+    <span class="n">mean</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#float">float</a></span><span class="p">,</span> <span class="n">std</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" title="typing.Annotated" href="https://docs.python.org/3/library/typing.html#typing.Annotated">Annotated</a></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#float">float</a></span><span class="p">,</span> <span class="n"><span title="annotated_types.Gt">Gt</span></span><span class="p">(</span><span class="mi">0</span><span class="p">)]</span>
+<span class="p">)</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+
+        <p>Statistics for <a href="https://en.wikipedia.org/wiki/Feature_scaling#Standardization_(Z-score_Normalization)">normalizing</a>
+and denormalizing audio.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+<p><span class="doc-section-title">Attributes:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td><code><a class="autorefs autorefs-internal" title="            mean
+
+
+  
+      instance-attribute
+   (splifft.core.NormalizationStats.mean)" href="#splifft.core.NormalizationStats.mean">mean</a></code></td>
+            <td>
+                  <code><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#float">float</a></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Mean <span class="arithmatex">\(\mu\)</span> of the mixture</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><a class="autorefs autorefs-internal" title="            std
+
+
+  
+      instance-attribute
+   (splifft.core.NormalizationStats.std)" href="#splifft.core.NormalizationStats.std">std</a></code></td>
+            <td>
+                  <code><a class="autorefs autorefs-external" title="typing.Annotated" href="https://docs.python.org/3/library/typing.html#typing.Annotated">Annotated</a>[<a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#float">float</a>, <span title="annotated_types.Gt">Gt</span>(0)]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Standard deviation <span class="arithmatex">\(\sigma\)</span> of the mixture</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h4 id="splifft.core.NormalizationStats.mean" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-attribute"></code>            <span class="doc doc-object-name doc-attribute-name">mean</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-instance-attribute"><code>instance-attribute</code></small>
+  </span>
+
+</h4>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span class="n">mean</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#float">float</a></span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Mean <span class="arithmatex">\(\mu\)</span> of the mixture</p>
+
+    </div>
+
+</div>
+
+
+
+
+
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h4 id="splifft.core.NormalizationStats.std" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-attribute"></code>            <span class="doc doc-object-name doc-attribute-name">std</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-instance-attribute"><code>instance-attribute</code></small>
+  </span>
+
+</h4>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span class="n">std</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" title="typing.Annotated" href="https://docs.python.org/3/library/typing.html#typing.Annotated">Annotated</a></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#float">float</a></span><span class="p">,</span> <span class="n"><span title="annotated_types.Gt">Gt</span></span><span class="p">(</span><span class="mi">0</span><span class="p">)]</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Standard deviation <span class="arithmatex">\(\sigma\)</span> of the mixture</p>
+
+    </div>
+
+</div>
+
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+
+
+
+
+
+<div class="doc doc-object doc-class">
+
+
+
+<h3 id="splifft.core.NormalizedAudio" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-class"></code>            <span class="doc doc-object-name doc-class-name">NormalizedAudio</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-dataclass"><code>dataclass</code></small>
+  </span>
+
+</h3>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span class="nf">NormalizedAudio</span><span class="p">(</span>
+    <span class="n">audio</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="            Audio
+
+
+  
+      dataclass
+   (splifft.core.Audio)" href="#splifft.core.Audio">Audio</a></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-internal" title="            NormalizedAudioTensor
+
+
+  
+      module-attribute
+   (splifft.core.NormalizedAudioTensor)" href="#splifft.core.NormalizedAudioTensor">NormalizedAudioTensor</a></span><span class="p">],</span>
+    <span class="n">stats</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="            NormalizationStats
+
+
+  
+      dataclass
+   (splifft.core.NormalizationStats)" href="#splifft.core.NormalizationStats">NormalizationStats</a></span><span class="p">,</span>
+<span class="p">)</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+
+        <p>Container for normalized audio and its original stats.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+<p><span class="doc-section-title">Attributes:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td><code><a class="autorefs autorefs-internal" title="            audio
+
+
+  
+      instance-attribute
+   (splifft.core.NormalizedAudio.audio)" href="#splifft.core.NormalizedAudio.audio">audio</a></code></td>
+            <td>
+                  <code><a class="autorefs autorefs-internal" title="            Audio
+
+
+  
+      dataclass
+   (splifft.core.Audio)" href="#splifft.core.Audio">Audio</a>[<a class="autorefs autorefs-internal" title="            NormalizedAudioTensor
+
+
+  
+      module-attribute
+   (splifft.core.NormalizedAudioTensor)" href="#splifft.core.NormalizedAudioTensor">NormalizedAudioTensor</a>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><a class="autorefs autorefs-internal" title="            stats
+
+
+  
+      instance-attribute
+   (splifft.core.NormalizedAudio.stats)" href="#splifft.core.NormalizedAudio.stats">stats</a></code></td>
+            <td>
+                  <code><a class="autorefs autorefs-internal" title="            NormalizationStats
+
+
+  
+      dataclass
+   (splifft.core.NormalizationStats)" href="#splifft.core.NormalizationStats">NormalizationStats</a></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h4 id="splifft.core.NormalizedAudio.audio" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-attribute"></code>            <span class="doc doc-object-name doc-attribute-name">audio</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-instance-attribute"><code>instance-attribute</code></small>
+  </span>
+
+</h4>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span class="n">audio</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="            Audio
+
+
+  
+      dataclass
+   (splifft.core.Audio)" href="#splifft.core.Audio">Audio</a></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-internal" title="            NormalizedAudioTensor
+
+
+  
+      module-attribute
+   (splifft.core.NormalizedAudioTensor)" href="#splifft.core.NormalizedAudioTensor">NormalizedAudioTensor</a></span><span class="p">]</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+    </div>
+
+</div>
+
+
+
+
+
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h4 id="splifft.core.NormalizedAudio.stats" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-attribute"></code>            <span class="doc doc-object-name doc-attribute-name">stats</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-instance-attribute"><code>instance-attribute</code></small>
+  </span>
+
+</h4>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span class="n">stats</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="            NormalizationStats
+
+
+  
+      dataclass
+   (splifft.core.NormalizationStats)" href="#splifft.core.NormalizationStats">NormalizationStats</a></span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+    </div>
+
+</div>
+
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+
+
+
+
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="splifft.core.normalize_audio" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <span class="doc doc-object-name doc-function-name">normalize_audio</span>
+
+
+</h3>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span class="nf">normalize_audio</span><span class="p">(</span>
+    <span class="n">audio</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="            Audio
+
+
+  
+      dataclass
+   (splifft.core.Audio)" href="#splifft.core.Audio">Audio</a></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-internal" title="            RawAudioTensor
+
+
+  
+      module-attribute
+   (splifft.core.RawAudioTensor)" href="#splifft.core.RawAudioTensor">RawAudioTensor</a></span><span class="p">],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-internal" title="            NormalizedAudio
+
+
+  
+      dataclass
+   (splifft.core.NormalizedAudio)" href="#splifft.core.NormalizedAudio">NormalizedAudio</a></span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Preprocess the raw audio in the time domain to have a mean of 0 and a std of 1
+before passing it to the model.</p>
+<p>Operates on the mean of the <a class="autorefs autorefs-internal" title="            Channels
+
+
+  
+      module-attribute
+  " href="#splifft.core.Channels">channels</a>.</p>
+
+
+            <details class="quote">
+              <summary>Source code in <code>src/splifft/core.py</code></summary>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">56</span>
+<span class="normal">57</span>
+<span class="normal">58</span>
+<span class="normal">59</span>
+<span class="normal">60</span>
+<span class="normal">61</span>
+<span class="normal">62</span>
+<span class="normal">63</span>
+<span class="normal">64</span>
+<span class="normal">65</span>
+<span class="normal">66</span>
+<span class="normal">67</span>
+<span class="normal">68</span>
+<span class="normal">69</span>
+<span class="normal">70</span>
+<span class="normal">71</span>
+<span class="normal">72</span>
+<span class="normal">73</span>
+<span class="normal">74</span>
+<span class="normal">75</span>
+<span class="normal">76</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">normalize_audio</span><span class="p">(</span><span class="n">audio</span><span class="p">:</span> <span class="n">Audio</span><span class="p">[</span><span class="n">RawAudioTensor</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">NormalizedAudio</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Preprocess the raw audio in the time domain to have a mean of 0 and a std of 1</span>
+<span class="sd">    before passing it to the model.</span>
+
+<span class="sd">    Operates on the mean of the [channels][splifft.core.Channels].</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">mono_audio</span> <span class="o">=</span> <span class="n">audio</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">mean</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">mono_audio</span><span class="o">.</span><span class="n">mean</span><span class="p">())</span>
+    <span class="n">std</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">mono_audio</span><span class="o">.</span><span class="n">std</span><span class="p">())</span>
+
+    <span class="k">if</span> <span class="n">std</span> <span class="o">&lt;=</span> <span class="mf">1e-8</span><span class="p">:</span>  <span class="c1"># silent audio</span>
+        <span class="k">return</span> <span class="n">NormalizedAudio</span><span class="p">(</span>
+            <span class="n">audio</span><span class="o">=</span><span class="n">Audio</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">NormalizedAudioTensor</span><span class="p">(</span><span class="n">audio</span><span class="o">.</span><span class="n">data</span><span class="p">),</span> <span class="n">sample_rate</span><span class="o">=</span><span class="n">audio</span><span class="o">.</span><span class="n">sample_rate</span><span class="p">),</span>
+            <span class="n">stats</span><span class="o">=</span><span class="n">NormalizationStats</span><span class="p">(</span><span class="n">mean</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span>
+        <span class="p">)</span>
+
+    <span class="n">normalized_data</span> <span class="o">=</span> <span class="p">(</span><span class="n">audio</span><span class="o">.</span><span class="n">data</span> <span class="o">-</span> <span class="n">mean</span><span class="p">)</span> <span class="o">/</span> <span class="n">std</span>
+    <span class="k">return</span> <span class="n">NormalizedAudio</span><span class="p">(</span>
+        <span class="n">audio</span><span class="o">=</span><span class="n">Audio</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">NormalizedAudioTensor</span><span class="p">(</span><span class="n">normalized_data</span><span class="p">),</span> <span class="n">sample_rate</span><span class="o">=</span><span class="n">audio</span><span class="o">.</span><span class="n">sample_rate</span><span class="p">),</span>
+        <span class="n">stats</span><span class="o">=</span><span class="n">NormalizationStats</span><span class="p">(</span><span class="n">mean</span><span class="p">,</span> <span class="n">std</span><span class="p">),</span>
+    <span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+
+
+
+
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="splifft.core.denormalize_audio" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <span class="doc doc-object-name doc-function-name">denormalize_audio</span>
+
+
+</h3>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span class="nf">denormalize_audio</span><span class="p">(</span>
+    <span class="n">audio_data</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="            NormalizedAudioTensor
+
+
+  
+      module-attribute
+   (splifft.core.NormalizedAudioTensor)" href="#splifft.core.NormalizedAudioTensor">NormalizedAudioTensor</a></span><span class="p">,</span>
+    <span class="n">stats</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="            NormalizationStats
+
+
+  
+      dataclass
+   (splifft.core.NormalizationStats)" href="#splifft.core.NormalizationStats">NormalizationStats</a></span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-internal" title="            RawAudioTensor
+
+
+  
+      module-attribute
+   (splifft.core.RawAudioTensor)" href="#splifft.core.RawAudioTensor">RawAudioTensor</a></span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Take the model output and restore them to their original loudness.</p>
+
+
+            <details class="quote">
+              <summary>Source code in <code>src/splifft/core.py</code></summary>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">79</span>
+<span class="normal">80</span>
+<span class="normal">81</span>
+<span class="normal">82</span>
+<span class="normal">83</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">denormalize_audio</span><span class="p">(</span>
+    <span class="n">audio_data</span><span class="p">:</span> <span class="n">NormalizedAudioTensor</span><span class="p">,</span> <span class="n">stats</span><span class="p">:</span> <span class="n">NormalizationStats</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RawAudioTensor</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Take the model output and restore them to their original loudness.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">RawAudioTensor</span><span class="p">((</span><span class="n">audio_data</span> <span class="o">*</span> <span class="n">stats</span><span class="o">.</span><span class="n">std</span><span class="p">)</span> <span class="o">+</span> <span class="n">stats</span><span class="o">.</span><span class="n">mean</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+
+
+
+
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="splifft.core.generate_chunks" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <span class="doc doc-object-name doc-function-name">generate_chunks</span>
+
+
+</h3>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span class="nf">generate_chunks</span><span class="p">(</span>
+    <span class="n">audio_data</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="            RawAudioTensor
+
+
+  
+      module-attribute
+   (splifft.core.RawAudioTensor)" href="#splifft.core.RawAudioTensor">RawAudioTensor</a></span> <span class="o">|</span> <span class="n"><a class="autorefs autorefs-internal" title="            NormalizedAudioTensor
+
+
+  
+      module-attribute
+   (splifft.core.NormalizedAudioTensor)" href="#splifft.core.NormalizedAudioTensor">NormalizedAudioTensor</a></span><span class="p">,</span>
+    <span class="n">chunk_size</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="            ChunkSize
+
+
+  
+      module-attribute
+   (splifft.models.ChunkSize)" href="../models/#splifft.models.ChunkSize">ChunkSize</a></span><span class="p">,</span>
+    <span class="n">hop_size</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="            HopSize
+
+
+  
+      module-attribute
+   (splifft.core.HopSize)" href="#splifft.core.HopSize">HopSize</a></span><span class="p">,</span>
+    <span class="n">batch_size</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="            BatchSize
+
+
+  
+      module-attribute
+   (splifft.core.BatchSize)" href="#splifft.core.BatchSize">BatchSize</a></span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">padding_mode</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="            PaddingMode
+
+
+  
+      module-attribute
+   (splifft.core.PaddingMode)" href="#splifft.core.PaddingMode">PaddingMode</a></span> <span class="o">=</span> <span class="s2">&quot;reflect&quot;</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-external" title="typing.Iterator" href="https://docs.python.org/3/library/typing.html#typing.Iterator">Iterator</a></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-internal" title="            PaddedChunkedAudioTensor
+
+
+  
+      module-attribute
+   (splifft.core.PaddedChunkedAudioTensor)" href="#splifft.core.PaddedChunkedAudioTensor">PaddedChunkedAudioTensor</a></span><span class="p">]</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Generates batches of overlapping chunks from an audio tensor.</p>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><a class="autorefs autorefs-external" title="typing.Iterator" href="https://docs.python.org/3/library/typing.html#typing.Iterator">Iterator</a>[<a class="autorefs autorefs-internal" title="            PaddedChunkedAudioTensor
+
+
+  
+      module-attribute
+   (splifft.core.PaddedChunkedAudioTensor)" href="#splifft.core.PaddedChunkedAudioTensor">PaddedChunkedAudioTensor</a>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>An iterator that yields batches of chunks of shape (B, C, chunk_T).</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+            <details class="quote">
+              <summary>Source code in <code>src/splifft/core.py</code></summary>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 91</span>
+<span class="normal"> 92</span>
+<span class="normal"> 93</span>
+<span class="normal"> 94</span>
+<span class="normal"> 95</span>
+<span class="normal"> 96</span>
+<span class="normal"> 97</span>
+<span class="normal"> 98</span>
+<span class="normal"> 99</span>
+<span class="normal">100</span>
+<span class="normal">101</span>
+<span class="normal">102</span>
+<span class="normal">103</span>
+<span class="normal">104</span>
+<span class="normal">105</span>
+<span class="normal">106</span>
+<span class="normal">107</span>
+<span class="normal">108</span>
+<span class="normal">109</span>
+<span class="normal">110</span>
+<span class="normal">111</span>
+<span class="normal">112</span>
+<span class="normal">113</span>
+<span class="normal">114</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">generate_chunks</span><span class="p">(</span>
+    <span class="n">audio_data</span><span class="p">:</span> <span class="n">RawAudioTensor</span> <span class="o">|</span> <span class="n">NormalizedAudioTensor</span><span class="p">,</span>
+    <span class="n">chunk_size</span><span class="p">:</span> <span class="n">ChunkSize</span><span class="p">,</span>
+    <span class="n">hop_size</span><span class="p">:</span> <span class="n">HopSize</span><span class="p">,</span>
+    <span class="n">batch_size</span><span class="p">:</span> <span class="n">BatchSize</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">padding_mode</span><span class="p">:</span> <span class="n">PaddingMode</span> <span class="o">=</span> <span class="s2">&quot;reflect&quot;</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">PaddedChunkedAudioTensor</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Generates batches of overlapping chunks from an audio tensor.</span>
+
+<span class="sd">    :return: An iterator that yields batches of chunks of shape (B, C, chunk_T).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">padding</span> <span class="o">=</span> <span class="n">chunk_size</span> <span class="o">-</span> <span class="n">hop_size</span>
+    <span class="n">padded_audio</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">pad</span><span class="p">(</span><span class="n">audio_data</span><span class="p">,</span> <span class="p">(</span><span class="n">padding</span><span class="p">,</span> <span class="n">padding</span><span class="p">),</span> <span class="n">mode</span><span class="o">=</span><span class="n">padding_mode</span><span class="p">)</span>
+
+    <span class="n">unfolded</span> <span class="o">=</span> <span class="n">padded_audio</span><span class="o">.</span><span class="n">unfold</span><span class="p">(</span>
+        <span class="n">dimension</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">chunk_size</span><span class="p">,</span> <span class="n">step</span><span class="o">=</span><span class="n">hop_size</span>
+    <span class="p">)</span>  <span class="c1"># (C, num_chunks, chunk_size)</span>
+
+    <span class="n">num_chunks</span> <span class="o">=</span> <span class="n">unfolded</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">unfolded</span> <span class="o">=</span> <span class="n">unfolded</span><span class="o">.</span><span class="n">permute</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>  <span class="c1"># (num_chunks, C, chunk_size)</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">num_chunks</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">):</span>
+        <span class="k">yield</span> <span class="n">PaddedChunkedAudioTensor</span><span class="p">(</span><span class="n">unfolded</span><span class="p">[</span><span class="n">i</span> <span class="p">:</span> <span class="n">i</span> <span class="o">+</span> <span class="n">batch_size</span><span class="p">])</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+
+
+
+
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="splifft.core.stitch_chunks" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <span class="doc doc-object-name doc-function-name">stitch_chunks</span>
+
+
+</h3>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span class="nf">stitch_chunks</span><span class="p">(</span>
+    <span class="n">processed_chunks</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" title="typing.Sequence" href="https://docs.python.org/3/library/typing.html#typing.Sequence">Sequence</a></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-internal" title="            SeparatedChunkedTensor
+
+
+  
+      module-attribute
+   (splifft.core.SeparatedChunkedTensor)" href="#splifft.core.SeparatedChunkedTensor">SeparatedChunkedTensor</a></span><span class="p">],</span>
+    <span class="n">num_stems</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="            NumModelStems
+
+
+  
+      module-attribute
+   (splifft.core.NumModelStems)" href="#splifft.core.NumModelStems">NumModelStems</a></span><span class="p">,</span>
+    <span class="n">chunk_size</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="            ChunkSize
+
+
+  
+      module-attribute
+   (splifft.models.ChunkSize)" href="../models/#splifft.models.ChunkSize">ChunkSize</a></span><span class="p">,</span>
+    <span class="n">hop_size</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="            HopSize
+
+
+  
+      module-attribute
+   (splifft.core.HopSize)" href="#splifft.core.HopSize">HopSize</a></span><span class="p">,</span>
+    <span class="n">target_num_samples</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="            Samples
+
+
+  
+      module-attribute
+   (splifft.core.Samples)" href="#splifft.core.Samples">Samples</a></span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">window</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="            WindowTensor
+
+
+  
+      module-attribute
+   (splifft.core.WindowTensor)" href="#splifft.core.WindowTensor">WindowTensor</a></span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-internal" title="            RawSeparatedTensor
+
+
+  
+      module-attribute
+   (splifft.core.RawSeparatedTensor)" href="#splifft.core.RawSeparatedTensor">RawSeparatedTensor</a></span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Stitches processed audio chunks back together using the <a href="https://en.wikipedia.org/wiki/Overlap%E2%80%93add_method">overlap-add method</a>.</p>
+<p>Reconstructs the full audio signal from a sequence of overlapping, processed chunks. Ensures
+that the sum of all overlapping windows is constant at every time step:
+<span class="arithmatex">\(\sum_{m=-\infty}^{\infty} w[n - mH] = C\)</span> where <span class="arithmatex">\(H\)</span> is the <a class="autorefs autorefs-internal" title="            HopSize
+
+
+  
+      module-attribute
+  " href="#splifft.core.HopSize">hop size</a>.</p>
+
+
+            <details class="quote">
+              <summary>Source code in <code>src/splifft/core.py</code></summary>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">117</span>
+<span class="normal">118</span>
+<span class="normal">119</span>
+<span class="normal">120</span>
+<span class="normal">121</span>
+<span class="normal">122</span>
+<span class="normal">123</span>
+<span class="normal">124</span>
+<span class="normal">125</span>
+<span class="normal">126</span>
+<span class="normal">127</span>
+<span class="normal">128</span>
+<span class="normal">129</span>
+<span class="normal">130</span>
+<span class="normal">131</span>
+<span class="normal">132</span>
+<span class="normal">133</span>
+<span class="normal">134</span>
+<span class="normal">135</span>
+<span class="normal">136</span>
+<span class="normal">137</span>
+<span class="normal">138</span>
+<span class="normal">139</span>
+<span class="normal">140</span>
+<span class="normal">141</span>
+<span class="normal">142</span>
+<span class="normal">143</span>
+<span class="normal">144</span>
+<span class="normal">145</span>
+<span class="normal">146</span>
+<span class="normal">147</span>
+<span class="normal">148</span>
+<span class="normal">149</span>
+<span class="normal">150</span>
+<span class="normal">151</span>
+<span class="normal">152</span>
+<span class="normal">153</span>
+<span class="normal">154</span>
+<span class="normal">155</span>
+<span class="normal">156</span>
+<span class="normal">157</span>
+<span class="normal">158</span>
+<span class="normal">159</span>
+<span class="normal">160</span>
+<span class="normal">161</span>
+<span class="normal">162</span>
+<span class="normal">163</span>
+<span class="normal">164</span>
+<span class="normal">165</span>
+<span class="normal">166</span>
+<span class="normal">167</span>
+<span class="normal">168</span>
+<span class="normal">169</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">stitch_chunks</span><span class="p">(</span>
+    <span class="n">processed_chunks</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">SeparatedChunkedTensor</span><span class="p">],</span>
+    <span class="n">num_stems</span><span class="p">:</span> <span class="n">NumModelStems</span><span class="p">,</span>
+    <span class="n">chunk_size</span><span class="p">:</span> <span class="n">ChunkSize</span><span class="p">,</span>
+    <span class="n">hop_size</span><span class="p">:</span> <span class="n">HopSize</span><span class="p">,</span>
+    <span class="n">target_num_samples</span><span class="p">:</span> <span class="n">Samples</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">window</span><span class="p">:</span> <span class="n">WindowTensor</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RawSeparatedTensor</span><span class="p">:</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Stitches processed audio chunks back together using the [overlap-add method](https://en.wikipedia.org/wiki/Overlap%E2%80%93add_method).</span>
+
+<span class="sd">    Reconstructs the full audio signal from a sequence of overlapping, processed chunks. Ensures</span>
+<span class="sd">    that the sum of all overlapping windows is constant at every time step:</span>
+<span class="sd">    $\sum_{m=-\infty}^{\infty} w[n - mH] = C$ where $H$ is the [hop size][splifft.core.HopSize].</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">all_chunks</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="n">processed_chunks</span><span class="p">),</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">total_chunks</span><span class="p">,</span> <span class="n">_N</span><span class="p">,</span> <span class="n">num_channels</span><span class="p">,</span> <span class="n">_chunk_T</span> <span class="o">=</span> <span class="n">all_chunks</span><span class="o">.</span><span class="n">shape</span>
+    <span class="n">windowed_chunks</span> <span class="o">=</span> <span class="n">all_chunks</span> <span class="o">*</span> <span class="n">window</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="c1"># folding: (B, N * C * chunk_T) -&gt; (1, N * C * chunk_T, total_chunks)</span>
+    <span class="n">reshaped_for_fold</span> <span class="o">=</span> <span class="n">windowed_chunks</span><span class="o">.</span><span class="n">permute</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span>
+        <span class="mi">1</span><span class="p">,</span> <span class="n">num_stems</span> <span class="o">*</span> <span class="n">num_channels</span> <span class="o">*</span> <span class="n">chunk_size</span><span class="p">,</span> <span class="n">total_chunks</span>
+    <span class="p">)</span>
+
+    <span class="n">total_length</span> <span class="o">=</span> <span class="p">(</span><span class="n">total_chunks</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">hop_size</span> <span class="o">+</span> <span class="n">chunk_size</span>
+
+    <span class="n">folded</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">fold</span><span class="p">(</span>
+        <span class="n">reshaped_for_fold</span><span class="p">,</span>
+        <span class="n">output_size</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">total_length</span><span class="p">),</span>
+        <span class="n">kernel_size</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">chunk_size</span><span class="p">),</span>
+        <span class="n">stride</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">hop_size</span><span class="p">),</span>
+    <span class="p">)</span>  <span class="c1"># (1, N * C, 1, total_length)</span>
+    <span class="n">stitched</span> <span class="o">=</span> <span class="n">folded</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">num_stems</span><span class="p">,</span> <span class="n">num_channels</span><span class="p">,</span> <span class="n">total_length</span><span class="p">)</span>
+
+    <span class="c1"># normalization for overlap-add</span>
+    <span class="n">ones_template</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">total_length</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">window</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+    <span class="n">unfolded_ones</span> <span class="o">=</span> <span class="n">ones_template</span><span class="o">.</span><span class="n">unfold</span><span class="p">(</span><span class="n">dimension</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">chunk_size</span><span class="p">,</span> <span class="n">step</span><span class="o">=</span><span class="n">hop_size</span><span class="p">)</span>
+    <span class="n">windowed_unfolded_ones</span> <span class="o">=</span> <span class="n">unfolded_ones</span> <span class="o">*</span> <span class="n">window</span>
+    <span class="n">reshaped_for_fold_norm</span> <span class="o">=</span> <span class="n">windowed_unfolded_ones</span><span class="o">.</span><span class="n">permute</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span>
+        <span class="mi">1</span><span class="p">,</span> <span class="n">chunk_size</span><span class="p">,</span> <span class="n">total_chunks</span>
+    <span class="p">)</span>
+    <span class="n">norm_window</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">fold</span><span class="p">(</span>
+        <span class="n">reshaped_for_fold_norm</span><span class="p">,</span>
+        <span class="n">output_size</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">total_length</span><span class="p">),</span>
+        <span class="n">kernel_size</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">chunk_size</span><span class="p">),</span>
+        <span class="n">stride</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">hop_size</span><span class="p">),</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">squeeze</span><span class="p">()</span>
+
+    <span class="n">norm_window</span><span class="o">.</span><span class="n">clamp_min_</span><span class="p">(</span><span class="mf">1e-8</span><span class="p">)</span>  <span class="c1"># for edges where the window sum might be zero</span>
+    <span class="n">stitched</span> <span class="o">/=</span> <span class="n">norm_window</span>
+
+    <span class="n">padding</span> <span class="o">=</span> <span class="n">chunk_size</span> <span class="o">-</span> <span class="n">hop_size</span>
+    <span class="k">return</span> <span class="n">RawSeparatedTensor</span><span class="p">(</span><span class="n">stitched</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">padding</span> <span class="p">:</span> <span class="n">padding</span> <span class="o">+</span> <span class="n">target_num_samples</span><span class="p">])</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+
+
+
+
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="splifft.core.derive_stems" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <span class="doc doc-object-name doc-function-name">derive_stems</span>
+
+
+</h3>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span class="nf">derive_stems</span><span class="p">(</span>
+    <span class="n">separated_stems</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" title="typing.Mapping" href="https://docs.python.org/3/library/typing.html#typing.Mapping">Mapping</a></span><span class="p">[</span>
+        <span class="n"><a class="autorefs autorefs-internal" title="            ModelOutputStemName
+
+
+  
+      module-attribute
+   (splifft.models.ModelOutputStemName)" href="../models/#splifft.models.ModelOutputStemName">ModelOutputStemName</a></span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-internal" title="            RawAudioTensor
+
+
+  
+      module-attribute
+   (splifft.core.RawAudioTensor)" href="#splifft.core.RawAudioTensor">RawAudioTensor</a></span>
+    <span class="p">],</span>
+    <span class="n">mixture_input</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="            RawAudioTensor
+
+
+  
+      module-attribute
+   (splifft.core.RawAudioTensor)" href="#splifft.core.RawAudioTensor">RawAudioTensor</a></span><span class="p">,</span>
+    <span class="n">stem_rules</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="            DerivedStemsConfig
+
+
+  
+      module-attribute
+   (splifft.config.DerivedStemsConfig)" href="../config/#splifft.config.DerivedStemsConfig">DerivedStemsConfig</a></span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#dict">dict</a></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-internal" title="            StemName
+
+
+  
+      module-attribute
+   (splifft.config.StemName)" href="../config/#splifft.config.StemName">StemName</a></span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-internal" title="            RawAudioTensor
+
+
+  
+      module-attribute
+   (splifft.core.RawAudioTensor)" href="#splifft.core.RawAudioTensor">RawAudioTensor</a></span><span class="p">]</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>It is the caller's responsibility to ensure that all tensors are aligned and have the same shape.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Mixture input and separated stems must first be <a class="autorefs autorefs-internal" title="            denormalize_audio" href="#splifft.core.denormalize_audio">denormalized</a>.</p>
+</div>
+
+
+            <details class="quote">
+              <summary>Source code in <code>src/splifft/core.py</code></summary>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">175</span>
+<span class="normal">176</span>
+<span class="normal">177</span>
+<span class="normal">178</span>
+<span class="normal">179</span>
+<span class="normal">180</span>
+<span class="normal">181</span>
+<span class="normal">182</span>
+<span class="normal">183</span>
+<span class="normal">184</span>
+<span class="normal">185</span>
+<span class="normal">186</span>
+<span class="normal">187</span>
+<span class="normal">188</span>
+<span class="normal">189</span>
+<span class="normal">190</span>
+<span class="normal">191</span>
+<span class="normal">192</span>
+<span class="normal">193</span>
+<span class="normal">194</span>
+<span class="normal">195</span>
+<span class="normal">196</span>
+<span class="normal">197</span>
+<span class="normal">198</span>
+<span class="normal">199</span>
+<span class="normal">200</span>
+<span class="normal">201</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">derive_stems</span><span class="p">(</span>
+    <span class="n">separated_stems</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="n">ModelOutputStemName</span><span class="p">,</span> <span class="n">RawAudioTensor</span><span class="p">],</span>
+    <span class="n">mixture_input</span><span class="p">:</span> <span class="n">RawAudioTensor</span><span class="p">,</span>
+    <span class="n">stem_rules</span><span class="p">:</span> <span class="n">DerivedStemsConfig</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="n">StemName</span><span class="p">,</span> <span class="n">RawAudioTensor</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    It is the caller&#39;s responsibility to ensure that all tensors are aligned and have the same shape.</span>
+
+<span class="sd">    !!! note</span>
+<span class="sd">        Mixture input and separated stems must first be [denormalized][splifft.core.denormalize_audio].</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">stems</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;mixture&quot;</span><span class="p">:</span> <span class="n">RawAudioTensor</span><span class="p">(</span><span class="n">mixture_input</span><span class="p">),</span>  <span class="c1"># for subtraction</span>
+        <span class="o">**</span><span class="n">separated_stems</span><span class="p">,</span>
+    <span class="p">}</span>
+
+    <span class="k">for</span> <span class="n">derived_name</span><span class="p">,</span> <span class="n">rule</span> <span class="ow">in</span> <span class="n">stem_rules</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">rule</span><span class="o">.</span><span class="n">operation</span> <span class="o">==</span> <span class="s2">&quot;subtract&quot;</span><span class="p">:</span>
+            <span class="n">minuend</span> <span class="o">=</span> <span class="n">stems</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">rule</span><span class="o">.</span><span class="n">stem_name</span><span class="p">,</span> <span class="n">mixture_input</span><span class="p">)</span>
+            <span class="n">subtrahend</span> <span class="o">=</span> <span class="n">stems</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">rule</span><span class="o">.</span><span class="n">by_stem_name</span><span class="p">,</span> <span class="n">mixture_input</span><span class="p">)</span>
+            <span class="n">stems</span><span class="p">[</span><span class="n">derived_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">RawAudioTensor</span><span class="p">(</span><span class="n">minuend</span> <span class="o">-</span> <span class="n">subtrahend</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">rule</span><span class="o">.</span><span class="n">operation</span> <span class="o">==</span> <span class="s2">&quot;sum&quot;</span><span class="p">:</span>
+            <span class="n">to_sum</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">stems</span><span class="p">[</span><span class="n">s</span><span class="p">]</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">rule</span><span class="o">.</span><span class="n">stem_names</span><span class="p">)</span>
+            <span class="n">stems</span><span class="p">[</span><span class="n">derived_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">RawAudioTensor</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">to_sum</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span>
+
+    <span class="n">stems</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;mixture&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">stems</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+
+
+
+
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="splifft.core.get_dtype" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <span class="doc doc-object-name doc-function-name">get_dtype</span>
+
+
+</h3>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span class="nf">get_dtype</span><span class="p">(</span><span class="n">dtype</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="            Dtype
+
+
+  
+      module-attribute
+   (splifft.core.Dtype)" href="#splifft.core.Dtype">Dtype</a></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-external" title="torch.dtype" href="https://docs.pytorch.org/docs/stable/tensor_attributes.html#torch.dtype">dtype</a></span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+
+            <details class="quote">
+              <summary>Source code in <code>src/splifft/core.py</code></summary>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">209</span>
+<span class="normal">210</span>
+<span class="normal">211</span>
+<span class="normal">212</span>
+<span class="normal">213</span>
+<span class="normal">214</span>
+<span class="normal">215</span>
+<span class="normal">216</span>
+<span class="normal">217</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">get_dtype</span><span class="p">(</span><span class="n">dtype</span><span class="p">:</span> <span class="n">Dtype</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">dtype</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">dtype</span> <span class="o">==</span> <span class="s2">&quot;float32&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">float32</span>
+    <span class="k">elif</span> <span class="n">dtype</span> <span class="o">==</span> <span class="s2">&quot;float16&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">float16</span>
+    <span class="k">elif</span> <span class="n">dtype</span> <span class="o">==</span> <span class="s2">&quot;bfloat16&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">bfloat16</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;unsupported </span><span class="si">{</span><span class="n">dtype</span><span class="si">=}</span><span class="s2">&quot;</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+
+
+
+
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="splifft.core.Samples" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-attribute"></code>            <span class="doc doc-object-name doc-attribute-name">Samples</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-module-attribute"><code>module-attribute</code></small>
+  </span>
+
+</h3>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span class="n">Samples</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" title="typing.TypeAlias" href="https://docs.python.org/3/library/typing.html#typing.TypeAlias">TypeAlias</a></span> <span class="o">=</span> <span class="n"><a class="autorefs autorefs-external" title="typing.Annotated" href="https://docs.python.org/3/library/typing.html#typing.Annotated">Annotated</a></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#int">int</a></span><span class="p">,</span> <span class="n"><span title="annotated_types.Gt">Gt</span></span><span class="p">(</span><span class="mi">0</span><span class="p">)]</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Number of samples in the audio signal.</p>
+
+    </div>
+
+</div>
+
+
+
+
+
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="splifft.core.SampleRate" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-attribute"></code>            <span class="doc doc-object-name doc-attribute-name">SampleRate</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-module-attribute"><code>module-attribute</code></small>
+  </span>
+
+</h3>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span class="n">SampleRate</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" title="typing.TypeAlias" href="https://docs.python.org/3/library/typing.html#typing.TypeAlias">TypeAlias</a></span> <span class="o">=</span> <span class="n"><a class="autorefs autorefs-external" title="typing.Annotated" href="https://docs.python.org/3/library/typing.html#typing.Annotated">Annotated</a></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#int">int</a></span><span class="p">,</span> <span class="n"><span title="annotated_types.Gt">Gt</span></span><span class="p">(</span><span class="mi">0</span><span class="p">)]</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>The number of samples of audio recorded per second (hertz).</p>
+<p>See <a href="../../concepts/#introduction">concepts</a> for more details.</p>
+
+    </div>
+
+</div>
+
+
+
+
+
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="splifft.core.Channels" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-attribute"></code>            <span class="doc doc-object-name doc-attribute-name">Channels</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-module-attribute"><code>module-attribute</code></small>
+  </span>
+
+</h3>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span class="n">Channels</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" title="typing.TypeAlias" href="https://docs.python.org/3/library/typing.html#typing.TypeAlias">TypeAlias</a></span> <span class="o">=</span> <span class="n"><a class="autorefs autorefs-external" title="typing.Annotated" href="https://docs.python.org/3/library/typing.html#typing.Annotated">Annotated</a></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#int">int</a></span><span class="p">,</span> <span class="n"><span title="annotated_types.Gt">Gt</span></span><span class="p">(</span><span class="mi">0</span><span class="p">)]</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Number of audio streams.</p>
+<ul>
+<li>1: Mono audio</li>
+<li>2: Stereo (left and right). Models are usually trained on stereo audio.</li>
+</ul>
+
+    </div>
+
+</div>
+
+
+
+
+
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="splifft.core.FileFormat" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-attribute"></code>            <span class="doc doc-object-name doc-attribute-name">FileFormat</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-module-attribute"><code>module-attribute</code></small>
+  </span>
+
+</h3>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span class="n">FileFormat</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" title="typing.TypeAlias" href="https://docs.python.org/3/library/typing.html#typing.TypeAlias">TypeAlias</a></span> <span class="o">=</span> <span class="n"><a class="autorefs autorefs-external" title="typing.Literal" href="https://docs.python.org/3/library/typing.html#typing.Literal">Literal</a></span><span class="p">[</span><span class="s1">&#39;flac&#39;</span><span class="p">,</span> <span class="s1">&#39;wav&#39;</span><span class="p">,</span> <span class="s1">&#39;ogg&#39;</span><span class="p">]</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+    </div>
+
+</div>
+
+
+
+
+
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="splifft.core.AudioEncoding" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-attribute"></code>            <span class="doc doc-object-name doc-attribute-name">AudioEncoding</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-module-attribute"><code>module-attribute</code></small>
+  </span>
+
+</h3>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span class="n">AudioEncoding</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" title="typing.TypeAlias" href="https://docs.python.org/3/library/typing.html#typing.TypeAlias">TypeAlias</a></span> <span class="o">=</span> <span class="n"><a class="autorefs autorefs-external" title="typing.Literal" href="https://docs.python.org/3/library/typing.html#typing.Literal">Literal</a></span><span class="p">[</span>
+    <span class="s2">&quot;PCM_S&quot;</span><span class="p">,</span> <span class="s2">&quot;PCM_U&quot;</span><span class="p">,</span> <span class="s2">&quot;PCM_F&quot;</span><span class="p">,</span> <span class="s2">&quot;ULAW&quot;</span><span class="p">,</span> <span class="s2">&quot;ALAW&quot;</span>
+<span class="p">]</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p><a href="https://trac.ffmpeg.org/wiki/audio%20types">Audio encoding</a></p>
+<ul>
+<li><code>PCM_S</code>: Signed integer linear pulse-code modulation</li>
+<li><code>PCM_U</code>: Unsigned integer linear pulse-code modulation</li>
+<li><code>PCM_F</code>: Floating-point pulse-code modulation</li>
+<li><code>ULAW</code>: <a href="https://en.wikipedia.org/wiki/%CE%9C-law_algorithm">μ-law</a></li>
+<li><code>ALAW</code>: <a href="https://en.wikipedia.org/wiki/A-law_algorithm">a-law</a></li>
+</ul>
+
+    </div>
+
+</div>
+
+
+
+
+
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="splifft.core.BitDepth" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-attribute"></code>            <span class="doc doc-object-name doc-attribute-name">BitDepth</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-module-attribute"><code>module-attribute</code></small>
+  </span>
+
+</h3>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span class="n">BitDepth</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" title="typing.TypeAlias" href="https://docs.python.org/3/library/typing.html#typing.TypeAlias">TypeAlias</a></span> <span class="o">=</span> <span class="n"><a class="autorefs autorefs-external" title="typing.Literal" href="https://docs.python.org/3/library/typing.html#typing.Literal">Literal</a></span><span class="p">[</span><span class="mi">8</span><span class="p">,</span> <span class="mi">16</span><span class="p">,</span> <span class="mi">24</span><span class="p">,</span> <span class="mi">32</span><span class="p">,</span> <span class="mi">64</span><span class="p">]</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Number of bits of information in each sample.</p>
+<p>It determines the dynamic range of the audio signal: the difference between the quietest and loudest
+possible sounds.</p>
+<ul>
+<li>16-bit: Standard for CD audio: ~96 dB dynamic range.</li>
+<li>24-bit: Common in professional audio, allowing for more headroom during mixing</li>
+<li>32-bit float: Standard in digital audio workstations (DAWs) and deep learning models.
+    The amplitude is represented by a floating-point number, which prevents clipping (distortion
+    from exceeding the maximum value). This library primarily works with fp32 tensors.</li>
+</ul>
+
+    </div>
+
+</div>
+
+
+
+
+
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="splifft.core.RawAudioTensor" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-attribute"></code>            <span class="doc doc-object-name doc-attribute-name">RawAudioTensor</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-module-attribute"><code>module-attribute</code></small>
+  </span>
+
+</h3>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span class="n">RawAudioTensor</span> <span class="o">=</span> <span class="n"><a class="autorefs autorefs-external" title="typing.NewType" href="https://docs.python.org/3/library/typing.html#typing.NewType">NewType</a></span><span class="p">(</span><span class="s1">&#39;RawAudioTensor&#39;</span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-external" title="torch.Tensor" href="https://docs.pytorch.org/docs/stable/tensors.html#torch.Tensor">Tensor</a></span><span class="p">)</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Time domain tensor of audio samples.
+Shape (<a class="autorefs autorefs-internal" title="            Channels
+
+
+  
+      module-attribute
+  " href="#splifft.core.Channels">channels</a>, <a class="autorefs autorefs-internal" title="            Samples
+
+
+  
+      module-attribute
+  " href="#splifft.core.Samples">samples</a>)</p>
+
+    </div>
+
+</div>
+
+
+
+
+
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="splifft.core.NormalizedAudioTensor" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-attribute"></code>            <span class="doc doc-object-name doc-attribute-name">NormalizedAudioTensor</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-module-attribute"><code>module-attribute</code></small>
+  </span>
+
+</h3>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span class="n">NormalizedAudioTensor</span> <span class="o">=</span> <span class="n"><a class="autorefs autorefs-external" title="typing.NewType" href="https://docs.python.org/3/library/typing.html#typing.NewType">NewType</a></span><span class="p">(</span>
+    <span class="s2">&quot;NormalizedAudioTensor&quot;</span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-external" title="torch.Tensor" href="https://docs.pytorch.org/docs/stable/tensors.html#torch.Tensor">Tensor</a></span>
+<span class="p">)</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>A mixture tensor that has been normalized using <a class="autorefs autorefs-internal" title="            NormalizationStats
+
+
+  
+      dataclass
+  " href="#splifft.core.NormalizationStats">on-the-fly statistics</a>.
+Shape (<a class="autorefs autorefs-internal" title="            Channels
+
+
+  
+      module-attribute
+  " href="#splifft.core.Channels">channels</a>, <a class="autorefs autorefs-internal" title="            Samples
+
+
+  
+      module-attribute
+  " href="#splifft.core.Samples">samples</a>)</p>
+
+    </div>
+
+</div>
+
+
+
+
+
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="splifft.core.ComplexSpectrogram" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-attribute"></code>            <span class="doc doc-object-name doc-attribute-name">ComplexSpectrogram</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-module-attribute"><code>module-attribute</code></small>
+  </span>
+
+</h3>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span class="n">ComplexSpectrogram</span> <span class="o">=</span> <span class="n"><a class="autorefs autorefs-external" title="typing.NewType" href="https://docs.python.org/3/library/typing.html#typing.NewType">NewType</a></span><span class="p">(</span><span class="s1">&#39;ComplexSpectrogram&#39;</span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-external" title="torch.Tensor" href="https://docs.pytorch.org/docs/stable/tensors.html#torch.Tensor">Tensor</a></span><span class="p">)</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>A complex-valued representation of audio's frequency content over time via the STFT.</p>
+<p>Shape (<a class="autorefs autorefs-internal" title="            Channels
+
+
+  
+      module-attribute
+  " href="#splifft.core.Channels">channels</a>, <a class="autorefs autorefs-internal" title="            FftSize
+
+
+  
+      module-attribute
+  " href="#splifft.core.FftSize">frequency bins</a>, <a class="autorefs autorefs-internal" title="            ChunkSize
+
+
+  
+      module-attribute
+  " href="../models/#splifft.models.ChunkSize">time frames</a>, 2)</p>
+<p>See <a href="../../concepts/#complex-spectrogram">concepts</a> for more details.</p>
+
+    </div>
+
+</div>
+
+
+
+
+
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="splifft.core.HopSize" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-attribute"></code>            <span class="doc doc-object-name doc-attribute-name">HopSize</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-module-attribute"><code>module-attribute</code></small>
+  </span>
+
+</h3>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span class="n">HopSize</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" title="typing.TypeAlias" href="https://docs.python.org/3/library/typing.html#typing.TypeAlias">TypeAlias</a></span> <span class="o">=</span> <span class="n"><a class="autorefs autorefs-external" title="typing.Annotated" href="https://docs.python.org/3/library/typing.html#typing.Annotated">Annotated</a></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#int">int</a></span><span class="p">,</span> <span class="n"><span title="annotated_types.Gt">Gt</span></span><span class="p">(</span><span class="mi">0</span><span class="p">)]</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>The step size, in samples, between the start of consecutive <a class="autorefs autorefs-internal" title="            ChunkSize
+
+
+  
+      module-attribute
+  " href="../models/#splifft.models.ChunkSize">chunks</a>.</p>
+<p>To avoid artifacts at the edges of chunks, we process them with overlap. The hop size is the
+distance we "slide" the chunking window forward. <code>ChunkSize &lt; HopSize</code> implies overlap and the
+overlap amount is <code>ChunkSize - HopSize</code>.</p>
+
+    </div>
+
+</div>
+
+
+
+
+
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="splifft.core.WindowShape" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-attribute"></code>            <span class="doc doc-object-name doc-attribute-name">WindowShape</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-module-attribute"><code>module-attribute</code></small>
+  </span>
+
+</h3>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span class="n">WindowShape</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" title="typing.TypeAlias" href="https://docs.python.org/3/library/typing.html#typing.TypeAlias">TypeAlias</a></span> <span class="o">=</span> <span class="n"><a class="autorefs autorefs-external" title="typing.Literal" href="https://docs.python.org/3/library/typing.html#typing.Literal">Literal</a></span><span class="p">[</span>
+    <span class="s2">&quot;hann&quot;</span><span class="p">,</span> <span class="s2">&quot;hamming&quot;</span><span class="p">,</span> <span class="s2">&quot;linear_fade&quot;</span>
+<span class="p">]</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>The shape of the window function applied to each chunk before computing the STFT.</p>
+
+    </div>
+
+</div>
+
+
+
+
+
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="splifft.core.FftSize" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-attribute"></code>            <span class="doc doc-object-name doc-attribute-name">FftSize</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-module-attribute"><code>module-attribute</code></small>
+  </span>
+
+</h3>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span class="n">FftSize</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" title="typing.TypeAlias" href="https://docs.python.org/3/library/typing.html#typing.TypeAlias">TypeAlias</a></span> <span class="o">=</span> <span class="n"><a class="autorefs autorefs-external" title="typing.Annotated" href="https://docs.python.org/3/library/typing.html#typing.Annotated">Annotated</a></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#int">int</a></span><span class="p">,</span> <span class="n"><span title="annotated_types.Gt">Gt</span></span><span class="p">(</span><span class="mi">0</span><span class="p">)]</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>The number of frequency bins in the STFT, controlling the <a href="../../concepts/#fft-size">frequency resolution</a>.</p>
+
+    </div>
+
+</div>
+
+
+
+
+
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="splifft.core.Bands" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-attribute"></code>            <span class="doc doc-object-name doc-attribute-name">Bands</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-module-attribute"><code>module-attribute</code></small>
+  </span>
+
+</h3>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span class="n">Bands</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" title="typing.TypeAlias" href="https://docs.python.org/3/library/typing.html#typing.TypeAlias">TypeAlias</a></span> <span class="o">=</span> <span class="n"><a class="autorefs autorefs-external" title="torch.Tensor" href="https://docs.pytorch.org/docs/stable/tensors.html#torch.Tensor">Tensor</a></span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Groups of <a href="../../concepts/#bands">adjacent frequency bins in the spectrogram</a>.</p>
+
+    </div>
+
+</div>
+
+
+
+
+
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="splifft.core.BatchSize" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-attribute"></code>            <span class="doc doc-object-name doc-attribute-name">BatchSize</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-module-attribute"><code>module-attribute</code></small>
+  </span>
+
+</h3>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span class="n">BatchSize</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" title="typing.TypeAlias" href="https://docs.python.org/3/library/typing.html#typing.TypeAlias">TypeAlias</a></span> <span class="o">=</span> <span class="n"><a class="autorefs autorefs-external" title="typing.Annotated" href="https://docs.python.org/3/library/typing.html#typing.Annotated">Annotated</a></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#int">int</a></span><span class="p">,</span> <span class="n"><span title="annotated_types.Gt">Gt</span></span><span class="p">(</span><span class="mi">0</span><span class="p">)]</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>The number of chunks processed simultaneously by the GPU.</p>
+<p>Increasing the batch size can improve GPU utilisation and speed up training, but it requires more
+memory.</p>
+
+    </div>
+
+</div>
+
+
+
+
+
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="splifft.core.Dtype" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-attribute"></code>            <span class="doc doc-object-name doc-attribute-name">Dtype</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-module-attribute"><code>module-attribute</code></small>
+  </span>
+
+</h3>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span class="n">Dtype</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" title="typing.TypeAlias" href="https://docs.python.org/3/library/typing.html#typing.TypeAlias">TypeAlias</a></span> <span class="o">=</span> <span class="n"><a class="autorefs autorefs-external" title="typing.Literal" href="https://docs.python.org/3/library/typing.html#typing.Literal">Literal</a></span><span class="p">[</span><span class="s2">&quot;float32&quot;</span><span class="p">,</span> <span class="s2">&quot;float16&quot;</span><span class="p">,</span> <span class="s2">&quot;bfloat16&quot;</span><span class="p">]</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+    </div>
+
+</div>
+
+
+
+
+
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="splifft.core.PaddingMode" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-attribute"></code>            <span class="doc doc-object-name doc-attribute-name">PaddingMode</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-module-attribute"><code>module-attribute</code></small>
+  </span>
+
+</h3>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span class="n">PaddingMode</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" title="typing.TypeAlias" href="https://docs.python.org/3/library/typing.html#typing.TypeAlias">TypeAlias</a></span> <span class="o">=</span> <span class="n"><a class="autorefs autorefs-external" title="typing.Literal" href="https://docs.python.org/3/library/typing.html#typing.Literal">Literal</a></span><span class="p">[</span>
+    <span class="s2">&quot;reflect&quot;</span><span class="p">,</span> <span class="s2">&quot;constant&quot;</span><span class="p">,</span> <span class="s2">&quot;replicate&quot;</span>
+<span class="p">]</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>The method used to pad the audio before chunking, crucial for handling the edges of the audio signal.</p>
+<ul>
+<li><code>reflect</code>: Pads the signal by reflecting the audio at the boundary. This creates a smooth
+  continuation and often yields the best results for music.</li>
+<li><code>constant</code>: Pads with zeros. Simpler, but can introduce silence at the edges.</li>
+<li><code>replicate</code>: Repeats the last sample at the edge.</li>
+</ul>
+
+    </div>
+
+</div>
+
+
+
+
+
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="splifft.core.ChunkDuration" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-attribute"></code>            <span class="doc doc-object-name doc-attribute-name">ChunkDuration</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-module-attribute"><code>module-attribute</code></small>
+  </span>
+
+</h3>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span class="n">ChunkDuration</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" title="typing.TypeAlias" href="https://docs.python.org/3/library/typing.html#typing.TypeAlias">TypeAlias</a></span> <span class="o">=</span> <span class="n"><a class="autorefs autorefs-external" title="typing.Annotated" href="https://docs.python.org/3/library/typing.html#typing.Annotated">Annotated</a></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#float">float</a></span><span class="p">,</span> <span class="n"><span title="annotated_types.Gt">Gt</span></span><span class="p">(</span><span class="mi">0</span><span class="p">)]</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>The length of an audio segment, in seconds, processed by the model at one time.</p>
+<p>Equivalent to <a class="autorefs autorefs-internal" title="            ChunkSize
+
+
+  
+      module-attribute
+  " href="../models/#splifft.models.ChunkSize">chunk size</a> divided by the <a class="autorefs autorefs-internal" title="            SampleRate
+
+
+  
+      module-attribute
+  " href="#splifft.core.SampleRate">sample rate</a>.</p>
+
+    </div>
+
+</div>
+
+
+
+
+
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="splifft.core.OverlapRatio" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-attribute"></code>            <span class="doc doc-object-name doc-attribute-name">OverlapRatio</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-module-attribute"><code>module-attribute</code></small>
+  </span>
+
+</h3>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span class="n">OverlapRatio</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" title="typing.TypeAlias" href="https://docs.python.org/3/library/typing.html#typing.TypeAlias">TypeAlias</a></span> <span class="o">=</span> <span class="n"><a class="autorefs autorefs-external" title="typing.Annotated" href="https://docs.python.org/3/library/typing.html#typing.Annotated">Annotated</a></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#float">float</a></span><span class="p">,</span> <span class="n"><span title="annotated_types.Ge">Ge</span></span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> <span class="n"><span title="annotated_types.Lt">Lt</span></span><span class="p">(</span><span class="mi">1</span><span class="p">)]</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>The fraction of a chunk that overlaps with the next one.</p>
+<p>The relationship with <a class="autorefs autorefs-internal" title="            HopSize
+
+
+  
+      module-attribute
+  " href="#splifft.core.HopSize">hop size</a> is:
+$$
+\text{hop_size} = \text{chunk_size} \cdot (1 - \text{overlap_ratio})
+$$</p>
+<ul>
+<li>A ratio of <code>0.0</code> means no overlap (hop_size = chunk_size).</li>
+<li>A ratio of <code>0.5</code> means 50% overlap (hop_size = chunk_size / 2).</li>
+<li>A higher overlap ratio increases computational cost as more chunks are processed, but it can lead
+  to smoother results by averaging more predictions for each time frame.</li>
+</ul>
+
+    </div>
+
+</div>
+
+
+
+
+
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="splifft.core.Padding" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-attribute"></code>            <span class="doc doc-object-name doc-attribute-name">Padding</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-module-attribute"><code>module-attribute</code></small>
+  </span>
+
+</h3>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span class="n">Padding</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" title="typing.TypeAlias" href="https://docs.python.org/3/library/typing.html#typing.TypeAlias">TypeAlias</a></span> <span class="o">=</span> <span class="n"><a class="autorefs autorefs-external" title="typing.Annotated" href="https://docs.python.org/3/library/typing.html#typing.Annotated">Annotated</a></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#int">int</a></span><span class="p">,</span> <span class="n"><span title="annotated_types.Gt">Gt</span></span><span class="p">(</span><span class="mi">0</span><span class="p">)]</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Samples to add to the beginning and end of each chunk.</p>
+<ul>
+<li>To ensure that the very beginning and end of a track can be centerd within a chunk, we often may
+  add "reflection padding" or "zero padding" before chunking.</li>
+<li>To ensure that the last chunk is full-size, we may pad the audio so its length is a multiple of
+  the hop size.</li>
+</ul>
+
+    </div>
+
+</div>
+
+
+
+
+
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="splifft.core.PaddedChunkedAudioTensor" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-attribute"></code>            <span class="doc doc-object-name doc-attribute-name">PaddedChunkedAudioTensor</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-module-attribute"><code>module-attribute</code></small>
+  </span>
+
+</h3>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span class="n">PaddedChunkedAudioTensor</span> <span class="o">=</span> <span class="n"><a class="autorefs autorefs-external" title="typing.NewType" href="https://docs.python.org/3/library/typing.html#typing.NewType">NewType</a></span><span class="p">(</span>
+    <span class="s2">&quot;PaddedChunkedAudioTensor&quot;</span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-external" title="torch.Tensor" href="https://docs.pytorch.org/docs/stable/tensors.html#torch.Tensor">Tensor</a></span>
+<span class="p">)</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>A batch of audio chunks from a padded source.
+Shape (<a class="autorefs autorefs-internal" title="            BatchSize
+
+
+  
+      module-attribute
+  " href="#splifft.core.BatchSize">batch size</a>, <a class="autorefs autorefs-internal" title="            Channels
+
+
+  
+      module-attribute
+  " href="#splifft.core.Channels">channels</a>, <a class="autorefs autorefs-internal" title="            ChunkSize
+
+
+  
+      module-attribute
+  " href="../models/#splifft.models.ChunkSize">chunk size</a>)</p>
+
+    </div>
+
+</div>
+
+
+
+
+
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="splifft.core.NumModelStems" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-attribute"></code>            <span class="doc doc-object-name doc-attribute-name">NumModelStems</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-module-attribute"><code>module-attribute</code></small>
+  </span>
+
+</h3>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span class="n">NumModelStems</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" title="typing.TypeAlias" href="https://docs.python.org/3/library/typing.html#typing.TypeAlias">TypeAlias</a></span> <span class="o">=</span> <span class="n"><a class="autorefs autorefs-external" title="typing.Annotated" href="https://docs.python.org/3/library/typing.html#typing.Annotated">Annotated</a></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#int">int</a></span><span class="p">,</span> <span class="n"><span title="annotated_types.Gt">Gt</span></span><span class="p">(</span><span class="mi">0</span><span class="p">)]</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>The number of stems the model outputs. This should be the length of [splifft.models.ModelConfigLike.output_stem_names].</p>
+
+    </div>
+
+</div>
+
+
+
+
+
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="splifft.core.SeparatedChunkedTensor" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-attribute"></code>            <span class="doc doc-object-name doc-attribute-name">SeparatedChunkedTensor</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-module-attribute"><code>module-attribute</code></small>
+  </span>
+
+</h3>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span class="n">SeparatedChunkedTensor</span> <span class="o">=</span> <span class="n"><a class="autorefs autorefs-external" title="typing.NewType" href="https://docs.python.org/3/library/typing.html#typing.NewType">NewType</a></span><span class="p">(</span>
+    <span class="s2">&quot;SeparatedChunkedTensor&quot;</span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-external" title="torch.Tensor" href="https://docs.pytorch.org/docs/stable/tensors.html#torch.Tensor">Tensor</a></span>
+<span class="p">)</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>A batch of separated audio chunks from the model.
+Shape (<a class="autorefs autorefs-internal" title="            BatchSize
+
+
+  
+      module-attribute
+  " href="#splifft.core.BatchSize">batch size</a>, <a class="autorefs autorefs-internal" title="            NumModelStems
+
+
+  
+      module-attribute
+  " href="#splifft.core.NumModelStems">number of stems</a>, <a class="autorefs autorefs-internal" title="            Channels
+
+
+  
+      module-attribute
+  " href="#splifft.core.Channels">channels</a>, <a class="autorefs autorefs-internal" title="            ChunkSize
+
+
+  
+      module-attribute
+  " href="../models/#splifft.models.ChunkSize">chunk size</a>)</p>
+
+    </div>
+
+</div>
+
+
+
+
+
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="splifft.core.WindowTensor" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-attribute"></code>            <span class="doc doc-object-name doc-attribute-name">WindowTensor</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-module-attribute"><code>module-attribute</code></small>
+  </span>
+
+</h3>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span class="n">WindowTensor</span> <span class="o">=</span> <span class="n"><a class="autorefs autorefs-external" title="typing.NewType" href="https://docs.python.org/3/library/typing.html#typing.NewType">NewType</a></span><span class="p">(</span><span class="s1">&#39;WindowTensor&#39;</span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-external" title="torch.Tensor" href="https://docs.pytorch.org/docs/stable/tensors.html#torch.Tensor">Tensor</a></span><span class="p">)</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>A 1D tensor representing a window function.
+Shape (<a class="autorefs autorefs-internal" title="            ChunkSize
+
+
+  
+      module-attribute
+  " href="../models/#splifft.models.ChunkSize">chunk size</a>)</p>
+
+    </div>
+
+</div>
+
+
+
+
+
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="splifft.core.RawSeparatedTensor" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-attribute"></code>            <span class="doc doc-object-name doc-attribute-name">RawSeparatedTensor</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-module-attribute"><code>module-attribute</code></small>
+  </span>
+
+</h3>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span class="n">RawSeparatedTensor</span> <span class="o">=</span> <span class="n"><a class="autorefs autorefs-external" title="typing.NewType" href="https://docs.python.org/3/library/typing.html#typing.NewType">NewType</a></span><span class="p">(</span><span class="s1">&#39;RawSeparatedTensor&#39;</span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-external" title="torch.Tensor" href="https://docs.pytorch.org/docs/stable/tensors.html#torch.Tensor">Tensor</a></span><span class="p">)</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>The final, stitched, raw-domain separated audio.
+Shape (<a class="autorefs autorefs-internal" title="            NumModelStems
+
+
+  
+      module-attribute
+  " href="#splifft.core.NumModelStems">number of stems</a>, <a class="autorefs autorefs-internal" title="            Channels
+
+
+  
+      module-attribute
+  " href="#splifft.core.Channels">channels</a>, <a class="autorefs autorefs-internal" title="            Samples
+
+
+  
+      module-attribute
+  " href="#splifft.core.Samples">samples</a>)</p>
+
+    </div>
+
+</div>
+
+
+
+
+
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="splifft.core.Sdr" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-attribute"></code>            <span class="doc doc-object-name doc-attribute-name">Sdr</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-module-attribute"><code>module-attribute</code></small>
+  </span>
+
+</h3>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span class="n">Sdr</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" title="typing.TypeAlias" href="https://docs.python.org/3/library/typing.html#typing.TypeAlias">TypeAlias</a></span> <span class="o">=</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#float">float</a></span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Signal-to-Distortion Ratio (decibels). Higher is better.</p>
+<p>Measures the ratio of the power of clean reference signal to the power of all other error components
+(interference, artifacts, and spatial distortion).</p>
+<p>Definition:
+$$
+\text{SDR} = 10 \log_{10} \frac{|\mathbf{s}|^2}{|\mathbf{s} - \mathbf{\hat{s}}|^2},
+$$
+where:</p>
+<ul>
+<li><span class="arithmatex">\(\mathbf{s}\)</span>: ground truth source signal</li>
+<li><span class="arithmatex">\(\mathbf{\hat{s}}\)</span>: estimated source signal produced by the model</li>
+<li><span class="arithmatex">\(||\cdot||^2\)</span>: squared L2 norm (power) of the signal</li>
+</ul>
+
+    </div>
+
+</div>
+
+
+
+
+
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="splifft.core.SiSdr" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-attribute"></code>            <span class="doc doc-object-name doc-attribute-name">SiSdr</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-module-attribute"><code>module-attribute</code></small>
+  </span>
+
+</h3>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span class="n">SiSdr</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" title="typing.TypeAlias" href="https://docs.python.org/3/library/typing.html#typing.TypeAlias">TypeAlias</a></span> <span class="o">=</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#float">float</a></span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Scale-Invariant SDR (SI-SDR) is invariant to scaling errors (decibels). Higher is better.</p>
+<p>It projects the estimate onto the reference to find the optimal scaling factor <span class="arithmatex">\(\alpha\)</span>, creating a scaled reference that best matches the estimate's amplitude.</p>
+<ul>
+<li>Optimal scaling factor: <span class="arithmatex">\(\alpha = \frac{\langle\mathbf{\hat{s}}, \mathbf{s}\rangle}{||\mathbf{s}||^2}\)</span></li>
+<li>Scaled reference: <span class="arithmatex">\(\mathbf{s}_\text{target} = \alpha \cdot \mathbf{s}\)</span></li>
+<li>Error: <span class="arithmatex">\(\mathbf{e} = \mathbf{\hat{s}} - \mathbf{s}_\text{target}\)</span></li>
+<li><span class="arithmatex">\(\text{SI-SDR} = 10 \log_{10} \frac{||\mathbf{s}_\text{target}||^2}{||\mathbf{e}||^2}\)</span></li>
+</ul>
+
+    </div>
+
+</div>
+
+
+
+
+
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="splifft.core.L1Norm" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-attribute"></code>            <span class="doc doc-object-name doc-attribute-name">L1Norm</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-module-attribute"><code>module-attribute</code></small>
+  </span>
+
+</h3>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span class="n">L1Norm</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" title="typing.TypeAlias" href="https://docs.python.org/3/library/typing.html#typing.TypeAlias">TypeAlias</a></span> <span class="o">=</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#float">float</a></span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>L1 norm (mean absolute error) between two signals (dimensionless). Lower is better.</p>
+<p>Measures the average absolute difference between the reference and estimated signals.</p>
+<ul>
+<li>Time domain: <span class="arithmatex">\(\mathcal{L}_\text{L1} = \frac{1}{N}
+\sum_{n=1}^{N} |\mathbf{s}[n] - \mathbf{\hat{s}}[n]|\)</span>,</li>
+<li>Frequency domain: <span class="arithmatex">\(\mathcal{L}_\text{L1Freq} = \frac{1}{\text{MK}}\sum_{m=1}^{M}
+\sum_{k=1}^{K} \left||S(m, k)| - |\hat{S}(m, k)|\right|\)</span></li>
+</ul>
+
+    </div>
+
+</div>
+
+
+
+
+
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="splifft.core.DbDifferenceMel" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-attribute"></code>            <span class="doc doc-object-name doc-attribute-name">DbDifferenceMel</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-module-attribute"><code>module-attribute</code></small>
+  </span>
+
+</h3>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span class="n">DbDifferenceMel</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" title="typing.TypeAlias" href="https://docs.python.org/3/library/typing.html#typing.TypeAlias">TypeAlias</a></span> <span class="o">=</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#float">float</a></span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Difference in the dB-scaled mel spectrogram.
+$$
+\mathbf{D}(m, k) = \text{dB}(|\hat{S}<em>\text{mel}(m, k)|) - \text{dB}(|S</em>\text{mel}(m, k)|)
+$$</p>
+
+    </div>
+
+</div>
+
+
+
+
+
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="splifft.core.Bleedless" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-attribute"></code>            <span class="doc doc-object-name doc-attribute-name">Bleedless</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-module-attribute"><code>module-attribute</code></small>
+  </span>
+
+</h3>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span class="n">Bleedless</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" title="typing.TypeAlias" href="https://docs.python.org/3/library/typing.html#typing.TypeAlias">TypeAlias</a></span> <span class="o">=</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#float">float</a></span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>A metric to quantify the amount of "bleeding" from other sources. Higher is better.</p>
+<p>Measures the average energy of the parts of the <a class="autorefs autorefs-internal" title="            DbDifferenceMel
+
+
+  
+      module-attribute
+  " href="#splifft.core.DbDifferenceMel">mel spectrogram</a>
+that are louder than the reference.
+A high value indicates that the estimate contains unwanted energy (bleed) from other sources:
+$$
+\text{Bleed} = \text{mean}(\mathbf{D}(m, k)) \quad \forall \quad \mathbf{D}(m, k) &gt; 0
+$$</p>
+
+    </div>
+
+</div>
+
+
+
+
+
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="splifft.core.Fullness" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-attribute"></code>            <span class="doc doc-object-name doc-attribute-name">Fullness</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-module-attribute"><code>module-attribute</code></small>
+  </span>
+
+</h3>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span class="n">Fullness</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" title="typing.TypeAlias" href="https://docs.python.org/3/library/typing.html#typing.TypeAlias">TypeAlias</a></span> <span class="o">=</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#float">float</a></span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>A metric to quantify how much of the original source is missing. Higher is better.</p>
+<p>Complementary to <a class="autorefs autorefs-internal" title="            Bleedless
+
+
+  
+      module-attribute
+  " href="#splifft.core.Bleedless">Bleedless</a>.
+Measures the average energy of the parts of the <a class="autorefs autorefs-internal" title="            DbDifferenceMel
+
+
+  
+      module-attribute
+  " href="#splifft.core.DbDifferenceMel">mel spectrogram</a>
+that are quieter than the reference.
+A high value indicates that parts of the target loss were lost during the separation, indicating
+that more of the original source's character is preserved.
+$$
+\text{Fullness} = \text{mean}(|\mathbf{D}(m, k)|) \quad \forall \quad \mathbf{D}(m, k) &lt; 0
+$$</p>
+
+    </div>
+
+</div>
+
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+
+
+
+
+
+
+  
+  
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      <script id="__config" type="application/json">{"base": "../..", "features": ["search.suggest", "search.highlight", "content.code.copy", "content.code.annotate", "navigation.expand"], "search": "../../assets/javascripts/workers/search.d50fe291.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.13a4f30d.min.js"></script>
+      
+        <script src="../../assets/js/katex.js"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.js"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/contrib/auto-render.min.js"></script>
+      
+    
+  </body>
+</html>
