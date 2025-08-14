@@ -1,8 +1,9 @@
 """Command line interface for `splifft`."""
 
 import logging
+import time
 from pathlib import Path
-from typing import Annotated, Optional
+from typing import Annotated, Callable, Optional, ParamSpec, TypeVar
 
 import typer
 from rich.logging import RichHandler
@@ -20,6 +21,23 @@ app = typer.Typer(
 # TODO: migrate away from hardcoding.
 _DEFAULT_MODULE_NAME = "splifft.models.bs_roformer"
 _DEFAULT_CLASS_NAME = "BSRoformer"
+
+P = ParamSpec("P")
+T = TypeVar("T")
+
+
+def timed(func_name: str | None = None) -> Callable[[Callable[P, T]], Callable[P, T]]:
+    def decorator(func: Callable[P, T]) -> Callable[P, T]:
+        def wrapper(*args: P.args, **kwargs: P.kwargs) -> T:
+            start_time = time.perf_counter()
+            result = func(*args, **kwargs)
+            elapsed_time = time.perf_counter() - start_time
+            logger.info(f"{func_name or func.__qualname__} took {elapsed_time:.4f} seconds")
+            return result
+
+        return wrapper
+
+    return decorator
 
 
 @app.command()
@@ -120,8 +138,8 @@ def separate(
         model_type=config.model_type,
         package=package_name,
     )
-    config_model_concrete = config.model.to_concrete(model_metadata.config)
-    model = model_metadata.model(config_model_concrete)
+    model_params_concrete = config.model.to_concrete(model_metadata.params)
+    model = model_metadata.model(model_params_concrete)
     if config.inference.force_weights_dtype:
         model = model.to(get_dtype(config.inference.force_weights_dtype))
     logger.info(f"loading weights from {checkpoint_path=}")
@@ -139,10 +157,11 @@ def separate(
             config.audio_io.force_channels,
             device=device,
         )
-        output_stems = run_inference_on_file(
+        output_stems = timed("inference")(run_inference_on_file)(
             mixture,
             config=config,
             model=model,
+            model_params_concrete=model_params_concrete,
         )
         if not config.output:
             return

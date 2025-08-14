@@ -7,11 +7,11 @@ def test_model_metadata_dynamically_loaded() -> None:
         "BSRoformer",
         model_type="bs_roformer",
     )
-    from splifft.models.bs_roformer import BSRoformer, BSRoformerConfig
+    from splifft.models.bs_roformer import BSRoformer, BSRoformerParams
 
     model_metadata_expected = ModelMetadata(
         model_type="bs_roformer",
-        config=BSRoformerConfig,
+        params=BSRoformerParams,
         model=BSRoformer,
     )
     assert model_metadata == model_metadata_expected

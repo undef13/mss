@@ -8,6 +8,7 @@ from typing import (
     TYPE_CHECKING,
     Annotated,
     Generic,
+    Literal,
     Protocol,
     TypeAlias,
     TypeVar,
@@ -23,13 +24,22 @@ if TYPE_CHECKING:
 ModelType: TypeAlias = str
 """The type of the model, e.g. `bs_roformer`, `demucs`"""
 
+ModelIoType: TypeAlias = Literal["waveform", "spectrogram", "waveform_and_spectrogram"]
+
 
 @runtime_checkable
-class ModelConfigLike(Protocol):
-    """A trait that must be implemented to be considered a model configuration."""
+class ModelParamsLike(Protocol):
+    """A trait that must be implemented to be considered a model parameter.
+    Note that `input_type` and `output_type` belong to a model's definition
+    and does not allow modification via the configuration dictionary."""
 
     chunk_size: ChunkSize
     output_stem_names: tuple[ModelOutputStemName, ...]
+    # the following are readonly
+    input_type: ModelIoType
+    """The type of the model's input (readonly)"""
+    output_type: ModelIoType
+    """The type of the model's output (readonly)"""
 
 
 ChunkSize: TypeAlias = Annotated[int, Gt(0)]
@@ -43,17 +53,16 @@ memory usage.
 ModelOutputStemName: TypeAlias = str
 """The output stem name, e.g. `vocals`, `drums`, `bass`, etc."""
 
-ModelConfigLikeT = TypeVar("ModelConfigLikeT", bound=ModelConfigLike)
-
 ModelT = TypeVar("ModelT", bound=nn.Module)
+ModelParamsLikeT = TypeVar("ModelParamsLikeT", bound=ModelParamsLike)
 
 
 @dataclass
-class ModelMetadata(Generic[ModelT, ModelConfigLikeT]):
-    """Metadata about a model, including its type, configuration class, and model class."""
+class ModelMetadata(Generic[ModelT, ModelParamsLikeT]):
+    """Metadata about a model, including its type, parameter class, and model class."""
 
     model_type: ModelType
-    config: type[ModelConfigLikeT]
+    params: type[ModelParamsLikeT]
     model: type[ModelT]
 
     @classmethod
@@ -64,13 +73,14 @@ class ModelMetadata(Generic[ModelT, ModelConfigLikeT]):
         *,
         model_type: ModelType,
         package: str | None = None,
-    ) -> ModelMetadata[nn.Module, ModelConfigLike]:
+    ) -> ModelMetadata[nn.Module, ModelParamsLike]:
         """
-        Dynamically import a model named `X` and its configuration dataclass `XConfig` under a
+        Dynamically import a model named `X` and its parameter dataclass `XParams` under a
         given module name (e.g. `splifft.models.bs_roformer`).
 
         :param model_cls_name: The name of the model class to import, e.g. `BSRoformer`.
         :param module_name: The name of the module to import, e.g. `splifft.models.bs_roformer`.
+        :param model_type: The type of the model, e.g. `bs_roformer`.
         :param package: The package to use as the anchor point from which to resolve the relative import.
         to an absolute import. This is only required when performing a relative import.
         """
@@ -80,16 +90,16 @@ class ModelMetadata(Generic[ModelT, ModelConfigLikeT]):
         except ImportError as e:
             raise ValueError(f"failed to find or import module for {_loc}") from e
 
-        config_cls_name = f"{model_cls_name}Config"
+        params_cls_name = f"{model_cls_name}Params"
         model_cls = getattr(module, model_cls_name, None)
-        config_cls = getattr(module, config_cls_name, None)
-        if model_cls is None or config_cls is None:
+        params_cls = getattr(module, params_cls_name, None)
+        if model_cls is None or params_cls is None:
             raise AttributeError(
-                f"expected to find a class named `{config_cls_name}` in {_loc}, but it was not found."
+                f"expected to find a class named `{params_cls_name}` in {_loc}, but it was not found."
             )
 
         return ModelMetadata(
             model_type=model_type,
             model=model_cls,
-            config=config_cls,  # type: ignore
+            params=params_cls,
         )

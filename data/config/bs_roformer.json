@@ -1,6 +1,11 @@
 {
     "identifier": "bs_roformer",
     "model_type": "bs_roformer",
+    "stft": {
+        "n_fft": 2048,
+        "hop_length": 512,
+        "win_length": 2048
+    },
     "model": {
         "chunk_size": 588800,
         "output_stem_names": [
@@ -15,9 +20,7 @@
         "depth": 12,
         "stereo": true,
         "time_transformer_depth": 1,
-        "freq_transformer_depth": 1,
-        "stft_n_fft": 2048,
-        "stft_hop_length": 512
+        "freq_transformer_depth": 1
     },
     "audio_io": {
         "target_sample_rate": 44100,

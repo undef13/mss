@@ -36,13 +36,15 @@ from .core import (
     BitRate,
     Channels,
     Dtype,
+    FftSize,
     FileFormat,
+    HopSize,
     OverlapRatio,
     PaddingMode,
     SampleRate,
     WindowShape,
 )
-from .models import ChunkSize, ModelConfigLikeT, ModelType
+from .models import ChunkSize, ModelParamsLikeT, ModelType
 from .models import ModelOutputStemName as _ModelOutputStemName
 
 # NOTE: we are not using typing.TYPE_CHECKING because pydantic relies on that
@@ -87,7 +89,7 @@ _INPUT_STEM_NAMES = get_args(ModelInputStemName)
 # }
 # but downstream users may want to register their own models with different configurations,
 # so a discriminated enum wouldn't work here.
-# so, we effectively let Config.model_config be dyn ModelConfigLike (i.e. dict[str, Any])
+# so, we effectively let Config.model_config be dyn ModelParamsLike (i.e. dict[str, Any])
 # and defer the validation of the model configuration until it is actually needed instead of doing it eagerly.
 class LazyModelConfig(BaseModel):
     """A lazily validated model configuration.
@@ -100,23 +102,34 @@ class LazyModelConfig(BaseModel):
 
     def to_concrete(
         self,
-        model_config: type[ModelConfigLikeT],
+        model_params: type[ModelParamsLikeT],
         *,
         pydantic_config: ConfigDict = ConfigDict(extra="forbid"),
-    ) -> ModelConfigLikeT:
-        """Validate against a real model configuration and convert to it.
+    ) -> ModelParamsLikeT:
+        """Validate against a real set of model parameters and convert to it.
 
-        :raises pydantic.ValidationError: if extra fields are present in the model configuration
-            that doesn't exist in the concrete model configuration.
+        :raises pydantic.ValidationError: if extra fields are present in the model parameters
+            that doesn't exist in the concrete model parameters.
         """
-        model_config_concrete: ModelConfigLikeT = TypeAdapter(
+        config_dict = self.model_dump()
+        # NOTE: a more scalable approach would be to use Annotated[] and get_origin but its overkill.
+        # hardcoding for now.
+        if "input_type" in config_dict:
+            raise PydanticCustomError(
+                "readonly_model_param", "`input_type` is a model parameter and cannot be modified"
+            )
+        if "output_type" in config_dict:
+            raise PydanticCustomError(
+                "readonly_model_param", "`output_type` is a model parameter and cannot be modified"
+            )
+        model_params_concrete: ModelParamsLikeT = TypeAdapter(
             type(
-                f"{model_config.__name__}Validator",
-                (model_config,),
+                f"{model_params.__name__}Validator",
+                (model_params,),
                 {"__pydantic_config__": pydantic_config},
             )  # needed for https://docs.pydantic.dev/latest/errors/usage_errors/#type-adapter-config-unused
         ).validate_python(self.model_dump())  # type: ignore
-        return model_config_concrete
+        return model_params_concrete
 
     @property
     def stem_names(self) -> tuple[ModelInputStemName | ModelOutputStemName, ...]:
@@ -126,6 +139,18 @@ class LazyModelConfig(BaseModel):
     model_config = ConfigDict(
         strict=True, extra="allow"
     )  # extra fields are not validated until `to_concrete`
+
+
+class StftConfig(BaseModel):
+    """configuration for the short-time fourier transform."""
+
+    n_fft: FftSize
+    hop_length: HopSize
+    win_length: FftSize
+    window_shape: WindowShape = "hann"
+    normalized: bool = False
+
+    model_config = _PYDANTIC_STRICT_CONFIG
 
 
 class AudioIOConfig(BaseModel):
@@ -207,6 +232,7 @@ class Config(BaseModel):
     """Unique identifier for this configuration"""
     model_type: ModelType
     model: LazyModelConfig
+    stft: StftConfig | None = None
     audio_io: AudioIOConfig = Field(default_factory=AudioIOConfig)
     inference: InferenceConfig = Field(default_factory=InferenceConfig)
     chunking: ChunkingConfig = Field(default_factory=ChunkingConfig)
@@ -215,11 +241,12 @@ class Config(BaseModel):
     experimental: dict[str, Any] | None = None
     """Any extra experimental configurations outside of the `splifft` core."""
 
+    # NOTE: stft config can be none for models that operate on raw waveforms
+    # they are checked in the processing step instead.
     @model_validator(mode="after")
     def check_derived_stems(self) -> Self:
         if self.derived_stems is None:
             return self
-        # accumulate valid stem names
         existing_stem_names: list[StemName] = list(self.model.stem_names)
         for derived_stem_name, definition in self.derived_stems.items():
             if derived_stem_name in existing_stem_names:

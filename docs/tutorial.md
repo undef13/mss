@@ -43,7 +43,7 @@ Instead, define a [stdlib `dataclass`][dataclasses.dataclass] separate from the 
 --8<-- "docs/examples/ext_project/src/my_library/models/my_model.py"
 ```
 
-1. [`ModelConfigLike`][splifft.models.ModelConfigLike] is *not* a base class to inherit from, but rather a form of [structural typing][typing.Protocol] that signals that `MyModelConfig` is compatible with the [`splifft` configuration system][splifft.config.LazyModelConfig]. You can remove it if you don't like it.
+1. [`ModelParamsLike`][splifft.models.ModelParamsLike] is *not* a base class to inherit from, but rather a form of [structural typing][typing.Protocol] that signals that `MyModelParams` is compatible with the [`splifft` configuration system][splifft.config.LazyModelConfig]. You can remove it if you don't like it.
 
 
 ### 2. Register the model
@@ -55,10 +55,10 @@ With the model and its config defined, our [configuration system][splifft.config
     A common solution is to define a "global" dictionary of available models:
 
     ```py title="src/my_library/models/__init__.py"
-    from my_library.models.my_model import MyModelConfig, MyModel
+    from my_library.models.my_model import MyModelParams, MyModel
 
     MODEL_REGISTRY = {
-        "my_model": (MyModel, MyModelConfig),
+        "my_model": (MyModel, MyModelParams),
         # every other model must be added here
     }
     ```

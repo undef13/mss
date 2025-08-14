@@ -14,12 +14,14 @@ from rich.progress import (
     TextColumn,
     TimeRemainingColumn,
 )
-from torch import Tensor, nn
+from torch import nn
 
 from .core import (
     NormalizedAudioTensor,
     RawAudioTensor,
     WindowTensor,
+    _get_window_fn,
+    create_processor,
     denormalize_audio,
     derive_stems,
     generate_chunks,
@@ -29,16 +31,25 @@ from .core import (
 )
 
 if TYPE_CHECKING:
-    from .config import ChunkingConfig, Config, StemName
-    from .core import Audio, BatchSize, ChunkSize, Dtype, NormalizationStats, NumModelStems
-    from .models import ModelOutputStemName
+    from .config import ChunkingConfig, Config, StemName, StftConfig
+    from .core import (
+        Audio,
+        BatchSize,
+        Dtype,
+        NormalizationStats,
+        NumModelStems,
+        RawSeparatedTensor,
+    )
+    from .models import ChunkSize, ModelIoType, ModelOutputStemName, ModelParamsLike
 
 
 def run_inference_on_file(
-    mixture: Audio[RawAudioTensor], config: Config, model: nn.Module
+    mixture: Audio[RawAudioTensor],
+    config: Config,
+    model: nn.Module,
+    model_params_concrete: ModelParamsLike,
 ) -> dict[StemName, RawAudioTensor]:
     """Runs the full source separation pipeline on a single audio file."""
-
     mixture_data: RawAudioTensor | NormalizedAudioTensor = mixture.data
     mixture_stats: NormalizationStats | None = None
     if config.inference.normalize_input_audio:
@@ -53,6 +64,9 @@ def run_inference_on_file(
         batch_size=config.inference.batch_size,
         num_model_stems=len(config.model.output_stem_names),
         chunk_size=config.model.chunk_size,
+        model_input_type=model_params_concrete.input_type,
+        model_output_type=model_params_concrete.output_type,
+        stft_cfg=config.stft,
         use_autocast_dtype=config.inference.use_autocast_dtype,
     )
 
@@ -64,9 +78,7 @@ def run_inference_on_file(
                 audio_data=NormalizedAudioTensor(stem_data),
                 stats=mixture_stats,
             )
-            denormalized_stems[stem_name] = stem_data
-        else:
-            denormalized_stems[stem_name] = RawAudioTensor(stem_data)
+        denormalized_stems[stem_name] = RawAudioTensor(stem_data)
 
     if config.inference.apply_tta:
         raise NotImplementedError
@@ -89,22 +101,22 @@ def separate(
     batch_size: BatchSize,
     num_model_stems: NumModelStems,
     chunk_size: ChunkSize,
+    model_input_type: ModelIoType,
+    model_output_type: ModelIoType,
+    stft_cfg: StftConfig,
     *,
     use_autocast_dtype: Dtype | None = None,
-) -> Tensor:  # FIXME: update type hint.
+) -> RawSeparatedTensor:
     """Chunk, predict and stitch."""
     device = mixture_data.device
     original_num_samples = mixture_data.shape[-1]
     hop_size = int(chunk_size * (1 - chunk_cfg.overlap_ratio))
 
+    window = _get_window_fn(chunk_cfg.window_shape, chunk_size, device)
+
     padded_length = original_num_samples + 2 * (chunk_size - hop_size)
     num_chunks = max(0, (padded_length - chunk_size) // hop_size + 1)
     total_batches = math.ceil(num_chunks / batch_size)
-
-    if chunk_cfg.window_shape == "hann":
-        window = torch.hann_window(chunk_size, device=device)
-    else:
-        raise NotImplementedError(f"{chunk_cfg.window_shape=}")
 
     chunk_generator = generate_chunks(
         audio_data=mixture_data,
@@ -112,6 +124,15 @@ def separate(
         hop_size=hop_size,
         batch_size=batch_size,
         padding_mode=chunk_cfg.padding_mode,
+    )
+
+    processor = create_processor(
+        model=model,
+        model_input_type=model_input_type,
+        model_output_type=model_output_type,
+        stft_cfg=stft_cfg,
+        num_channels=mixture_data.shape[0],
+        chunk_size=chunk_size,
     )
 
     processed_chunks = []
@@ -144,7 +165,7 @@ def separate(
             ),
         ):
             for chunk_batch in chunk_generator:
-                separated_batch = model(chunk_batch)
+                separated_batch = processor(chunk_batch)
                 processed_chunks.append(separated_batch)
                 progress.update(task, advance=1)
 

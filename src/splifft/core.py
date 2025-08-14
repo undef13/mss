@@ -3,18 +3,19 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Annotated, Generic, Iterator, Literal, NewType, TypeVar
+from typing import TYPE_CHECKING, Annotated, Generic, Iterator, Literal, NewType, Protocol, TypeVar
 
 import torch
 import torch.nn.functional as F
 from annotated_types import Ge, Gt, Lt
-from torch import Tensor
+from einops import rearrange
+from torch import Tensor, nn
 
 if TYPE_CHECKING:
-    from typing import Mapping, Sequence, TypeAlias
+    from typing import Callable, Mapping, Sequence, TypeAlias
 
-    from .config import DerivedStemsConfig, StemName
-    from .models import ChunkSize, ModelOutputStemName
+    from .config import DerivedStemsConfig, StemName, StftConfig
+    from .models import ChunkSize, ModelIoType, ModelOutputStemName
 
 
 _AudioTensorLike = TypeVar("_AudioTensorLike")
@@ -168,7 +169,190 @@ def stitch_chunks(
 
 
 #
-# derive stems
+# (i)stft
+#
+
+
+class Processor(Protocol):
+    """A callable that processes a batch of audio chunks."""
+
+    def __call__(
+        self, chunk_batch: RawAudioTensor | NormalizedAudioTensor
+    ) -> SeparatedChunkedTensor: ...
+
+
+def create_processor(
+    model: nn.Module,
+    model_input_type: ModelIoType,
+    model_output_type: ModelIoType,
+    stft_cfg: StftConfig | None,
+    num_channels: Channels,
+    chunk_size: ChunkSize,
+) -> Processor:
+    """Creates a processing function based on the model's I/O types."""
+    types_that_need_stft: set[ModelIoType] = {"spectrogram", "waveform_and_spectrogram"}
+    needs_stft = (
+        model_input_type in types_that_need_stft or model_output_type in types_that_need_stft
+    )
+
+    if needs_stft and stft_cfg is None:
+        raise ValueError(
+            "expected stft configuration for models that operate on spectrograms, but found `None`."
+        )
+
+    if model_input_type == "waveform" and model_output_type == "waveform":
+        return _process_wave_to_wave(model)
+
+    assert stft_cfg, "unreachable code: expected stft config"
+
+    if model_input_type == "spectrogram" and model_output_type == "spectrogram":
+        return _process_spec_to_spec(model, stft_cfg, num_channels, chunk_size)
+
+    if model_input_type == "waveform_and_spectrogram" and model_output_type == "waveform":
+        return _process_hybrid(model, stft_cfg)
+
+    raise NotImplementedError(f"Unsupported I/O: {model_input_type} -> {model_output_type}")
+
+
+def _process_wave_to_wave(model: nn.Module) -> Processor:
+    def _process(chunk_batch: RawAudioTensor | NormalizedAudioTensor) -> SeparatedChunkedTensor:
+        return SeparatedChunkedTensor(model(chunk_batch))
+
+    return _process
+
+
+def _process_spec_to_spec(
+    model: nn.Module,
+    stft_cfg: StftConfig,
+    num_channels: Channels,
+    chunk_size: ChunkSize,
+) -> Processor:
+    def _process(chunk_batch: RawAudioTensor | NormalizedAudioTensor) -> SeparatedChunkedTensor:
+        spec_batch = stft(chunk_batch, stft_cfg)
+        spec_batch_rearranged = rearrange(spec_batch, "b s f t c -> b (f s) t c")
+
+        mask_batch = model(spec_batch_rearranged)
+
+        spec_for_masking = spec_batch_rearranged.unsqueeze(1)
+        spec_complex = torch.view_as_complex(spec_for_masking)
+        mask_complex = torch.view_as_complex(mask_batch)
+        separated_spec_complex = spec_complex * mask_complex
+
+        separated_spec_complex = rearrange(
+            separated_spec_complex, "b n (f s) t -> (b n s) f t", s=num_channels
+        )
+
+        separated_wave_chunk = istft(
+            ComplexSpectrogram(torch.view_as_real(separated_spec_complex)),
+            stft_cfg,
+            length=chunk_size,
+        )
+        separated_wave_chunk_ = rearrange(
+            separated_wave_chunk,
+            "(b n s) t -> b n s t",
+            b=chunk_batch.shape[0],
+            s=num_channels,
+        )
+        return SeparatedChunkedTensor(separated_wave_chunk_)
+
+    return _process
+
+
+def _process_hybrid(model: nn.Module, stft_cfg: StftConfig) -> Processor:
+    def _process(chunk_batch: RawAudioTensor | NormalizedAudioTensor) -> SeparatedChunkedTensor:
+        spec_batch = stft(chunk_batch, stft_cfg)
+        spec_batch_rearranged = rearrange(spec_batch, "b s f t c -> b (f s) t c")
+        model_input: HybridModelInput = (spec_batch_rearranged, chunk_batch)
+        return SeparatedChunkedTensor(model(model_input))
+
+    return _process
+
+
+def _get_window_fn(name: str, win_length: int, device: torch.device) -> WindowTensor:
+    # intentionally keeping it sealed and simple, not using getattr().
+    fn: Callable[[int], Tensor]
+    if name == "hann":
+        fn = torch.hann_window
+    elif name == "hamming":
+        fn = torch.hamming_window
+    else:
+        raise ValueError(f"unknown window function: {name}")
+
+    return WindowTensor(fn(win_length, device=device))
+
+
+def stft(
+    audio_data: RawAudioTensor | NormalizedAudioTensor, stft_cfg: StftConfig
+) -> ComplexSpectrogram:
+    device = audio_data.device
+    is_mps = device.type == "mps"
+
+    window = _get_window_fn(stft_cfg.window_shape, stft_cfg.win_length, device)
+
+    b, c, t = audio_data.shape
+    audio_data_reshaped = audio_data.reshape(b * c, t)
+
+    # mps backend for stft is buggy in older pytorch versions
+    try:
+        spec_reshaped = torch.stft(
+            audio_data_reshaped,
+            n_fft=stft_cfg.n_fft,
+            hop_length=stft_cfg.hop_length,
+            win_length=stft_cfg.win_length,
+            window=window,
+            return_complex=True,
+        )
+    except RuntimeError:
+        spec_reshaped = torch.stft(
+            audio_data_reshaped.cpu() if is_mps else audio_data_reshaped,
+            n_fft=stft_cfg.n_fft,
+            hop_length=stft_cfg.hop_length,
+            win_length=stft_cfg.win_length,
+            window=window.cpu() if is_mps else window,
+            return_complex=True,
+        ).to(device)
+
+    _bc, f, t_frames = spec_reshaped.shape
+    spec = spec_reshaped.reshape(b, c, f, t_frames)
+
+    return ComplexSpectrogram(torch.view_as_real(spec))
+
+
+def istft(
+    spec: ComplexSpectrogram, stft_cfg: StftConfig, length: int | None = None
+) -> RawAudioTensor | NormalizedAudioTensor:
+    device = spec.device
+    is_mps = device.type == "mps"
+
+    window = _get_window_fn(stft_cfg.window_shape, stft_cfg.win_length, device)
+    spec_complex = torch.view_as_complex(spec)
+
+    try:
+        audio = torch.istft(
+            spec_complex,
+            n_fft=stft_cfg.n_fft,
+            hop_length=stft_cfg.hop_length,
+            win_length=stft_cfg.win_length,
+            window=window,
+            return_complex=False,
+            length=length,
+        )
+    except RuntimeError:
+        audio = torch.istft(
+            spec_complex.cpu() if is_mps else spec_complex,
+            n_fft=stft_cfg.n_fft,
+            hop_length=stft_cfg.hop_length,
+            win_length=stft_cfg.win_length,
+            window=window.cpu() if is_mps else window,
+            return_complex=False,
+            length=length,
+        ).to(device)
+
+    return audio  # type: ignore
+
+
+#
+# stem postprocessing
 #
 def derive_stems(
     separated_stems: Mapping[ModelOutputStemName, RawAudioTensor],
@@ -278,6 +462,9 @@ Shape ([channels][splifft.core.Channels], [frequency bins][splifft.core.FftSize]
 See [concepts](../concepts.md#complex-spectrogram) for more details.
 """
 
+HybridModelInput: TypeAlias = tuple[ComplexSpectrogram, RawAudioTensor | NormalizedAudioTensor]
+"""Input for hybrid models that require both spectrogram and waveform."""
+
 HopSize: TypeAlias = Annotated[int, Gt(0)]
 """The step size, in samples, between the start of consecutive [chunks][splifft.models.ChunkSize].
 
@@ -358,7 +545,7 @@ PaddedChunkedAudioTensor = NewType("PaddedChunkedAudioTensor", Tensor)
 Shape ([batch size][splifft.core.BatchSize], [channels][splifft.core.Channels], [chunk size][splifft.models.ChunkSize])"""
 
 NumModelStems: TypeAlias = Annotated[int, Gt(0)]
-"""The number of stems the model outputs. This should be the length of [splifft.models.ModelConfigLike.output_stem_names]."""
+"""The number of stems the model outputs. This should be the length of [splifft.models.ModelParamsLike.output_stem_names]."""
 
 # post separation stitching
 

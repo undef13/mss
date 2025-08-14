@@ -6,7 +6,7 @@ More information on the expected JSON schema for the configuration can be found 
 
 - checkpoint: [`roformer-fp16.pt`](https://github.com/undef13/splifft/releases/download/v0.0.1/roformer-fp16.pt)
 - configuration: [`bs_roformer.json`](https://github.com/undef13/splifft/blob/main/data/config/bs_roformer.json)
-- [`config.model`][splifft.models.bs_roformer.BSRoformerConfig]
+- [`config.model`][splifft.models.bs_roformer.BSRoformerParams]
 - [`config.model_type = "bs_roformer"`][splifft.config.Config.model_type]
 
 ## Visualizations

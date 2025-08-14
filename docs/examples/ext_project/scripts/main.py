@@ -10,8 +10,8 @@ config = Config.from_file(Path("path/to/my_model_config.json"))
 from my_library.models import my_model_metadata
 
 metadata = my_model_metadata()
-my_model_config = config.model.to_concrete(metadata.config)
-model = metadata.model(my_model_config)
+my_model_params = config.model.to_concrete(metadata.params)
+model = metadata.model(my_model_params)
 # --8<-- [end:model]
 # --8<-- [start:inference]
 from splifft.inference import run_inference_on_file
@@ -23,7 +23,7 @@ model = load_weights(model, checkpoint_path, device="cpu")
 mixture = read_audio(
     Path("path/to/mixture.wav"), config.audio_io.target_sample_rate, config.audio_io.force_channels
 )
-stems = run_inference_on_file(mixture, config, model)
+stems = run_inference_on_file(mixture, config, model, my_model_params)
 
 print(f"{list(stems.keys())=}")
 # --8<-- [end:inference]

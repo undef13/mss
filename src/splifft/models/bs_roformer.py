@@ -1,6 +1,4 @@
 from dataclasses import dataclass, field
-from functools import partial
-from typing import Callable
 
 import torch
 import torch.nn.functional as F
@@ -10,7 +8,7 @@ from torch import Tensor, nn
 from torch.nn import Module, ModuleList
 from torch.utils.checkpoint import checkpoint
 
-from . import ChunkSize, ModelConfigLike, ModelOutputStemName
+from . import ChunkSize, ModelIoType, ModelOutputStemName, ModelParamsLike
 from .utils.attend import Attend
 
 try:
@@ -31,7 +29,7 @@ DEFAULT_FREQS_PER_BANDS = (
 
 
 @dataclass
-class BSRoformerConfig(ModelConfigLike):
+class BSRoformerParams(ModelParamsLike):
     chunk_size: ChunkSize
     output_stem_names: tuple[ModelOutputStemName, ...]
     dim: int
@@ -46,11 +44,6 @@ class BSRoformerConfig(ModelConfigLike):
     attn_dropout: float = 0.0
     ff_dropout: float = 0.0
     flash_attn: bool = True
-    stft_n_fft: int = 2048
-    stft_hop_length: int = 512
-    stft_win_length: int = 2048
-    stft_normalized: bool = False
-    stft_window_fn_name: str = "torch.hann_window"
     mask_estimator_depth: int = 2
     mlp_expansion_factor: int = 4
     use_torch_checkpoint: bool = False
@@ -58,34 +51,10 @@ class BSRoformerConfig(ModelConfigLike):
     use_shared_bias: bool = True
     skip_connection: bool = False
 
-    multi_stft_resolution_loss_weight: float = 1.0
-    multi_stft_resolutions_window_sizes: tuple[int, ...] = field(
-        default_factory=lambda: (4096, 2048, 1024, 512, 256)
-    )
-    multi_stft_hop_size: int = 147
-    multi_stft_normalized: bool = False
-    multi_stft_window_fn_name: str = "torch.hann_window"
-
     debug: bool = False
     """Whether to check for nan/inf in model outputs. Keep it off for [torch.compile][]."""
-
-    @property
-    def stft_window_fn(self) -> Callable[[int], Tensor]:
-        return _fn_name_to_callable(self.stft_window_fn_name)
-
-    @property
-    def multi_stft_window_fn(self) -> Callable[[int], Tensor]:
-        return _fn_name_to_callable(self.multi_stft_window_fn_name)
-
-
-def _fn_name_to_callable(fn_name: str) -> Callable[[int], Tensor]:
-    if fn_name == "torch.hann_window":
-        return torch.hann_window
-    elif fn_name == "torch.hamming_window":
-        return torch.hamming_window
-    else:
-        # TODO: allow more
-        raise ValueError(f"Unknown window function: {fn_name}")
+    input_type: ModelIoType = "spectrogram"
+    output_type: ModelIoType = "spectrogram"
 
 
 def l2norm(t: Tensor) -> Tensor:
@@ -395,7 +364,7 @@ class MaskEstimator(Module):
 
 
 class BSRoformer(Module):
-    def __init__(self, cfg: BSRoformerConfig):
+    def __init__(self, cfg: BSRoformerParams):
         super().__init__()
         self.stereo = cfg.stereo
         self.audio_channels = 2 if cfg.stereo else 1
@@ -425,7 +394,12 @@ class BSRoformer(Module):
             shared_out_bias=self.shared_out_bias,
         )
 
-        t_frames = cfg.chunk_size // cfg.stft_hop_length + 1  # e.g. 588800 // 512 + 1 = 1151
+        # NOTE: we can dynamically generate the rotary embeddings but the old code used a cached
+        # version (likely for perf)
+        # we are keeping it here to maintain 100% compatability, but once we can assert the
+        # dynamically generated rotary emebeddings match perfectly, parameterise with cfg.dim_head.
+        stft_hop_length = 512
+        t_frames = cfg.chunk_size // stft_hop_length + 1  # e.g. 588800 // 512 + 1 = 1151
         self.cos_emb_time = nn.Parameter(torch.zeros(t_frames, cfg.dim_head))
         self.sin_emb_time = nn.Parameter(torch.zeros(t_frames, cfg.dim_head))
         time_rotary_embed = RotaryEmbedding(cos_emb=self.cos_emb_time, sin_emb=self.sin_emb_time)
@@ -463,15 +437,6 @@ class BSRoformer(Module):
 
         self.final_norm = CustomNorm(cfg.dim)
 
-        self.stft_kwargs = dict(
-            n_fft=cfg.stft_n_fft,
-            hop_length=cfg.stft_hop_length,
-            win_length=cfg.stft_win_length,
-            normalized=cfg.stft_normalized,
-        )
-
-        self.stft_window_fn = partial(cfg.stft_window_fn, cfg.stft_win_length)
-
         freqs_per_bands_with_complex = tuple(
             2 * f * self.audio_channels for f in cfg.freqs_per_bands
         )
@@ -490,77 +455,18 @@ class BSRoformer(Module):
 
             self.mask_estimators.append(mask_estimator)
 
-        # for the multi-resolution stft loss
-
-        self.multi_stft_resolution_loss_weight = cfg.multi_stft_resolution_loss_weight
-        self.multi_stft_resolutions_window_sizes = cfg.multi_stft_resolutions_window_sizes
-        self.multi_stft_n_fft = cfg.stft_n_fft
-        self.multi_stft_window_fn = cfg.multi_stft_window_fn
-
-        self.multi_stft_kwargs = dict(
-            hop_length=cfg.multi_stft_hop_size, normalized=cfg.multi_stft_normalized
-        )
         self.debug = cfg.debug
 
-    def forward(
-        self, raw_audio: Tensor, target: Tensor | None = None, return_loss_breakdown: bool = False
-    ) -> Tensor | tuple[Tensor, tuple[Tensor, float]]:
+    def forward(self, stft_repr: Tensor) -> Tensor:
         """
-        einops
-
-        - b: batch
-        - f: frequency
-        - t: time
-        - s: audio channel (1 for mono, 2 for stereo)
-        - n: number of stems
-        - c: complex (2)
-        - d: feature dimension
+        :param stft_repr: input spectrogram. shape (b, f*s, t, c)
+        :return: estimated mask. shape (b, n, f*s, t, c)
         """
-
-        device = raw_audio.device
-
-        # defining whether model is loaded on MPS (MacOS GPU accelerator)
-        x_is_mps = True if device.type == "mps" else False
-
-        if raw_audio.ndim == 2:
-            raw_audio = rearrange(raw_audio, "b t -> b 1 t")
-
-        channels = raw_audio.shape[1]
-        assert (not self.stereo and channels == 1) or (self.stereo and channels == 2), (
-            "stereo needs to be set to True if passing in audio signal that is stereo (channel dimension of 2). also need to be False if mono (channel dimension of 1)"
-        )
-
-        # to stft
-
-        raw_audio, batch_audio_channel_packed_shape = pack([raw_audio], "* t")
-
-        stft_window = self.stft_window_fn(device=device)
-
-        # RuntimeError: FFT operations are only supported on MacOS 14+
-        # Since it's tedious to define whether we're on correct MacOS version - simple try-catch is used
-        try:
-            stft_repr_complex = torch.stft(
-                raw_audio, **self.stft_kwargs, window=stft_window, return_complex=True
-            )
-        except RuntimeError:
-            stft_repr_complex = torch.stft(
-                raw_audio.cpu() if x_is_mps else raw_audio,
-                **self.stft_kwargs,
-                window=stft_window.cpu() if x_is_mps else stft_window,
-                return_complex=True,
-            ).to(device)
-        stft_repr = torch.view_as_real(stft_repr_complex)
-
-        stft_repr = unpack(stft_repr, batch_audio_channel_packed_shape, "* f t c")[0]
-
-        # merge stereo / mono into the frequency, with frequency leading dimension, for band splitting
-        stft_repr = rearrange(stft_repr, "b s f t c -> b (f s) t c")
-
         x = rearrange(stft_repr, "b f t c -> b t (f c)")
 
         if self.debug and (torch.isnan(x).any() or torch.isinf(x).any()):
             raise RuntimeError(
-                f"NaN/Inf in x after stft: {x.isnan().sum()} NaNs, {x.isinf().sum()} Infs"
+                f"nan/inf in x after rearrange: {x.isnan().sum()} nans, {x.isinf().sum()} infs"
             )
 
         if self.use_torch_checkpoint:
@@ -570,7 +476,7 @@ class BSRoformer(Module):
 
         if self.debug and (torch.isnan(x).any() or torch.isinf(x).any()):
             raise RuntimeError(
-                f"NaN/Inf in x after band_split: {x.isnan().sum()} NaNs, {x.isinf().sum()} Infs"
+                f"nan/inf in x after band_split: {x.isnan().sum()} nans, {x.isinf().sum()} infs"
             )
 
         # axial / hierarchical attention
@@ -590,7 +496,6 @@ class BSRoformer(Module):
                 time_transformer, freq_transformer = transformer_block
 
             if self.skip_connection:
-                # Sum all previous
                 for j in range(i):
                     x = x + store[j]
 
@@ -618,8 +523,6 @@ class BSRoformer(Module):
 
         x = self.final_norm(x)
 
-        num_stems = len(self.mask_estimators)
-
         if self.use_torch_checkpoint:
             mask = torch.stack(
                 [checkpoint(fn, x, use_reentrant=False) for fn in self.mask_estimators],
@@ -629,86 +532,4 @@ class BSRoformer(Module):
             mask = torch.stack([fn(x) for fn in self.mask_estimators], dim=1)
         mask = rearrange(mask, "b n t (f c) -> b n f t c", c=2)
 
-        # modulate frequency representation
-
-        stft_repr = rearrange(stft_repr, "b f t c -> b 1 f t c")
-
-        # complex number multiplication
-
-        stft_repr = torch.view_as_complex(stft_repr)
-        mask = torch.view_as_complex(mask)
-
-        stft_repr = stft_repr * mask
-
-        # istft
-
-        stft_repr = rearrange(stft_repr, "b n (f s) t -> (b n s) f t", s=self.audio_channels)
-
-        # same as torch.stft() fix for MacOS MPS above
-        try:
-            recon_audio = torch.istft(
-                stft_repr,
-                **self.stft_kwargs,
-                window=stft_window,
-                return_complex=False,
-                length=raw_audio.shape[-1],
-            )
-        except RuntimeError:
-            recon_audio = torch.istft(
-                stft_repr.cpu() if x_is_mps else stft_repr,
-                **self.stft_kwargs,
-                window=stft_window.cpu() if x_is_mps else stft_window,
-                return_complex=False,
-                length=raw_audio.shape[-1],
-            ).to(device)
-
-        recon_audio = rearrange(
-            recon_audio, "(b n s) t -> b n s t", s=self.audio_channels, n=num_stems
-        )
-
-        if num_stems == 1:
-            recon_audio = rearrange(recon_audio, "b 1 s t -> b s t")
-
-        # if a target is passed in, calculate loss for learning
-
-        if target is None:
-            return recon_audio
-
-        if self.num_stems > 1:
-            assert target.ndim == 4 and target.shape[1] == self.num_stems
-
-        if target.ndim == 2:
-            target = rearrange(target, "... t -> ... 1 t")
-
-        target = target[..., : recon_audio.shape[-1]]  # protect against lost length on istft
-
-        loss = F.l1_loss(recon_audio, target)
-
-        multi_stft_resolution_loss = 0.0
-
-        for window_size in self.multi_stft_resolutions_window_sizes:
-            res_stft_kwargs = dict(
-                n_fft=max(
-                    window_size, self.multi_stft_n_fft
-                ),  # not sure what n_fft is across multi resolution stft
-                win_length=window_size,
-                return_complex=True,
-                window=self.multi_stft_window_fn(window_size, device=device),
-                **self.multi_stft_kwargs,
-            )
-
-            recon_Y = torch.stft(rearrange(recon_audio, "... s t -> (... s) t"), **res_stft_kwargs)
-            target_Y = torch.stft(rearrange(target, "... s t -> (... s) t"), **res_stft_kwargs)
-
-            multi_stft_resolution_loss = multi_stft_resolution_loss + F.l1_loss(recon_Y, target_Y)
-
-        weighted_multi_resolution_loss = (
-            multi_stft_resolution_loss * self.multi_stft_resolution_loss_weight
-        )
-
-        total_loss = loss + weighted_multi_resolution_loss
-
-        if not return_loss_breakdown:
-            return total_loss
-
-        return total_loss, (loss, multi_stft_resolution_loss)
+        return mask

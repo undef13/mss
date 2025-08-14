@@ -4,6 +4,7 @@ import pytest
 from pydantic import ValidationError
 
 from splifft.config import Config, LazyModelConfig
+from splifft.models import ModelIoType, ModelParamsLike
 
 #
 # model
@@ -59,15 +60,17 @@ def test_model_config_to_concrete_extra_fields() -> None:
     from dataclasses import dataclass
 
     @dataclass
-    class MyModelConfig:
+    class MyModelParam(ModelParamsLike):
         chunk_size: int
         output_stem_names: tuple[str, ...]
         param_1: str
         param_2: int
+        input_type = "waveform"
+        output_type = "waveform"
 
     lazy_model_config = LazyModelConfig.model_validate(MODEL_CONFIG_EXTRA)
-    model_config = lazy_model_config.to_concrete(MyModelConfig)
-    assert isinstance(model_config, MyModelConfig)
+    model_config = lazy_model_config.to_concrete(MyModelParam)
+    assert isinstance(model_config, MyModelParam)
     assert model_config.param_1 == "13"
     assert model_config.param_2 == 13
 
@@ -76,10 +79,10 @@ def test_model_config_to_concrete_extra_fields() -> None:
     )
     assert isinstance(lazy_model_config_extra, LazyModelConfig)  # lazy allows extra invalid fields
     # extra fields are now not allowed on `to_concrete`
-    # this would also mean that if MyModelConfig doesn't conform to ModelConfigLike, it will raise an error
+    # this would also mean that if MyModelConfig doesn't conform to ModelParamLike, it will raise an error
     # when `to_concrete` is called
     with pytest.raises(ValidationError):
-        lazy_model_config_extra.to_concrete(MyModelConfig)
+        lazy_model_config_extra.to_concrete(MyModelParam)
 
 
 def test_config_required() -> None:
@@ -165,10 +168,10 @@ def config_roformer() -> Config:
 
 
 def test_config_roformer_concrete(config_roformer: Config) -> None:
-    from splifft.models.bs_roformer import BSRoformerConfig
+    from splifft.models.bs_roformer import BSRoformerParams
 
-    model_config = config_roformer.model.to_concrete(BSRoformerConfig)
-    assert isinstance(model_config, BSRoformerConfig)
+    model_config = config_roformer.model.to_concrete(BSRoformerParams)
+    assert isinstance(model_config, BSRoformerParams)
 
 
 #
@@ -177,8 +180,11 @@ def test_config_roformer_concrete(config_roformer: Config) -> None:
 
 
 def test_lazy_model_config_protocol() -> None:
-    # this is just to ensure we correctly implemented the ModelConfigLike protocol for LazyModelConfig.
-    from splifft.models import ModelConfigLike
+    # this is just to ensure we correctly implemented the ModelParamLike protocol for LazyModelConfig.
+    from splifft.models import ModelParamsLike
 
-    config_instance = LazyModelConfig(chunk_size=1024, output_stem_names=("vocals", "drums"))
-    assert isinstance(config_instance, ModelConfigLike)
+    class _ModelParam(LazyModelConfig):
+        input_type: ModelIoType
+        output_type: ModelIoType
+
+    assert set(_ModelParam.__pydantic_fields__) == ModelParamsLike.__protocol_attrs__  # type: ignore

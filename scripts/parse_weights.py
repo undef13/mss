@@ -6,7 +6,7 @@ from pathlib import Path
 import torch
 
 from splifft import PATH_MODELS
-from splifft.models.bs_roformer import BSRoformer, BSRoformerConfig
+from splifft.models.bs_roformer import BSRoformer, BSRoformerParams
 from splifft.utils.mil import BlobFile, parse_mil_program, resolve_path
 
 PATH_RAW = PATH_MODELS / "roformer.mlmodelc"
@@ -22,11 +22,11 @@ program = parse_mil_program(mil_content)
 # %% torch preprocessing
 
 torch.set_default_dtype(torch.float16)
-model_cfg = BSRoformerConfig(
+model_cfg = BSRoformerParams(
     dim=256,
     depth=12,
     stereo=True,
-    num_stems=6,
+    output_stem_names=tuple(f"_{i}" for i in range(6)),
     use_shared_bias=True,
     time_transformer_depth=1,
     freq_transformer_depth=1,
