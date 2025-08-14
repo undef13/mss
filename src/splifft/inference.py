@@ -2,9 +2,18 @@
 
 from __future__ import annotations
 
+import math
 from typing import TYPE_CHECKING
 
 import torch
+from rich.progress import (
+    BarColumn,
+    Progress,
+    SpinnerColumn,
+    TaskProgressColumn,
+    TextColumn,
+    TimeRemainingColumn,
+)
 from torch import Tensor, nn
 
 from .core import (
@@ -18,11 +27,6 @@ from .core import (
     normalize_audio,
     stitch_chunks,
 )
-
-try:
-    from tqdm import tqdm
-except ImportError:
-    tqdm = None
 
 if TYPE_CHECKING:
     from .config import ChunkingConfig, Config, StemName
@@ -91,8 +95,11 @@ def separate(
     """Chunk, predict and stitch."""
     device = mixture_data.device
     original_num_samples = mixture_data.shape[-1]
-
     hop_size = int(chunk_size * (1 - chunk_cfg.overlap_ratio))
+
+    padded_length = original_num_samples + 2 * (chunk_size - hop_size)
+    num_chunks = max(0, (padded_length - chunk_size) // hop_size + 1)
+    total_batches = math.ceil(num_chunks / batch_size)
 
     if chunk_cfg.window_shape == "hann":
         window = torch.hann_window(chunk_size, device=device)
@@ -106,26 +113,40 @@ def separate(
         batch_size=batch_size,
         padding_mode=chunk_cfg.padding_mode,
     )
-    if tqdm is not None:
-        chunk_generator = tqdm(
-            chunk_generator,
-            desc="Processing chunks",
-        )
 
     processed_chunks = []
-    with (
-        torch.inference_mode(),
-        torch.autocast(
-            device_type=device.type,
-            enabled=use_autocast_dtype is not None,
-            dtype=(
-                get_dtype(use_autocast_dtype) if use_autocast_dtype is not None else torch.float32
+
+    dtype_str = f" • {use_autocast_dtype}" if use_autocast_dtype else ""
+    info_text = f"[cyan](bs=[bold]{batch_size}[/bold] • {device.type}{dtype_str})[/cyan]"
+
+    progress_columns = (
+        SpinnerColumn(),
+        TextColumn("[progress.description]{task.description}"),
+        BarColumn(),
+        TaskProgressColumn(),
+        TimeRemainingColumn(),
+        TextColumn(info_text),
+    )
+
+    with Progress(*progress_columns, transient=True) as progress:
+        task = progress.add_task("processing chunks...", total=total_batches)
+
+        with (
+            torch.inference_mode(),
+            torch.autocast(
+                device_type=device.type,
+                enabled=use_autocast_dtype is not None,
+                dtype=(
+                    get_dtype(use_autocast_dtype)
+                    if use_autocast_dtype is not None
+                    else torch.float32
+                ),
             ),
-        ),
-    ):
-        for chunk_batch in chunk_generator:
-            separated_batch = model(chunk_batch)
-            processed_chunks.append(separated_batch)
+        ):
+            for chunk_batch in chunk_generator:
+                separated_batch = model(chunk_batch)
+                processed_chunks.append(separated_batch)
+                progress.update(task, advance=1)
 
     return stitch_chunks(
         processed_chunks=processed_chunks,

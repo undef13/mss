@@ -119,21 +119,22 @@ There are three steps. You do not need to have Python installed.
       <summary>Console output</summary>
 
     ```php
-    [00:00:41] INFO     using device=device(type='cuda')                                                 __main__.py:117
-               INFO     loading configuration from                                                       __main__.py:119
+    [00:00:41] INFO     using device=device(type='cuda')                                                 __main__.py:111
+               INFO     loading configuration from                                                       __main__.py:113
                         config_path=PosixPath('data/config/bs_roformer.json')                                           
-               INFO     loading model metadata `BSRoformer` from module `splifft.models.bs_roformer`     __main__.py:122
-    [00:00:42] INFO     loading weights from checkpoint_path=PosixPath('data/models/roformer-fp16.pt')   __main__.py:131
-               INFO     processing audio file:                                                           __main__.py:138
+               INFO     loading model metadata `BSRoformer` from module `splifft.models.bs_roformer`     __main__.py:126
+    [00:00:42] INFO     loading weights from checkpoint_path=PosixPath('data/models/roformer-fp16.pt')   __main__.py:127
+               INFO     processing audio file:                                                           __main__.py:135
                         mixture_path=PosixPath('data/audio/input/3BFTio5296w.flac')                                     
-    [00:00:56] INFO     wrote stem `bass` to data/audio/output/3BFTio5296w/bass.flac                     __main__.py:168
-               INFO     wrote stem `drums` to data/audio/output/3BFTio5296w/drums.flac                   __main__.py:168
-               INFO     wrote stem `other` to data/audio/output/3BFTio5296w/other.flac                   __main__.py:168
-    [00:00:57] INFO     wrote stem `vocals` to data/audio/output/3BFTio5296w/vocals.flac                 __main__.py:168
-               INFO     wrote stem `guitar` to data/audio/output/3BFTio5296w/guitar.flac                 __main__.py:168
-               INFO     wrote stem `piano` to data/audio/output/3BFTio5296w/piano.flac                   __main__.py:168
-    [00:00:58] INFO     wrote stem `instrumental` to data/audio/output/3BFTio5296w/instrumental.flac     __main__.py:168
-               INFO     wrote stem `drums_and_bass` to data/audio/output/3BFTio5296w/drums_and_bass.flac __main__.py:168
+    ⠙ processing chunks... ━━━━━━━━━━╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  25% 0:00:10 (bs=4 • cuda • float16)
+    [00:00:56] INFO     wrote stem `bass` to data/audio/output/3BFTio5296w/bass.flac                     __main__.py:158
+               INFO     wrote stem `drums` to data/audio/output/3BFTio5296w/drums.flac                   __main__.py:158
+               INFO     wrote stem `other` to data/audio/output/3BFTio5296w/other.flac                   __main__.py:158
+    [00:00:57] INFO     wrote stem `vocals` to data/audio/output/3BFTio5296w/vocals.flac                 __main__.py:158
+               INFO     wrote stem `guitar` to data/audio/output/3BFTio5296w/guitar.flac                 __main__.py:158
+               INFO     wrote stem `piano` to data/audio/output/3BFTio5296w/piano.flac                   __main__.py:158
+    [00:00:58] INFO     wrote stem `instrumental` to data/audio/output/3BFTio5296w/instrumental.flac     __main__.py:158
+               INFO     wrote stem `drums_and_bass` to data/audio/output/3BFTio5296w/drums_and_bass.flac __main__.py:158
     ```
     </details>
 
