@@ -149,18 +149,14 @@ def stitch_chunks(
     stitched = folded.view(num_stems, num_channels, total_length)
 
     # normalization for overlap-add
-    ones_template = torch.ones(1, 1, total_length, device=window.device)
-    unfolded_ones = ones_template.unfold(dimension=-1, size=chunk_size, step=hop_size)
-    windowed_unfolded_ones = unfolded_ones * window
-    reshaped_for_fold_norm = windowed_unfolded_ones.permute(0, 1, 3, 2).reshape(
-        1, chunk_size, total_chunks
-    )
+    windows_to_fold = window.expand(total_chunks, 1, chunk_size)
+    reshaped_windows_for_fold = windows_to_fold.permute(1, 2, 0).reshape(1, chunk_size, total_chunks)
     norm_window = F.fold(
-        reshaped_for_fold_norm,
+        reshaped_windows_for_fold,
         output_size=(1, total_length),
         kernel_size=(1, chunk_size),
         stride=(1, hop_size),
-    ).squeeze()
+    ).squeeze(0)
 
     norm_window.clamp_min_(1e-8)  # for edges where the window sum might be zero
     stitched /= norm_window
