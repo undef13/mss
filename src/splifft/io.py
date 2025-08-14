@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, BinaryIO
 
 import torch
-import torchaudio
+from torchcodec.decoders import AudioDecoder
 
 from .core import Audio, RawAudioTensor, SampleRate
 from .models import ModelT
@@ -25,25 +25,11 @@ def read_audio(
     device: torch.device | None = None,
 ) -> Audio[RawAudioTensor]:
     """Loads, resamples and converts channels."""
-    waveform, sr = torchaudio.load(file, channels_first=True)
-    waveform = waveform.to(device)
+    decoder = AudioDecoder(source=str(file), sample_rate=target_sr, num_channels=target_channels)
+    samples = decoder.get_all_samples()
+    waveform = samples.data.to(device)
 
-    if sr != target_sr:
-        resampler = torchaudio.transforms.Resample(orig_freq=sr, new_freq=target_sr).to(device)
-        waveform = resampler(waveform)
-
-    current_channels = waveform.shape[0]
-    if target_channels is not None and current_channels != target_channels:
-        if target_channels == 1:  # stereo -> mono
-            waveform = torch.mean(waveform, dim=0, keepdim=True)
-        elif target_channels == 2:  # mono -> stereo
-            waveform = waveform.repeat(2, 1)
-        else:
-            raise ValueError(
-                f"expected target_channels to be 1 or 2, got {target_channels=} with {current_channels=}."
-            )
-
-    return Audio(RawAudioTensor(waveform), target_sr)
+    return Audio(RawAudioTensor(waveform), samples.sample_rate)
 
 
 # NOTE: torchaudio.save is simple enough and a wrapper is not needed.

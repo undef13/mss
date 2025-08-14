@@ -48,6 +48,7 @@ Releases = "https://github.com/undef13/splifft/releases"
 config = ["pydantic>=2.11.5"]
 inference = [
     "torchaudio>=2.7.1",
+    "torchcodec>=0.6",
     "tqdm>=4.67.1",
     "soundfile>=0.13.1 ; sys_platform == 'Windows'",
 ]

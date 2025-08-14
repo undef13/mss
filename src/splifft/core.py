@@ -150,7 +150,9 @@ def stitch_chunks(
 
     # normalization for overlap-add
     windows_to_fold = window.expand(total_chunks, 1, chunk_size)
-    reshaped_windows_for_fold = windows_to_fold.permute(1, 2, 0).reshape(1, chunk_size, total_chunks)
+    reshaped_windows_for_fold = windows_to_fold.permute(1, 2, 0).reshape(
+        1, chunk_size, total_chunks
+    )
     norm_window = F.fold(
         reshaped_windows_for_fold,
         output_size=(1, total_length),
@@ -243,16 +245,7 @@ Channels: TypeAlias = Annotated[int, Gt(0)]
 
 
 FileFormat: TypeAlias = Literal["flac", "wav", "ogg"]
-AudioEncoding: TypeAlias = Literal["PCM_S", "PCM_U", "PCM_F", "ULAW", "ALAW"]
-"""[Audio encoding](https://trac.ffmpeg.org/wiki/audio%20types)
-
-- `PCM_S`: Signed integer linear pulse-code modulation
-- `PCM_U`: Unsigned integer linear pulse-code modulation
-- `PCM_F`: Floating-point pulse-code modulation
-- `ULAW`: [μ-law](https://en.wikipedia.org/wiki/%CE%9C-law_algorithm)
-- `ALAW`: [a-law](https://en.wikipedia.org/wiki/A-law_algorithm)
-"""
-BitDepth: TypeAlias = Literal[8, 16, 24, 32, 64]
+BitRate: TypeAlias = Literal[8, 16, 24, 32, 64]
 """Number of bits of information in each sample.
 
 It determines the dynamic range of the audio signal: the difference between the quietest and loudest

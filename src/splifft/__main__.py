@@ -98,7 +98,7 @@ def separate(
 ) -> None:
     """Separates an audio file into its constituent stems."""
     import torch
-    import torchaudio
+    from torchcodec.encoders import AudioEncoder
 
     from .config import Config
     from .core import get_dtype
@@ -153,15 +153,8 @@ def separate(
                 continue
 
             output_file = (curr_output_dir / stem_name).with_suffix(f".{config.output.file_format}")
-            torchaudio.save(
-                output_file,
-                stem_data.cpu(),
-                mixture.sample_rate,
-                format=config.output.file_format,
-                encoding=config.output.audio_encoding,
-                bits_per_sample=config.output.bit_depth,
-                # TODO: compression, backend
-            )
+            encoder = AudioEncoder(samples=stem_data.cpu(), sample_rate=mixture.sample_rate)
+            encoder.to_file(str(output_file), bit_rate=config.output.bit_rate)
             logger.info(f"wrote stem `{stem_name}` to {output_file}")
 
 

@@ -50,7 +50,6 @@
     },
     "output": {
         "stem_names": "all",
-        "file_format": "flac",
-        "bit_depth": 24
+        "file_format": "flac"
     }
 }

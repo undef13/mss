@@ -88,11 +88,13 @@ There are three steps. You do not need to have Python installed.
 3. Go into a new directory and place the [model checkpoint](https://github.com/undef13/splifft/releases/download/v0.0.1/roformer-fp16.pt) and [configuration](https://raw.githubusercontent.com/undef13/splifft/refs/heads/main/data/config/bs_roformer.json) inside it. Assuming your current directory has this structure (doesn't have to be exactly this):
 
     <details>
-      <summary>Grab an example audio from YouTube</summary>
+      <summary>Minimal reproduction: with example audio from YouTube</summary>
 
     ```sh
     uv tool install yt-dlp
     yt-dlp -f bestaudio -o data/audio/input/3BFTio5296w.flac 3BFTio5296w
+    wget -P data/models/ https://huggingface.co/undef13/splifft/resolve/main/roformer-fp16.pt?download=true
+    wget -P data/config/ https://raw.githubusercontent.com/undef13/splifft/refs/heads/main/data/config/bs_roformer.json
     ```
     </details>
 

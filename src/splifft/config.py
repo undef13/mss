@@ -32,9 +32,8 @@ from pydantic_core import PydanticCustomError
 from typing_extensions import Self
 
 from .core import (
-    AudioEncoding,
     BatchSize,
-    BitDepth,
+    BitRate,
     Channels,
     Dtype,
     FileFormat,
@@ -193,8 +192,8 @@ DerivedStemsConfig: TypeAlias = dict[DerivedStemName, DerivedStemRule]
 class OutputConfig(BaseModel):
     stem_names: Literal["all"] | NonEmptyUnique[Tuple[StemName]] = "all"
     file_format: FileFormat = "wav"
-    audio_encoding: AudioEncoding = "PCM_F"
-    bit_depth: BitDepth = 32
+    bit_rate: BitRate | None = None
+    """Output bit rate for lossy formats. The default is chosen by FFmpeg."""
 
     model_config = _PYDANTIC_STRICT_CONFIG
 
