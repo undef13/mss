@@ -2,7 +2,7 @@ from dataclasses import dataclass, field
 
 import torch
 import torch.nn.functional as F
-from einops import pack, rearrange, unpack
+from einops import pack, rearrange, repeat, unpack
 from einops.layers.torch import Rearrange
 from torch import Tensor, nn
 from torch.nn import Module, ModuleList
@@ -48,7 +48,7 @@ class BSRoformerParams(ModelParamsLike):
     mlp_expansion_factor: int = 4
     use_torch_checkpoint: bool = False
     sage_attention: bool = False
-    use_shared_bias: bool = True
+    use_shared_bias: bool = False  # COMPAT: weights are all zeros anyways, disabling by default
     skip_connection: bool = False
 
     debug: bool = False
@@ -79,11 +79,35 @@ class CustomNorm(Module):
 
 
 class RotaryEmbedding(nn.Module):
-    def __init__(self, cos_emb: nn.Parameter, sin_emb: nn.Parameter):
+    """A performance-oriented version of RoPE.
+
+    Unlike `lucidrain`'s implementation which compute embeddings JIT during the
+    forward pass and caches calls with the same or shorter sequence length,
+    we simply compute them AOT as persistent buffers. To keep the computational
+    graph clean, we do not support dynamic sequence lengths, learned frequencies
+    or length extrapolation.
+    """
+
+    def __init__(self, seq_len: int, dim_head: int, *, theta: int = 10000):
         super().__init__()
-        # both (seq_len_for_rotation, dim_head)
-        self.cos_emb = cos_emb
-        self.sin_emb = sin_emb
+        # COMPAT: the original implementation does not generate the embeddings
+        # on the fly, but serialises them in fp16. there are some tiny
+        # differences:
+        # |                     |   from weights  |   generated    |
+        # | ------------------- | --------------- | -------------- |
+        # | cos_emb_time:971,22 | -0.99462890625  | -0.994140625   |
+        # | cos_emb_time:971,23 | -0.99462890625  | -0.994140625   |
+        # | sin_emb_time:727,12 | -0.457763671875 | -0.4580078125  |
+        # | sin_emb_time:727,13 | -0.457763671875 | -0.4580078125  |
+        # | sin_emb_time:825,4  | -0.8544921875   | -0.85400390625 |
+        # | sin_emb_time:825,5  | -0.8544921875   | -0.85400390625 |
+        freqs = 1.0 / (theta ** (torch.arange(0, dim_head, 2).float() / dim_head))
+        t = torch.arange(seq_len)
+        freqs = torch.einsum("i,j->ij", t, freqs)  # (seq_len, dim / 2)
+        freqs = repeat(freqs, "... d -> ... (d r)", r=2)  # (seq_len, dim)
+        # hardcoding fp16 to aim for 100% compat.
+        self.cos_emb = freqs.cos().to(torch.float16)
+        self.sin_emb = freqs.sin().to(torch.float16)
 
     def rotate_half(self, x: Tensor) -> Tensor:
         x = rearrange(x, "... (d r) -> ... d r", r=2)
@@ -394,20 +418,13 @@ class BSRoformer(Module):
             shared_out_bias=self.shared_out_bias,
         )
 
-        # NOTE: we can dynamically generate the rotary embeddings but the old code used a cached
-        # version (likely for perf)
-        # we are keeping it here to maintain 100% compatability, but once we can assert the
-        # dynamically generated rotary emebeddings match perfectly, parameterise with cfg.dim_head.
+        # NOTE: hardcoding stft hop length for now - we should parameterise this.
         stft_hop_length = 512
         t_frames = cfg.chunk_size // stft_hop_length + 1  # e.g. 588800 // 512 + 1 = 1151
-        self.cos_emb_time = nn.Parameter(torch.zeros(t_frames, cfg.dim_head))
-        self.sin_emb_time = nn.Parameter(torch.zeros(t_frames, cfg.dim_head))
-        time_rotary_embed = RotaryEmbedding(cos_emb=self.cos_emb_time, sin_emb=self.sin_emb_time)
+        time_rotary_embed = RotaryEmbedding(seq_len=t_frames, dim_head=cfg.dim_head)
 
         num_bands = len(cfg.freqs_per_bands)  # e.g. 62
-        self.cos_emb_freq = nn.Parameter(torch.zeros(num_bands, cfg.dim_head))
-        self.sin_emb_freq = nn.Parameter(torch.zeros(num_bands, cfg.dim_head))
-        freq_rotary_embed = RotaryEmbedding(cos_emb=self.cos_emb_freq, sin_emb=self.sin_emb_freq)
+        freq_rotary_embed = RotaryEmbedding(seq_len=num_bands, dim_head=cfg.dim_head)
 
         for _ in range(cfg.depth):
             tran_modules = []

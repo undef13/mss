@@ -41,16 +41,14 @@ def read_audio(
 
 
 def load_weights(
-    model: ModelT,
-    checkpoint_file: FileLike,
-    device: torch.device | str,
+    model: ModelT, checkpoint_file: FileLike, device: torch.device | str, *, strict: bool = False
 ) -> ModelT:
     """Load the weights from a checkpoint into the given model."""
 
     state_dict = torch.load(checkpoint_file, map_location=device, weights_only=True)
 
     # TODO: DataParallel and `module.` prefix
-    model.load_state_dict(state_dict)
+    model.load_state_dict(state_dict, strict=strict)
     # NOTE: do not torch.compile here!
 
     return model.to(device)
