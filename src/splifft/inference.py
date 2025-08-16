@@ -21,7 +21,7 @@ from .core import (
     RawAudioTensor,
     WindowTensor,
     _get_window_fn,
-    create_processor,
+    create_w2w_model,
     denormalize_audio,
     derive_stems,
     generate_chunks,
@@ -40,7 +40,13 @@ if TYPE_CHECKING:
         NumModelStems,
         RawSeparatedTensor,
     )
-    from .models import ChunkSize, ModelIoType, ModelOutputStemName, ModelParamsLike
+    from .models import (
+        ChunkSize,
+        ModelInputType,
+        ModelOutputStemName,
+        ModelOutputType,
+        ModelParamsLike,
+    )
 
 
 def run_inference_on_file(
@@ -101,9 +107,9 @@ def separate(
     batch_size: BatchSize,
     num_model_stems: NumModelStems,
     chunk_size: ChunkSize,
-    model_input_type: ModelIoType,
-    model_output_type: ModelIoType,
-    stft_cfg: StftConfig,
+    model_input_type: ModelInputType,
+    model_output_type: ModelOutputType,
+    stft_cfg: StftConfig | None,
     *,
     use_autocast_dtype: Dtype | None = None,
 ) -> RawSeparatedTensor:
@@ -126,7 +132,7 @@ def separate(
         padding_mode=chunk_cfg.padding_mode,
     )
 
-    processor = create_processor(
+    model_w2w = create_w2w_model(
         model=model,
         model_input_type=model_input_type,
         model_output_type=model_output_type,
@@ -165,7 +171,7 @@ def separate(
             ),
         ):
             for chunk_batch in chunk_generator:
-                separated_batch = processor(chunk_batch)
+                separated_batch = model_w2w(chunk_batch)
                 processed_chunks.append(separated_batch)
                 progress.update(task, advance=1)
 

@@ -34,8 +34,8 @@ Key principles:
 - [ ] `BS-Roformer`: ensure bit-for-bit equivalence in pytorch and strive for max perf.
   - [x] initial fp16 support
   - [ ] support `coremltools` and `torch.compile`
-    - [ ] handroll complex multiplication implementation
-    - [ ] isolate/handroll istft in forward pass
+    - [x] handroll complex multiplication implementation
+    - [x] handroll stft in forward pass
 - [ ] evals: SDR, bleedless, fullness, etc.
 - [ ] datasets: MUSDB18-HQ, moises
 - [ ] proper benchmarking (MFU, memory...)

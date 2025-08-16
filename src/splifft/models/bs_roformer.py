@@ -1,4 +1,5 @@
 from dataclasses import dataclass, field
+from functools import partial
 
 import torch
 import torch.nn.functional as F
@@ -8,7 +9,7 @@ from torch import Tensor, nn
 from torch.nn import Module, ModuleList
 from torch.utils.checkpoint import checkpoint
 
-from . import ChunkSize, ModelIoType, ModelOutputStemName, ModelParamsLike
+from . import ChunkSize, ModelInputType, ModelOutputStemName, ModelOutputType, ModelParamsLike
 from .utils.attend import Attend
 
 try:
@@ -50,11 +51,11 @@ class BSRoformerParams(ModelParamsLike):
     sage_attention: bool = False
     use_shared_bias: bool = False  # COMPAT: weights are all zeros anyways, disabling by default
     skip_connection: bool = False
-
     debug: bool = False
     """Whether to check for nan/inf in model outputs. Keep it off for [torch.compile][]."""
-    input_type: ModelIoType = "spectrogram"
-    output_type: ModelIoType = "spectrogram"
+
+    input_type: ModelInputType = "spectrogram"
+    output_type: ModelOutputType = "spectrogram_mask"
 
 
 def l2norm(t: Tensor) -> Tensor:
@@ -308,8 +309,7 @@ class Transformer(Module):
 
     def forward(self, x: Tensor) -> Tensor:
         for attn, ff in self.layers:  # type: ignore
-            # COMPAT: x is fp16 but residual connections have explicit casts
-            # see `input_265`, `x_39`
+            # COMPAT: x is fp16 but explicit casts are present in 265
             attn_out = attn(x)
             x = (attn_out.to(torch.float32) + x.to(torch.float32)).to(x.dtype)
             ff_out = ff(x)
@@ -339,7 +339,7 @@ class BandSplit(Module):
         return torch.stack(outs, dim=-2)
 
 
-def MLP(
+def mlp(
     dim_in: int,
     dim_out: int,
     dim_hidden: int | None = None,
@@ -374,10 +374,11 @@ class MaskEstimator(Module):
         dim_hidden = dim * mlp_expansion_factor
 
         for dim_in in dim_inputs:
-            mlp = nn.Sequential(
-                MLP(dim, dim_in * 2, dim_hidden=dim_hidden, depth=depth), nn.GLU(dim=-1)
+            self.to_freqs.append(
+                nn.Sequential(
+                    mlp(dim, dim_in * 2, dim_hidden=dim_hidden, depth=depth), nn.GLU(dim=-1)
+                )
             )
-            self.to_freqs.append(mlp)
 
     def forward(self, x: Tensor) -> Tensor:
         x_unbound = x.unbind(dim=-2)
@@ -409,7 +410,8 @@ class BSRoformer(Module):
             self.shared_qkv_bias = nn.Parameter(torch.ones(dim_inner * 3))
             self.shared_out_bias = nn.Parameter(torch.ones(cfg.dim))
 
-        transformer_kwargs = dict(
+        transformer = partial(
+            Transformer,
             dim=cfg.dim,
             heads=cfg.heads,
             dim_head=cfg.dim_head,
@@ -434,25 +436,13 @@ class BSRoformer(Module):
             tran_modules = []
             if cfg.linear_transformer_depth > 0:
                 tran_modules.append(
-                    Transformer(
-                        depth=cfg.linear_transformer_depth,
-                        linear_attn=True,
-                        **transformer_kwargs,  # type: ignore
-                    )
+                    transformer(depth=cfg.linear_transformer_depth, linear_attn=True)
                 )
             tran_modules.append(
-                Transformer(
-                    depth=cfg.time_transformer_depth,
-                    rotary_embed=time_rotary_embed,
-                    **transformer_kwargs,  # type: ignore
-                )
+                transformer(depth=cfg.time_transformer_depth, rotary_embed=time_rotary_embed)
             )
             tran_modules.append(
-                Transformer(
-                    depth=cfg.freq_transformer_depth,
-                    rotary_embed=freq_rotary_embed,
-                    **transformer_kwargs,  # type: ignore
-                )
+                transformer(depth=cfg.freq_transformer_depth, rotary_embed=freq_rotary_embed)
             )
             self.layers.append(nn.ModuleList(tran_modules))
 
@@ -481,7 +471,7 @@ class BSRoformer(Module):
     def forward(self, stft_repr: Tensor) -> Tensor:
         """
         :param stft_repr: input spectrogram. shape (b, f*s, t, c)
-        :return: estimated mask. shape (b, n, f*s, t, c)
+        :return: estimated mask. shape (b, n, f, t, c)
         """
         x = rearrange(stft_repr, "b f t c -> b t (f c)")
 

@@ -24,7 +24,8 @@ if TYPE_CHECKING:
 ModelType: TypeAlias = str
 """The type of the model, e.g. `bs_roformer`, `demucs`"""
 
-ModelIoType: TypeAlias = Literal["waveform", "spectrogram", "waveform_and_spectrogram"]
+ModelInputType: TypeAlias = Literal["waveform", "spectrogram", "waveform_and_spectrogram"]
+ModelOutputType: TypeAlias = Literal["waveform", "spectrogram_mask"]
 
 
 @runtime_checkable
@@ -36,9 +37,9 @@ class ModelParamsLike(Protocol):
     chunk_size: ChunkSize
     output_stem_names: tuple[ModelOutputStemName, ...]
     # the following are readonly
-    input_type: ModelIoType
+    input_type: ModelInputType
     """The type of the model's input (readonly)"""
-    output_type: ModelIoType
+    output_type: ModelOutputType
     """The type of the model's output (readonly)"""
 
 

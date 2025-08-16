@@ -4,7 +4,7 @@ import pytest
 from pydantic import ValidationError
 
 from splifft.config import Config, LazyModelConfig
-from splifft.models import ModelIoType, ModelParamsLike
+from splifft.models import ModelInputType, ModelOutputType, ModelParamsLike
 
 #
 # model
@@ -184,7 +184,7 @@ def test_lazy_model_config_protocol() -> None:
     from splifft.models import ModelParamsLike
 
     class _ModelParam(LazyModelConfig):
-        input_type: ModelIoType
-        output_type: ModelIoType
+        input_type: ModelInputType
+        output_type: ModelOutputType
 
     assert set(_ModelParam.__pydantic_fields__) == ModelParamsLike.__protocol_attrs__  # type: ignore
