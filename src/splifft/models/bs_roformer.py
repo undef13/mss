@@ -34,9 +34,9 @@ class BSRoformerParams(ModelParamsLike):
     output_stem_names: tuple[ModelOutputStemName, ...]
     dim: int
     depth: int
-    stereo: bool = False
-    time_transformer_depth: int = 2
-    freq_transformer_depth: int = 2
+    stereo: bool = True
+    time_transformer_depth: int = 1
+    freq_transformer_depth: int = 1
     linear_transformer_depth: int = 0
     freqs_per_bands: tuple[int, ...] = field(default_factory=lambda: DEFAULT_FREQS_PER_BANDS)
     dim_head: int = 64
@@ -308,8 +308,12 @@ class Transformer(Module):
 
     def forward(self, x: Tensor) -> Tensor:
         for attn, ff in self.layers:  # type: ignore
-            x = attn(x) + x
-            x = ff(x) + x
+            # COMPAT: x is fp16 but residual connections have explicit casts
+            # see `input_265`, `x_39`
+            attn_out = attn(x)
+            x = (attn_out.to(torch.float32) + x.to(torch.float32)).to(x.dtype)
+            ff_out = ff(x)
+            x = (ff_out.to(torch.float32) + x.to(torch.float32)).to(x.dtype)
         return self.norm(x)
 
 
