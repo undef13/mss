@@ -4,7 +4,8 @@
     "stft": {
         "n_fft": 2048,
         "hop_length": 512,
-        "win_length": 2048
+        "win_length": 2048,
+        "conv_dtype": "float16"
     },
     "model": {
         "chunk_size": 588800,
@@ -17,7 +18,10 @@
             "piano"
         ],
         "dim": 256,
-        "depth": 12
+        "depth": 12,
+        "rms_norm_eps": 5.960464477539063e-08,
+        "rotary_embed_dtype": "float16",
+        "transformer_residual_dtype": "float32"
     },
     "audio_io": {
         "target_sample_rate": 44100,
@@ -33,6 +37,10 @@
         "method": "overlap_add_windowed",
         "overlap_ratio": 0.5,
         "window_shape": "hann"
+    },
+    "masking": {
+        "add_sub_dtype": "float32",
+        "out_dtype": "float16"
     },
     "derived_stems": {
         "instrumental": {

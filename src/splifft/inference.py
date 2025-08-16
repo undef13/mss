@@ -25,17 +25,15 @@ from .core import (
     denormalize_audio,
     derive_stems,
     generate_chunks,
-    get_dtype,
     normalize_audio,
     stitch_chunks,
 )
 
 if TYPE_CHECKING:
-    from .config import ChunkingConfig, Config, StemName, StftConfig
+    from .config import ChunkingConfig, Config, MaskingConfig, StemName, StftConfig
     from .core import (
         Audio,
         BatchSize,
-        Dtype,
         NormalizationStats,
         NumModelStems,
         RawSeparatedTensor,
@@ -73,6 +71,7 @@ def run_inference_on_file(
         model_input_type=model_params_concrete.input_type,
         model_output_type=model_params_concrete.output_type,
         stft_cfg=config.stft,
+        masking_cfg=config.masking,
         use_autocast_dtype=config.inference.use_autocast_dtype,
     )
 
@@ -110,8 +109,9 @@ def separate(
     model_input_type: ModelInputType,
     model_output_type: ModelOutputType,
     stft_cfg: StftConfig | None,
+    masking_cfg: MaskingConfig,
     *,
-    use_autocast_dtype: Dtype | None = None,
+    use_autocast_dtype: torch.dtype | None = None,
 ) -> RawSeparatedTensor:
     """Chunk, predict and stitch."""
     device = mixture_data.device
@@ -139,6 +139,7 @@ def separate(
         stft_cfg=stft_cfg,
         num_channels=mixture_data.shape[0],
         chunk_size=chunk_size,
+        masking_cfg=masking_cfg,
     )
 
     processed_chunks = []
@@ -163,11 +164,7 @@ def separate(
             torch.autocast(
                 device_type=device.type,
                 enabled=use_autocast_dtype is not None,
-                dtype=(
-                    get_dtype(use_autocast_dtype)
-                    if use_autocast_dtype is not None
-                    else torch.float32
-                ),
+                dtype=use_autocast_dtype,
             ),
         ):
             for chunk_batch in chunk_generator:

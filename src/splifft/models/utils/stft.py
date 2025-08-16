@@ -19,11 +19,13 @@ class Stft(nn.Module):
         hop_length: int,
         win_length: int,
         window_fn: Callable[[int], Tensor],
+        conv_dtype: torch.dtype | None,
     ):
         super().__init__()
         self.n_fft = n_fft
         self.hop_length = hop_length
         self.win_length = win_length
+        self.conv_dtype = conv_dtype
 
         window = window_fn(self.win_length)
 
@@ -38,12 +40,12 @@ class Stft(nn.Module):
         ] * window.unsqueeze(-1)
 
         # (out_channels, in_channels, kernel_size)
-        self.register_buffer("real_conv_weight", real_kernels.T.unsqueeze(1).to(torch.float16))
-        self.register_buffer("imag_conv_weight", imag_kernels.T.unsqueeze(1).to(torch.float16))
+        self.register_buffer("real_conv_weight", real_kernels.T.unsqueeze(1).to(self.conv_dtype))
+        self.register_buffer("imag_conv_weight", imag_kernels.T.unsqueeze(1).to(self.conv_dtype))
 
     def forward(self, x: Tensor) -> ComplexSpectrogram:
         b, s, t = x.shape
-        x = x.reshape(b * s, 1, t).to(torch.float16)
+        x = x.reshape(b * s, 1, t).to(self.conv_dtype)
 
         padding = self.n_fft // 2
         x = F.pad(x, (padding, padding), "reflect")

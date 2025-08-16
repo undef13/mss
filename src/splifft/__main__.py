@@ -119,7 +119,6 @@ def separate(
     from torchcodec.encoders import AudioEncoder
 
     from .config import Config
-    from .core import get_dtype
     from .inference import run_inference_on_file
     from .io import load_weights, read_audio
     from .models import ModelMetadata
@@ -141,7 +140,7 @@ def separate(
     model_params_concrete = config.model.to_concrete(model_metadata.params)
     model = model_metadata.model(model_params_concrete)
     if config.inference.force_weights_dtype:
-        model = model.to(get_dtype(config.inference.force_weights_dtype))
+        model = model.to(config.inference.force_weights_dtype)
     logger.info(f"loading weights from {checkpoint_path=}")
     model = load_weights(model, checkpoint_path, device).eval()
     if (c := config.inference.compile_model) is not None:

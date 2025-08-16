@@ -16,6 +16,7 @@ from typing import (
     get_args,
 )
 
+import torch
 from annotated_types import Len
 from pydantic import (
     AfterValidator,
@@ -24,18 +25,19 @@ from pydantic import (
     ConfigDict,
     Discriminator,
     Field,
+    GetCoreSchemaHandler,
+    GetPydanticSchema,
     StringConstraints,
     TypeAdapter,
     model_validator,
 )
-from pydantic_core import PydanticCustomError
+from pydantic_core import CoreSchema, PydanticCustomError, core_schema
 from typing_extensions import Self
 
 from .core import (
     BatchSize,
     BitRate,
     Channels,
-    Dtype,
     FftSize,
     FileFormat,
     HopSize,
@@ -43,11 +45,33 @@ from .core import (
     PaddingMode,
     SampleRate,
     WindowShape,
+    str_to_torch_dtype,
 )
 from .models import ChunkSize, ModelParamsLikeT, ModelType
 from .models import ModelOutputStemName as _ModelOutputStemName
 
+
 # NOTE: we are not using typing.TYPE_CHECKING because pydantic relies on that
+def _get_torch_dtype_schema(_source_type: Any, _handler: GetCoreSchemaHandler) -> CoreSchema:
+    return core_schema.json_or_python_schema(
+        json_schema=core_schema.chain_schema(
+            [
+                core_schema.no_info_plain_validator_function(str_to_torch_dtype),
+            ]
+        ),
+        python_schema=core_schema.union_schema(
+            [
+                core_schema.is_instance_schema(torch.dtype),
+                core_schema.no_info_plain_validator_function(str_to_torch_dtype),
+            ]
+        ),
+        serialization=core_schema.plain_serializer_function_ser_schema(
+            lambda dtype: str(dtype).split(".")[-1]
+        ),
+    )
+
+
+TorchDtype: TypeAlias = Annotated[torch.dtype, GetPydanticSchema(_get_torch_dtype_schema)]
 
 _PYDANTIC_STRICT_CONFIG = ConfigDict(strict=True, extra="forbid")
 
@@ -122,13 +146,18 @@ class LazyModelConfig(BaseModel):
             raise PydanticCustomError(
                 "readonly_model_param", "`output_type` is a model parameter and cannot be modified"
             )
-        model_params_concrete: ModelParamsLikeT = TypeAdapter(
+        ta = TypeAdapter(
             type(
                 f"{model_params.__name__}Validator",
                 (model_params,),
                 {"__pydantic_config__": pydantic_config},
             )  # needed for https://docs.pydantic.dev/latest/errors/usage_errors/#type-adapter-config-unused
-        ).validate_python(self.model_dump())  # type: ignore
+        )  # type: ignore
+        # types defined within `TYPE_CHECKING` blocks will be forward references, so we need rebuild
+        # furthermore, we dont want others to *have* to install pydantic so we "hijack" any
+        # undefined annotations
+        ta.rebuild(_types_namespace={"TorchDtype": TorchDtype})
+        model_params_concrete: ModelParamsLikeT = ta.validate_python(self.model_dump())  # type: ignore
         return model_params_concrete
 
     @property
@@ -149,6 +178,8 @@ class StftConfig(BaseModel):
     win_length: FftSize
     window_shape: WindowShape = "hann"
     normalized: bool = False
+    conv_dtype: TorchDtype | None = None
+    """The data type used for the `conv1d` buffers."""
 
     model_config = _PYDANTIC_STRICT_CONFIG
 
@@ -172,8 +203,8 @@ class TorchCompileConfig(BaseModel):
 class InferenceConfig(BaseModel):
     normalize_input_audio: bool = False
     batch_size: BatchSize = 8
-    force_weights_dtype: Dtype | None = None
-    use_autocast_dtype: Dtype | None = None
+    force_weights_dtype: TorchDtype | None = None
+    use_autocast_dtype: TorchDtype | None = None
     compile_model: TorchCompileConfig | None = None
     apply_tta: bool = False
 
@@ -185,6 +216,13 @@ class ChunkingConfig(BaseModel):
     overlap_ratio: OverlapRatio = 0.5
     window_shape: WindowShape = "hann"
     padding_mode: PaddingMode = "reflect"
+
+    model_config = _PYDANTIC_STRICT_CONFIG
+
+
+class MaskingConfig(BaseModel):
+    add_sub_dtype: TorchDtype | None = None
+    out_dtype: TorchDtype | None = None
 
     model_config = _PYDANTIC_STRICT_CONFIG
 
@@ -236,6 +274,7 @@ class Config(BaseModel):
     audio_io: AudioIOConfig = Field(default_factory=AudioIOConfig)
     inference: InferenceConfig = Field(default_factory=InferenceConfig)
     chunking: ChunkingConfig = Field(default_factory=ChunkingConfig)
+    masking: MaskingConfig = Field(default_factory=MaskingConfig)
     derived_stems: DerivedStemsConfig | None = None
     output: OutputConfig = Field(default_factory=OutputConfig)
     experimental: dict[str, Any] | None = None

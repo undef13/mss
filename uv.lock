@@ -2521,7 +2521,7 @@ wheels = [
 
 [[package]]
 name = "splifft"
-version = "0.0.4.dev3"
+version = "0.0.4.dev4"
 source = { editable = "." }
 dependencies = [
     { name = "annotated-types" },

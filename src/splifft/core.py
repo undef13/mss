@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from typing import (
     TYPE_CHECKING,
     Annotated,
+    Any,
     Callable,
     Generic,
     Iterator,
@@ -26,7 +27,7 @@ from .models.utils.stft import IStft, Stft
 if TYPE_CHECKING:
     from typing import Mapping, Sequence, TypeAlias
 
-    from .config import DerivedStemsConfig, StemName, StftConfig
+    from .config import DerivedStemsConfig, MaskingConfig, StemName, StftConfig
     from .models import ChunkSize, ModelInputType, ModelOutputStemName, ModelOutputType
 
 
@@ -181,7 +182,10 @@ def stitch_chunks(
 
 
 def apply_mask(
-    spec_for_masking: ComplexSpectrogram, mask_batch: ComplexSpectrogram
+    spec_for_masking: ComplexSpectrogram,
+    mask_batch: ComplexSpectrogram,
+    mask_add_sub_dtype: torch.dtype | None,
+    mask_out_dtype: torch.dtype | None,
 ) -> SeparatedSpectrogramTensor:
     """Applies a complex mask to a spectrogram.
 
@@ -189,26 +193,23 @@ def apply_mask(
     CoreML does not support it: https://github.com/apple/coremltools/issues/2003 so we handroll our
     own.
     """
-    spec_fp32 = spec_for_masking.to(torch.float32)
-    mask_fp32 = mask_batch.to(torch.float32)
+    spec_real = spec_for_masking[..., 0]
+    spec_imag = spec_for_masking[..., 1]
+    mask_real = mask_batch[..., 0]
+    mask_imag = mask_batch[..., 1]
 
-    spec_real = spec_fp32[..., 0]
-    spec_imag = spec_fp32[..., 1]
-    mask_real = mask_fp32[..., 0]
-    mask_imag = mask_fp32[..., 1]
+    # see: 14385, 14401, 14392, 14408
+    ac = spec_real * mask_real
+    bd = spec_imag * mask_imag
+    ad = spec_real * mask_imag
+    bc = spec_imag * mask_real
 
-    # COMPAT: complex muls are in fp16, see 14585, 14401, 14392, 14408
-    ac = spec_real.to(torch.float16) * mask_real.to(torch.float16)
-    bd = spec_imag.to(torch.float16) * mask_imag.to(torch.float16)
-    ad = spec_real.to(torch.float16) * mask_imag.to(torch.float16)
-    bc = spec_imag.to(torch.float16) * mask_real.to(torch.float16)
+    # see: 509, 506, 505, 504, 741, 747
+    out_real = ac.to(mask_add_sub_dtype) - bd.to(mask_add_sub_dtype)
+    out_imag = ad.to(mask_add_sub_dtype) + bc.to(mask_add_sub_dtype)
 
-    # COMPAT: see 741, 747
-    out_real = ac.to(torch.float32) - bd.to(torch.float32)
-    out_imag = ad.to(torch.float32) + bc.to(torch.float32)
-
-    # COMPAT: see 501, 503
-    separated_spec = torch.stack([out_real, out_imag], dim=-1).to(torch.float16)
+    # see: 503, 501
+    separated_spec = torch.stack([out_real, out_imag], dim=-1).to(mask_out_dtype)
     return SeparatedSpectrogramTensor(separated_spec)
 
 
@@ -244,6 +245,7 @@ def create_w2w_model(
     stft_cfg: StftConfig | None,
     num_channels: Channels,
     chunk_size: ChunkSize,
+    masking_cfg: MaskingConfig,
 ) -> ModelWaveformToWaveform:
     try:
         device = next(model.parameters()).device
@@ -268,6 +270,7 @@ def create_w2w_model(
             hop_length=stft_cfg.hop_length,
             win_length=stft_cfg.win_length,
             window_fn=lambda win_len: _get_window_fn(stft_cfg.window_shape, win_len, device),
+            conv_dtype=stft_cfg.conv_dtype,
         ).to(device)
         if model_input_type == "spectrogram":
             preprocess = _create_stft_preprocessor(stft_module)
@@ -284,7 +287,9 @@ def create_w2w_model(
             win_length=stft_cfg.win_length,
             window_fn=lambda win_len: _get_window_fn(stft_cfg.window_shape, win_len, device),
         ).to(device)
-        postprocess = _create_spec_postprocessor(istft_module, num_channels, chunk_size)
+        postprocess = _create_spec_postprocessor(
+            istft_module, num_channels, chunk_size, masking_cfg.add_sub_dtype, masking_cfg.out_dtype
+        )
 
     return ModelWaveformToWaveform(model, preprocess, postprocess)
 
@@ -316,12 +321,21 @@ def _create_hybrid_preprocessor(
 
 
 def _create_spec_postprocessor(
-    istft_module: IStft, num_channels: int, chunk_size: int
+    istft_module: IStft,
+    num_channels: Channels,
+    chunk_size: ChunkSize,
+    mask_add_sub_dtype: torch.dtype | None,
+    mask_out_dtype: torch.dtype | None,
 ) -> Callable[[ComplexSpectrogram, ComplexSpectrogram], SeparatedChunkedTensor]:
     def _postprocess(
         mask_batch: ComplexSpectrogram, spec_chunk: ComplexSpectrogram
     ) -> SeparatedChunkedTensor:
-        separated_spec = apply_mask(ComplexSpectrogram(spec_chunk.unsqueeze(1)), mask_batch)
+        separated_spec = apply_mask(
+            ComplexSpectrogram(spec_chunk.unsqueeze(1)),
+            mask_batch,
+            mask_add_sub_dtype,
+            mask_out_dtype,
+        )
 
         separated_spec = rearrange(separated_spec, "b n (f s) t c -> (b n s) f t c", s=num_channels)
 
@@ -389,15 +403,16 @@ def derive_stems(
 #
 
 
-def get_dtype(dtype: Dtype) -> torch.dtype:
-    if dtype == "float32":
-        return torch.float32
-    elif dtype == "float16":
-        return torch.float16
-    elif dtype == "bfloat16":
-        return torch.bfloat16
-    else:
-        raise ValueError(f"unsupported {dtype=}")
+def str_to_torch_dtype(value: Any) -> torch.dtype:
+    if not isinstance(value, str):
+        raise TypeError(f"expected dtype to be a string, got {value} (type {type(value)})")
+    try:
+        dtype = getattr(torch, value)
+    except AttributeError:
+        raise ValueError(f"`{value}` is cannot be found under the `torch` namespace")
+    if not isinstance(dtype, torch.dtype):
+        raise TypeError(f"expected {dtype} to be a dtype but it is a {type(dtype)}")
+    return dtype
 
 
 #
@@ -496,7 +511,6 @@ Increasing the batch size can improve GPU utilisation and speed up training, but
 memory.
 """
 
-Dtype: TypeAlias = Literal["float32", "float16", "bfloat16"]
 
 # preprocessing
 

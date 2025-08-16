@@ -15,7 +15,7 @@ from typing import (
     runtime_checkable,
 )
 
-from annotated_types import Gt
+import annotated_types as at
 from torch import nn
 
 if TYPE_CHECKING:
@@ -43,15 +43,19 @@ class ModelParamsLike(Protocol):
     """The type of the model's output (readonly)"""
 
 
-ChunkSize: TypeAlias = Annotated[int, Gt(0)]
+_T = TypeVar("_T")
+Gt0: TypeAlias = Annotated[_T, at.Gt(0)]
+Ge0: TypeAlias = Annotated[_T, at.Ge(0)]
+ChunkSize: TypeAlias = Gt0[int]
 """The length of an audio segment, in samples, processed by the model at one time.
 
 A full audio track is often too long to fit into GPU, instead we process it in fixed-size chunks.
 A larger chunk size may allow the model to capture more temporal context at the cost of increased
 memory usage.
 """
+Dropout: TypeAlias = Annotated[float, at.Ge(0.0), at.Le(1.0)]
 
-ModelOutputStemName: TypeAlias = str
+ModelOutputStemName: TypeAlias = Annotated[str, at.MinLen(1)]
 """The output stem name, e.g. `vocals`, `drums`, `bass`, etc."""
 
 ModelT = TypeVar("ModelT", bound=nn.Module)
