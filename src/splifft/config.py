@@ -40,14 +40,13 @@ from .core import (
     Channels,
     FftSize,
     FileFormat,
-    HopSize,
     OverlapRatio,
     PaddingMode,
     SampleRate,
     WindowShape,
     str_to_torch_dtype,
 )
-from .models import ChunkSize, ModelParamsLikeT, ModelType
+from .models import ChunkSize, HopSize, ModelParamsLikeT, ModelType
 from .models import ModelOutputStemName as _ModelOutputStemName
 
 
@@ -135,17 +134,7 @@ class LazyModelConfig(BaseModel):
         :raises pydantic.ValidationError: if extra fields are present in the model parameters
             that doesn't exist in the concrete model parameters.
         """
-        config_dict = self.model_dump()
-        # NOTE: a more scalable approach would be to use Annotated[] and get_origin but its overkill.
-        # hardcoding for now.
-        if "input_type" in config_dict:
-            raise PydanticCustomError(
-                "readonly_model_param", "`input_type` is a model parameter and cannot be modified"
-            )
-        if "output_type" in config_dict:
-            raise PydanticCustomError(
-                "readonly_model_param", "`output_type` is a model parameter and cannot be modified"
-            )
+        # input_type and output_type are inconfigurable anyway
         ta = TypeAdapter(
             type(
                 f"{model_params.__name__}Validator",

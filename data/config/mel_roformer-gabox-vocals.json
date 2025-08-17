@@ -1,40 +1,35 @@
 {
-    "identifier": "bs_roformer",
+    "identifier": "mel_roformer-gabox-vocals",
     "model_type": "bs_roformer",
     "stft": {
         "n_fft": 2048,
-        "hop_length": 512,
+        "hop_length": 441,
         "win_length": 2048,
+        "normalized": false,
         "conv_dtype": "float16"
     },
     "model": {
-        "chunk_size": 588800,
+        "chunk_size": 352800,
         "output_stem_names": [
-            "bass",
-            "drums",
-            "other",
-            "vocals",
-            "guitar",
-            "piano"
+            "vocals"
         ],
-        "dim": 256,
-        "depth": 12,
-        "stft_hop_length": 512,
+        "dim": 384,
+        "depth": 6,
+        "stereo": true,
+        "stft_hop_length": 441,
         "band_config": {
-            "kind": "fixed"
+            "kind": "mel",
+            "num_bands": 60,
+            "sample_rate": 44100,
+            "stft_n_fft": 2048
         },
-        "rms_norm_eps": 5.960464477539063e-08,
-        "rotary_embed_dtype": "float16",
-        "transformer_residual_dtype": "float32"
+        "mask_estimator_depth": 2,
+        "norm_output": true
     },
     "inference": {
         "normalize_input_audio": true,
-        "batch_size": 4,
+        "batch_size": 2,
         "force_weights_dtype": "float16"
-    },
-    "masking": {
-        "add_sub_dtype": "float32",
-        "out_dtype": "float16"
     },
     "derived_stems": {
         "instrumental": {

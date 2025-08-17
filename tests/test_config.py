@@ -65,8 +65,14 @@ def test_model_config_to_concrete_extra_fields() -> None:
         output_stem_names: tuple[str, ...]
         param_1: str
         param_2: int
-        input_type = "waveform"
-        output_type = "waveform"
+
+        @property
+        def input_type(self) -> ModelInputType:
+            return "waveform"
+
+        @property
+        def output_type(self) -> ModelOutputType:
+            return "waveform"
 
     lazy_model_config = LazyModelConfig.model_validate(MODEL_CONFIG_EXTRA)
     model_config = lazy_model_config.to_concrete(MyModelParam)

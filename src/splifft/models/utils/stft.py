@@ -85,6 +85,9 @@ class IStft(nn.Module):
         device = spec.device
         is_mps = device.type == "mps"
         window = self.window.to(device)
+        # see https://github.com/lucidrains/BS-RoFormer/issues/47
+        # this would introduces a breaking change.
+        # spec = spec.index_fill(1, torch.tensor(0, device=spec.device), 0.)  # type: ignore
         spec_complex = torch.view_as_complex(spec)
 
         try:

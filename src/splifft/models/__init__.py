@@ -25,7 +25,7 @@ ModelType: TypeAlias = str
 """The type of the model, e.g. `bs_roformer`, `demucs`"""
 
 ModelInputType: TypeAlias = Literal["waveform", "spectrogram", "waveform_and_spectrogram"]
-ModelOutputType: TypeAlias = Literal["waveform", "spectrogram_mask"]
+ModelOutputType: TypeAlias = Literal["waveform", "spectrogram_mask", "spectrogram"]
 
 
 @runtime_checkable
@@ -36,11 +36,11 @@ class ModelParamsLike(Protocol):
 
     chunk_size: ChunkSize
     output_stem_names: tuple[ModelOutputStemName, ...]
-    # the following are readonly
-    input_type: ModelInputType
-    """The type of the model's input (readonly)"""
-    output_type: ModelOutputType
-    """The type of the model's output (readonly)"""
+
+    @property
+    def input_type(self) -> ModelInputType: ...
+    @property
+    def output_type(self) -> ModelOutputType: ...
 
 
 _T = TypeVar("_T")
@@ -53,6 +53,14 @@ A full audio track is often too long to fit into GPU, instead we process it in f
 A larger chunk size may allow the model to capture more temporal context at the cost of increased
 memory usage.
 """
+HopSize: TypeAlias = Annotated[int, at.Gt(0)]
+"""The step size, in samples, between the start of consecutive [chunks][splifft.models.ChunkSize].
+
+To avoid artifacts at the edges of chunks, we process them with overlap. The hop size is the
+distance we "slide" the chunking window forward. `ChunkSize < HopSize` implies overlap and the
+overlap amount is `ChunkSize - HopSize`.
+"""
+
 Dropout: TypeAlias = Annotated[float, at.Ge(0.0), at.Le(1.0)]
 
 ModelOutputStemName: TypeAlias = Annotated[str, at.MinLen(1)]

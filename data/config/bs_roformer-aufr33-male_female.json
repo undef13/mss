@@ -1,0 +1,32 @@
+{
+    "identifier": "bs_roformer-aufr33-male_female",
+    "model_type": "bs_roformer",
+    "stft": {
+        "n_fft": 2048,
+        "hop_length": 441,
+        "win_length": 2048,
+        "normalized": false,
+        "conv_dtype": "float16"
+    },
+    "model": {
+        "chunk_size": 352800,
+        "output_stem_names": [
+            "male",
+            "female"
+        ],
+        "dim": 384,
+        "depth": 8,
+        "stft_hop_length": 441,
+        "band_config": {
+            "kind": "fixed"
+        }
+    },
+    "inference": {
+        "normalize_input_audio": true,
+        "batch_size": 2,
+        "force_weights_dtype": "float16"
+    },
+    "output": {
+        "file_format": "flac"
+    }
+}

@@ -28,7 +28,7 @@ if TYPE_CHECKING:
     from typing import Mapping, Sequence, TypeAlias
 
     from .config import DerivedStemsConfig, MaskingConfig, StemName, StftConfig
-    from .models import ChunkSize, ModelInputType, ModelOutputStemName, ModelOutputType
+    from .models import ChunkSize, HopSize, ModelInputType, ModelOutputStemName, ModelOutputType
 
 
 _AudioTensorLike = TypeVar("_AudioTensorLike")
@@ -253,7 +253,7 @@ def create_w2w_model(
         device = torch.device("cpu")
 
     needs_stft = model_input_type == "spectrogram" or model_input_type == "waveform_and_spectrogram"
-    needs_istft = model_output_type == "spectrogram_mask"
+    needs_istft = model_output_type == "spectrogram_mask" or model_output_type == "spectrogram"
 
     if (needs_stft or needs_istft) and stft_cfg is None:
         raise ValueError(
@@ -288,9 +288,13 @@ def create_w2w_model(
             window_fn=lambda win_len: _get_window_fn(stft_cfg.window_shape, win_len, device),
         ).to(device)
         postprocess = _create_spec_postprocessor(
-            istft_module, num_channels, chunk_size, masking_cfg.add_sub_dtype, masking_cfg.out_dtype
+            istft_module,
+            num_channels,
+            chunk_size,
+            masking_cfg.add_sub_dtype,
+            masking_cfg.out_dtype,
+            model_output_type,
         )
-
     return ModelWaveformToWaveform(model, preprocess, postprocess)
 
 
@@ -326,19 +330,26 @@ def _create_spec_postprocessor(
     chunk_size: ChunkSize,
     mask_add_sub_dtype: torch.dtype | None,
     mask_out_dtype: torch.dtype | None,
+    model_output_type: ModelOutputType,
 ) -> Callable[[ComplexSpectrogram, ComplexSpectrogram], SeparatedChunkedTensor]:
     def _postprocess(
-        mask_batch: ComplexSpectrogram, spec_chunk: ComplexSpectrogram
+        model_output: ComplexSpectrogram, spec_chunk: ComplexSpectrogram
     ) -> SeparatedChunkedTensor:
-        separated_spec = apply_mask(
-            ComplexSpectrogram(spec_chunk.unsqueeze(1)),
-            mask_batch,
-            mask_add_sub_dtype,
-            mask_out_dtype,
-        )
+        separated_spec: SeparatedSpectrogramTensor
+
+        if model_output_type == "spectrogram_mask":
+            separated_spec = apply_mask(
+                ComplexSpectrogram(spec_chunk.unsqueeze(1)),
+                model_output,
+                mask_add_sub_dtype,
+                mask_out_dtype,
+            )
+        elif model_output_type == "spectrogram":
+            separated_spec = SeparatedSpectrogramTensor(model_output)
+        else:
+            raise ValueError(f"Unsupported model output type: {model_output_type}")
 
         separated_spec = rearrange(separated_spec, "b n (f s) t c -> (b n s) f t c", s=num_channels)
-
         # COMPAT: note that istft is NOT part of the graph. 14454 implies fp16 but because
         # torch ComplexHalf is experimental, we explicitly cast to f32.
         separated_wave_chunk = istft_module(separated_spec.to(torch.float32), length=chunk_size)
@@ -480,14 +491,6 @@ See [concepts](../concepts.md#complex-spectrogram) for more details.
 
 HybridModelInput: TypeAlias = tuple[ComplexSpectrogram, RawAudioTensor | NormalizedAudioTensor]
 """Input for hybrid models that require both spectrogram and waveform."""
-
-HopSize: TypeAlias = Annotated[int, Gt(0)]
-"""The step size, in samples, between the start of consecutive [chunks][splifft.models.ChunkSize].
-
-To avoid artifacts at the edges of chunks, we process them with overlap. The hop size is the
-distance we "slide" the chunking window forward. `ChunkSize < HopSize` implies overlap and the
-overlap amount is `ChunkSize - HopSize`.
-"""
 
 
 # NOTE: sharing both for stft and overlap-add stitching for now

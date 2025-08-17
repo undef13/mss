@@ -1,43 +1,32 @@
 {
-    "identifier": "bs_roformer",
+    "identifier": "bs_roformer-unwa-resurrection_vocals",
     "model_type": "bs_roformer",
     "stft": {
         "n_fft": 2048,
-        "hop_length": 512,
+        "hop_length": 441,
         "win_length": 2048,
+        "normalized": false,
         "conv_dtype": "float16"
     },
     "model": {
-        "chunk_size": 588800,
+        "chunk_size": 749259,
         "output_stem_names": [
-            "bass",
-            "drums",
-            "other",
-            "vocals",
-            "guitar",
-            "piano"
+            "vocals"
         ],
         "dim": 256,
         "depth": 12,
-        "stft_hop_length": 512,
+        "stft_hop_length": 441,
         "band_config": {
             "kind": "fixed"
-        },
-        "rms_norm_eps": 5.960464477539063e-08,
-        "rotary_embed_dtype": "float16",
-        "transformer_residual_dtype": "float32"
+        }
     },
     "inference": {
         "normalize_input_audio": true,
-        "batch_size": 4,
+        "batch_size": 2,
         "force_weights_dtype": "float16"
     },
-    "masking": {
-        "add_sub_dtype": "float32",
-        "out_dtype": "float16"
-    },
     "derived_stems": {
-        "instrumental": {
+        "other": {
             "operation": "subtract",
             "stem_name": "mixture",
             "by_stem_name": "vocals"

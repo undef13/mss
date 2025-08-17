@@ -36,19 +36,23 @@ Key principles:
   - [ ] support `coremltools` and `torch.compile`
     - [x] handroll complex multiplication implementation
     - [x] handroll stft in forward pass
+- [x] port additional SOTA models from MSST (e.g. Mel Roformer, SCNet)
+  - [x] directly support popular models (e.g. by [@unwa](https://huggingface.co/pcunwa), [gabox](https://huggingface.co/GaboxR67), by [@becruily](https://huggingface.co/becruily))
+- [ ] model registry with simple file-based cache
 - [ ] evals: SDR, bleedless, fullness, etc.
-- [ ] datasets: MUSDB18-HQ, moises
 - [ ] proper benchmarking (MFU, memory...)
-- [ ] port additional SOTA models from MSST (e.g. Mel Roformer, SCNet)
-  - [ ] directly support popular models (e.g. by [@unwa](https://huggingface.co/pcunwa), [gabox](https://huggingface.co/GaboxR67), by [@becruily](https://huggingface.co/becruily))
+- [ ] datasets: MUSDB18-HQ, moises
+
+**Medium term**
+
+- [ ] simple web-based GUI with FastAPI and SolidJS.
+- [ ] Jupyter notebook
 
 **Long term (low priority)**
 
-- [ ] model registry with simple file-based cache
 - [ ] data augmentation
 - [ ] implement a complete, configurable training loop
 - [ ] [`max` kernels](#mojo)
-- [ ] simple web-based GUI with FastAPI and Svelte.
 
 **Contributing**: PRs are very welcome!
 

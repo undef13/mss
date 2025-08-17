@@ -2,11 +2,11 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from functools import partial
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
 import torch
 import torch.nn.functional as F
-from einops import pack, rearrange, repeat, unpack
+from einops import pack, rearrange, reduce, repeat, unpack
 from einops.layers.torch import Rearrange
 from torch import Tensor, nn
 from torch.nn import Module, ModuleList
@@ -17,6 +17,7 @@ from . import (
     Dropout,
     Ge0,
     Gt0,
+    HopSize,
     ModelInputType,
     ModelOutputStemName,
     ModelOutputType,
@@ -44,22 +45,40 @@ DEFAULT_FREQS_PER_BANDS = (
 
 
 @dataclass
+class FixedBandsConfig:
+    kind: Literal["fixed"] = "fixed"
+    freqs_per_bands: tuple[Gt0[int], ...] = field(default_factory=lambda: DEFAULT_FREQS_PER_BANDS)
+
+
+@dataclass
+class MelBandsConfig:
+    kind: Literal["mel"]
+    num_bands: Gt0[int]
+    sample_rate: Gt0[int]
+    stft_n_fft: Gt0[int]
+
+
+@dataclass
 class BSRoformerParams(ModelParamsLike):
     chunk_size: ChunkSize
     output_stem_names: tuple[ModelOutputStemName, ...]
     dim: Gt0[int]
     depth: Gt0[int]
+    stft_hop_length: HopSize
     stereo: bool = True
     time_transformer_depth: Gt0[int] = 1
     freq_transformer_depth: Gt0[int] = 1
     linear_transformer_depth: Ge0[int] = 0
-    freqs_per_bands: tuple[Gt0[int], ...] = field(default_factory=lambda: DEFAULT_FREQS_PER_BANDS)
+    band_config: FixedBandsConfig | MelBandsConfig = field(default_factory=FixedBandsConfig)
     dim_head: int = 64
     heads: Gt0[int] = 8
     attn_dropout: Dropout = 0.0
     ff_dropout: Dropout = 0.0
     ff_mult: Gt0[int] = 4
     flash_attn: bool = True
+    norm_output: bool = False
+    """Note that in `lucidrains`' implementation, this is set to
+    False for `bs_roformer` but True for `mel_roformer`!!"""
     mask_estimator_depth: Gt0[int] = 2
     mlp_expansion_factor: Gt0[int] = 4
     use_torch_checkpoint: bool = False
@@ -72,8 +91,13 @@ class BSRoformerParams(ModelParamsLike):
     debug: bool = False
     """Whether to check for nan/inf in model outputs. Keep it off for [torch.compile][]."""
 
-    input_type: ModelInputType = "spectrogram"
-    output_type: ModelOutputType = "spectrogram_mask"
+    @property
+    def input_type(self) -> ModelInputType:
+        return "spectrogram"
+
+    @property
+    def output_type(self) -> ModelOutputType:
+        return "spectrogram_mask"
 
 
 def l2norm(t: Tensor) -> Tensor:
@@ -401,11 +425,16 @@ def mlp(
     dim_hidden: int | None = None,
     depth: int = 1,
     activation: type[Module] = nn.Tanh,
+    *,
+    is_mel_mlp_depth: bool = False,
 ) -> nn.Sequential:
     dim_hidden_ = dim_hidden or dim_in
 
     net: list[Module] = []
-    dims = (dim_in, *((dim_hidden_,) * (depth - 1)), dim_out)
+    # NOTE: in lucidrain's impl, `bs_roformer` has `depth - 1` but `mel_roformer` has `depth`
+    # this is likely a bug. we add a flag to control this behavior for compatibility.
+    num_hidden_layers = depth if is_mel_mlp_depth else depth - 1
+    dims = (dim_in, *((dim_hidden_,) * num_hidden_layers), dim_out)
 
     for ind, (layer_dim_in, layer_dim_out) in enumerate(zip(dims[:-1], dims[1:])):
         is_last = ind == (len(dims) - 2)
@@ -422,7 +451,13 @@ def mlp(
 
 class MaskEstimator(Module):
     def __init__(
-        self, dim: int, dim_inputs: tuple[int, ...], depth: int, mlp_expansion_factor: int
+        self,
+        dim: int,
+        dim_inputs: tuple[int, ...],
+        depth: int,
+        mlp_expansion_factor: int,
+        *,
+        is_mel_mlp_depth: bool,
     ):
         super().__init__()
         self.dim_inputs = dim_inputs
@@ -432,7 +467,14 @@ class MaskEstimator(Module):
         for dim_in in dim_inputs:
             self.to_freqs.append(
                 nn.Sequential(
-                    mlp(dim, dim_in * 2, dim_hidden=dim_hidden, depth=depth), nn.GLU(dim=-1)
+                    mlp(
+                        dim,
+                        dim_in * 2,
+                        dim_hidden=dim_hidden,
+                        depth=depth,
+                        is_mel_mlp_depth=is_mel_mlp_depth,
+                    ),
+                    nn.GLU(dim=-1),
                 )
             )
 
@@ -441,8 +483,8 @@ class MaskEstimator(Module):
 
         outs = []
 
-        for band_features, mlp in zip(x_unbound, self.to_freqs):
-            freq_out = mlp(band_features)
+        for band_features, mlp_net in zip(x_unbound, self.to_freqs):
+            freq_out = mlp_net(band_features)
             outs.append(freq_out)
 
         return torch.cat(outs, dim=-1)
@@ -475,7 +517,7 @@ class BSRoformer(Module):
             ff_dropout=cfg.ff_dropout,
             ff_mult=cfg.ff_mult,
             flash_attn=cfg.flash_attn,
-            norm_output=False,
+            norm_output=cfg.norm_output,
             sage_attention=cfg.sage_attention,
             shared_qkv_bias=self.shared_qkv_bias,
             shared_out_bias=self.shared_out_bias,
@@ -483,14 +525,57 @@ class BSRoformer(Module):
             transformer_residual_dtype=cfg.transformer_residual_dtype,
         )
 
-        # NOTE: hardcoding stft hop length for now - we should parameterise this.
-        stft_hop_length = 512
-        t_frames = cfg.chunk_size // stft_hop_length + 1  # e.g. 588800 // 512 + 1 = 1151
+        t_frames = cfg.chunk_size // cfg.stft_hop_length + 1  # e.g. 588800 // 512 + 1 = 1151
         time_rotary_embed = RotaryEmbedding(
             seq_len=t_frames, dim_head=cfg.dim_head, dtype=cfg.rotary_embed_dtype
         )
 
-        num_bands = len(cfg.freqs_per_bands)
+        self.is_mel = isinstance(cfg.band_config, MelBandsConfig)
+        if self.is_mel:
+            from torchaudio.functional import melscale_fbanks
+
+            mel_cfg = cfg.band_config
+            num_bands = mel_cfg.num_bands
+            freqs = mel_cfg.stft_n_fft // 2 + 1
+            mel_filter_bank = melscale_fbanks(
+                n_freqs=freqs,
+                f_min=0.0,
+                f_max=float(mel_cfg.sample_rate / 2),
+                n_mels=num_bands,
+                sample_rate=mel_cfg.sample_rate,
+                norm="slaney",
+                mel_scale="slaney",
+            ).T
+            # TODO: adopt https://github.com/lucidrains/BS-RoFormer/issues/47
+            mel_filter_bank[0, 0] = 1.0
+            mel_filter_bank[-1, -1] = 1.0
+
+            freqs_per_band_mask = mel_filter_bank > 0
+            assert freqs_per_band_mask.any(dim=0).all(), (
+                "all frequencies must be covered by at least one band"
+            )
+
+            repeated_freq_indices = repeat(torch.arange(freqs), "f -> b f", b=num_bands)
+            freq_indices = repeated_freq_indices[freqs_per_band_mask]
+            if self.stereo:
+                freq_indices = repeat(freq_indices, "f -> f s", s=2)
+                freq_indices = freq_indices * 2 + torch.arange(2)
+                freq_indices = rearrange(freq_indices, "f s -> (f s)")
+            self.register_buffer("freq_indices", freq_indices, persistent=False)
+            self.register_buffer("freqs_per_band_mask", freqs_per_band_mask, persistent=False)
+
+            num_freqs_per_band = reduce(freqs_per_band_mask, "b f -> b", "sum")
+            num_bands_per_freq = reduce(freqs_per_band_mask, "b f -> f", "sum")
+
+            self.register_buffer("num_freqs_per_band", num_freqs_per_band, persistent=False)
+            self.register_buffer("num_bands_per_freq", num_bands_per_freq, persistent=False)
+
+        elif isinstance(cfg.band_config, FixedBandsConfig):
+            num_freqs_per_band = torch.tensor(cfg.band_config.freqs_per_bands)
+            num_bands = len(cfg.band_config.freqs_per_bands)
+        else:
+            raise TypeError(f"unknown band config: {cfg.band_config}")
+
         freq_rotary_embed = RotaryEmbedding(
             seq_len=num_bands, dim_head=cfg.dim_head, dtype=cfg.rotary_embed_dtype
         )
@@ -509,14 +594,18 @@ class BSRoformer(Module):
             )
             self.layers.append(nn.ModuleList(tran_modules))
 
-        self.final_norm = rms_norm(cfg.dim, eps=cfg.rms_norm_eps)
+        self.final_norm = (
+            rms_norm(cfg.dim, eps=cfg.rms_norm_eps) if not self.is_mel else nn.Identity()
+        )
 
         freqs_per_bands_with_complex = tuple(
-            2 * f * self.audio_channels for f in cfg.freqs_per_bands
+            2 * f * self.audio_channels for f in num_freqs_per_band.tolist()
         )
 
         self.band_split = BandSplit(
-            dim=cfg.dim, dim_inputs=freqs_per_bands_with_complex, rms_norm_eps=cfg.rms_norm_eps
+            dim=cfg.dim,
+            dim_inputs=freqs_per_bands_with_complex,
+            rms_norm_eps=cfg.rms_norm_eps,
         )
 
         self.mask_estimators = nn.ModuleList([])
@@ -527,6 +616,7 @@ class BSRoformer(Module):
                 dim_inputs=freqs_per_bands_with_complex,
                 depth=cfg.mask_estimator_depth,
                 mlp_expansion_factor=cfg.mlp_expansion_factor,
+                is_mel_mlp_depth=self.is_mel,
             )
 
             self.mask_estimators.append(mask_estimator)
@@ -536,9 +626,16 @@ class BSRoformer(Module):
     def forward(self, stft_repr: Tensor) -> Tensor:
         """
         :param stft_repr: input spectrogram. shape (b, f*s, t, c)
-        :return: estimated mask. shape (b, n, f, t, c)
+        :return: estimated mask. shape (b, n, f*s, t, c)
         """
-        x = rearrange(stft_repr, "b f t c -> b t (f c)")
+        batch, _, t_frames, _ = stft_repr.shape
+        device = stft_repr.device
+        if self.is_mel:
+            batch_arange = torch.arange(batch, device=device)[..., None]
+            x = stft_repr[batch_arange, self.freq_indices]
+            x = rearrange(x, "b f t c -> b t (f c)")
+        else:
+            x = rearrange(stft_repr, "b f t c -> b t (f c)")
 
         if self.debug and (torch.isnan(x).any() or torch.isinf(x).any()):
             raise RuntimeError(
@@ -608,4 +705,30 @@ class BSRoformer(Module):
             mask = torch.stack([fn(x) for fn in self.mask_estimators], dim=1)
         mask = rearrange(mask, "b n t (f c) -> b n f t c", c=2)
 
-        return mask
+        if not self.is_mel:
+            return mask
+
+        stft_repr = rearrange(stft_repr, "b f t c -> b 1 f t c")
+        # stft_repr may be fp16 but complex32 support is experimental so we upcast it early
+        stft_repr_complex = torch.view_as_complex(stft_repr.to(torch.float32))
+
+        masks_per_band_complex = torch.view_as_complex(mask)
+        masks_per_band_complex = masks_per_band_complex.type(stft_repr_complex.dtype)
+
+        scatter_indices = repeat(
+            self.freq_indices,
+            "f -> b n f t",
+            b=batch,
+            n=self.num_stems,
+            t=stft_repr_complex.shape[-1],
+        )
+        stft_repr_expanded_stems = repeat(stft_repr_complex, "b 1 ... -> b n ...", n=self.num_stems)
+
+        masks_summed = torch.zeros_like(stft_repr_expanded_stems).scatter_add_(
+            2, scatter_indices, masks_per_band_complex
+        )
+
+        denom = repeat(self.num_bands_per_freq, "f -> (f r) 1", r=self.audio_channels)
+        masks_averaged = masks_summed / denom.clamp(min=1e-8)
+
+        return torch.view_as_real(masks_averaged).to(stft_repr.dtype)
