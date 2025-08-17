@@ -117,6 +117,12 @@ def generate_chunks(
     padding = chunk_size - hop_size
     padded_audio = F.pad(audio_data, (padding, padding), mode=padding_mode)
 
+    padded_len = padded_audio.shape[-1]
+    rem = (padded_len - chunk_size) % hop_size
+    if rem != 0:
+        final_pad = hop_size - rem
+        padded_audio = F.pad(padded_audio, (0, final_pad), mode="constant", value=0)
+
     unfolded = padded_audio.unfold(
         dimension=-1, size=chunk_size, step=hop_size
     )  # (C, num_chunks, chunk_size)
@@ -178,7 +184,10 @@ def stitch_chunks(
     stitched /= norm_window
 
     padding = chunk_size - hop_size
-    return RawSeparatedTensor(stitched[..., padding : padding + target_num_samples])
+    if padding > 0:
+        stitched = stitched[..., padding:-padding]
+
+    return RawSeparatedTensor(stitched[..., :target_num_samples])
 
 
 def apply_mask(
