@@ -8,12 +8,12 @@ from typing import TYPE_CHECKING, BinaryIO
 import torch
 from torchcodec.decoders import AudioDecoder
 
+from . import types as t
 from .core import Audio
 
 if TYPE_CHECKING:
     from typing import TypeAlias
 
-    from . import types as t
     from .models import ModelT
 
 

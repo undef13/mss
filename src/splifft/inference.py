@@ -16,6 +16,7 @@ from rich.progress import (
 )
 from torch import nn
 
+from . import types as t
 from .core import (
     _get_window_fn,
     create_w2w_model,
@@ -27,7 +28,6 @@ from .core import (
 )
 
 if TYPE_CHECKING:
-    from . import types as t
     from .config import ChunkingConfig, Config, MaskingConfig, StemName, StftConfig
     from .core import Audio, NormalizationStats
     from .models import (

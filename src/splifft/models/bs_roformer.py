@@ -84,6 +84,18 @@ class BSRoformerParams(ModelParamsLike):
     """Note that in `lucidrains`' implementation, this is set to
     False for `bs_roformer` but True for `mel_roformer`!!"""
     mask_estimator_depth: t.Gt0[int] = 2
+    """The number of hidden layers of the MLP is `mask_estimator_depth - 1`, that is:
+
+- depth = 1: (dim_in, dim_out)
+- depth = 2: (dim_in, dim_hidden, dim_out)
+
+Note that in `lucidrain`'s implementation of **mel-band roformers**, the number of hidden layers
+is incorrectly set as `mask_estimator_depth`. This includes popular models like kim-vocals and
+all models that use `zfturbo`'s music-source-separation training.
+
+If you are migrating a mel-band former's `zfturbo` configuration, **increment** the mask_estimator
+depth by 1.
+    """
     mlp_expansion_factor: t.Gt0[int] = 4
     use_torch_checkpoint: bool = False
     sage_attention: bool = False
@@ -438,15 +450,12 @@ def mlp(
     dim_hidden: int | None = None,
     depth: int = 1,
     activation: type[Module] = nn.Tanh,
-    *,
-    is_mel_mlp_depth: bool = False,
 ) -> nn.Sequential:
     dim_hidden_ = dim_hidden or dim_in
 
     net: list[Module] = []
     # NOTE: in lucidrain's impl, `bs_roformer` has `depth - 1` but `mel_roformer` has `depth`
-    # this is likely a bug. we add a flag to control this behavior for compatibility.
-    num_hidden_layers = depth if is_mel_mlp_depth else depth - 1
+    num_hidden_layers = depth - 1
     dims = (dim_in, *((dim_hidden_,) * num_hidden_layers), dim_out)
 
     for ind, (layer_dim_in, layer_dim_out) in enumerate(zip(dims[:-1], dims[1:])):
@@ -469,8 +478,6 @@ class MaskEstimator(Module):
         dim_inputs: tuple[int, ...],
         depth: int,
         mlp_expansion_factor: int,
-        *,
-        is_mel_mlp_depth: bool,
     ):
         super().__init__()
         self.dim_inputs = dim_inputs
@@ -480,13 +487,7 @@ class MaskEstimator(Module):
         for dim_in in dim_inputs:
             self.to_freqs.append(
                 nn.Sequential(
-                    mlp(
-                        dim,
-                        dim_in * 2,
-                        dim_hidden=dim_hidden,
-                        depth=depth,
-                        is_mel_mlp_depth=is_mel_mlp_depth,
-                    ),
+                    mlp(dim, dim_in * 2, dim_hidden=dim_hidden, depth=depth),
                     nn.GLU(dim=-1),
                 )
             )
@@ -629,7 +630,6 @@ class BSRoformer(Module):
                 dim_inputs=freqs_per_bands_with_complex,
                 depth=cfg.mask_estimator_depth,
                 mlp_expansion_factor=cfg.mlp_expansion_factor,
-                is_mel_mlp_depth=self.is_mel,
             )
 
             self.mask_estimators.append(mask_estimator)

@@ -23,7 +23,7 @@
             "sample_rate": 44100,
             "stft_n_fft": 2048
         },
-        "mask_estimator_depth": 2,
+        "mask_estimator_depth": 3,
         "norm_output": true
     },
     "inference": {

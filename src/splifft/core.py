@@ -19,12 +19,12 @@ from annotated_types import Gt
 from einops import rearrange
 from torch import Tensor, nn
 
+from . import types as t
 from .models.utils.stft import IStft, Stft
 
 if TYPE_CHECKING:
     from typing import Mapping, Sequence
 
-    from . import types as t
     from .config import DerivedStemsConfig, MaskingConfig, StemName, StftConfig
 
 
