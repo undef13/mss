@@ -31,6 +31,7 @@ model_cfg = BSRoformerParams(
     time_transformer_depth=1,
     freq_transformer_depth=1,
     chunk_size=588800,
+    stft_hop_length=512
 )
 model = BSRoformer(model_cfg)
 

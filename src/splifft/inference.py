@@ -17,9 +17,6 @@ from rich.progress import (
 from torch import nn
 
 from .core import (
-    NormalizedAudioTensor,
-    RawAudioTensor,
-    WindowTensor,
     _get_window_fn,
     create_w2w_model,
     denormalize_audio,
@@ -30,31 +27,22 @@ from .core import (
 )
 
 if TYPE_CHECKING:
+    from . import types as t
     from .config import ChunkingConfig, Config, MaskingConfig, StemName, StftConfig
-    from .core import (
-        Audio,
-        BatchSize,
-        NormalizationStats,
-        NumModelStems,
-        RawSeparatedTensor,
-    )
+    from .core import Audio, NormalizationStats
     from .models import (
-        ChunkSize,
-        ModelInputType,
-        ModelOutputStemName,
-        ModelOutputType,
         ModelParamsLike,
     )
 
 
 def run_inference_on_file(
-    mixture: Audio[RawAudioTensor],
+    mixture: Audio[t.RawAudioTensor],
     config: Config,
     model: nn.Module,
     model_params_concrete: ModelParamsLike,
-) -> dict[StemName, RawAudioTensor]:
+) -> dict[StemName, t.RawAudioTensor]:
     """Runs the full source separation pipeline on a single audio file."""
-    mixture_data: RawAudioTensor | NormalizedAudioTensor = mixture.data
+    mixture_data: t.RawAudioTensor | t.NormalizedAudioTensor = mixture.data
     mixture_stats: NormalizationStats | None = None
     if config.inference.normalize_input_audio:
         norm_audio = normalize_audio(mixture)
@@ -75,15 +63,15 @@ def run_inference_on_file(
         use_autocast_dtype=config.inference.use_autocast_dtype,
     )
 
-    denormalized_stems: dict[ModelOutputStemName, RawAudioTensor] = {}
+    denormalized_stems: dict[t.ModelOutputStemName, t.RawAudioTensor] = {}
     for i, stem_name in enumerate(config.model.output_stem_names):
         stem_data = separated_data[i, ...]
         if mixture_stats is not None:
             stem_data = denormalize_audio(
-                audio_data=NormalizedAudioTensor(stem_data),
+                audio_data=t.NormalizedAudioTensor(stem_data),
                 stats=mixture_stats,
             )
-        denormalized_stems[stem_name] = RawAudioTensor(stem_data)
+        denormalized_stems[stem_name] = t.RawAudioTensor(stem_data)
 
     if config.inference.apply_tta:
         raise NotImplementedError
@@ -100,19 +88,19 @@ def run_inference_on_file(
 
 
 def separate(
-    mixture_data: RawAudioTensor | NormalizedAudioTensor,
+    mixture_data: t.RawAudioTensor | t.NormalizedAudioTensor,
     chunk_cfg: ChunkingConfig,
     model: nn.Module,
-    batch_size: BatchSize,
-    num_model_stems: NumModelStems,
-    chunk_size: ChunkSize,
-    model_input_type: ModelInputType,
-    model_output_type: ModelOutputType,
+    batch_size: t.BatchSize,
+    num_model_stems: t.NumModelStems,
+    chunk_size: t.ChunkSize,
+    model_input_type: t.ModelInputType,
+    model_output_type: t.ModelOutputType,
     stft_cfg: StftConfig | None,
     masking_cfg: MaskingConfig,
     *,
     use_autocast_dtype: torch.dtype | None = None,
-) -> RawSeparatedTensor:
+) -> t.RawSeparatedTensor:
     """Chunk, predict and stitch."""
     device = mixture_data.device
     original_num_samples = mixture_data.shape[-1]
@@ -178,5 +166,5 @@ def separate(
         chunk_size=chunk_size,
         hop_size=hop_size,
         target_num_samples=original_num_samples,
-        window=WindowTensor(window),
+        window=t.WindowTensor(window),
     )

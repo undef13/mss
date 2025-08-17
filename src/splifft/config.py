@@ -16,6 +16,7 @@ from typing import (
     get_args,
 )
 
+# NOTE: we are not using typing.TYPE_CHECKING because pydantic relies on that
 import torch
 from annotated_types import Len
 from pydantic import (
@@ -34,23 +35,11 @@ from pydantic import (
 from pydantic_core import CoreSchema, PydanticCustomError, core_schema
 from typing_extensions import Self
 
-from .core import (
-    BatchSize,
-    BitRate,
-    Channels,
-    FftSize,
-    FileFormat,
-    OverlapRatio,
-    PaddingMode,
-    SampleRate,
-    WindowShape,
-    str_to_torch_dtype,
-)
-from .models import ChunkSize, HopSize, ModelParamsLikeT, ModelType
-from .models import ModelOutputStemName as _ModelOutputStemName
+from . import types as t
+from .core import str_to_torch_dtype
+from .models import ModelParamsLikeT
 
 
-# NOTE: we are not using typing.TYPE_CHECKING because pydantic relies on that
 def _get_torch_dtype_schema(_source_type: Any, _handler: GetCoreSchemaHandler) -> CoreSchema:
     return core_schema.json_or_python_schema(
         json_schema=core_schema.chain_schema(
@@ -101,7 +90,7 @@ NonEmptyUnique = Annotated[
 ]
 
 ModelInputStemName: TypeAlias = Literal["mixture"]
-ModelOutputStemName: TypeAlias = Annotated[_ModelOutputStemName, StringConstraints(min_length=1)]
+ModelOutputStemName: TypeAlias = Annotated[t.ModelOutputStemName, StringConstraints(min_length=1)]
 _INPUT_STEM_NAMES = get_args(ModelInputStemName)
 
 
@@ -120,7 +109,7 @@ class LazyModelConfig(BaseModel):
     Note that it is not guaranteed to be fully valid until `to_concrete` is called.
     """
 
-    chunk_size: ChunkSize
+    chunk_size: t.ChunkSize
     output_stem_names: NonEmptyUnique[Tuple[ModelOutputStemName]]
 
     def to_concrete(
@@ -143,9 +132,7 @@ class LazyModelConfig(BaseModel):
             )  # needed for https://docs.pydantic.dev/latest/errors/usage_errors/#type-adapter-config-unused
         )  # type: ignore
         # types defined within `TYPE_CHECKING` blocks will be forward references, so we need rebuild
-        # furthermore, we dont want others to *have* to install pydantic so we "hijack" any
-        # undefined annotations
-        ta.rebuild(_types_namespace={"TorchDtype": TorchDtype})
+        ta.rebuild(_types_namespace={"TorchDtype": TorchDtype, "t": t})
         model_params_concrete: ModelParamsLikeT = ta.validate_python(self.model_dump())  # type: ignore
         return model_params_concrete
 
@@ -162,10 +149,10 @@ class LazyModelConfig(BaseModel):
 class StftConfig(BaseModel):
     """configuration for the short-time fourier transform."""
 
-    n_fft: FftSize
-    hop_length: HopSize
-    win_length: FftSize
-    window_shape: WindowShape = "hann"
+    n_fft: t.FftSize
+    hop_length: t.HopSize
+    win_length: t.FftSize
+    window_shape: t.WindowShape = "hann"
     normalized: bool = False
     conv_dtype: TorchDtype | None = None
     """The data type used for the `conv1d` buffers."""
@@ -174,8 +161,8 @@ class StftConfig(BaseModel):
 
 
 class AudioIOConfig(BaseModel):
-    target_sample_rate: SampleRate = 44100
-    force_channels: Channels | None = 2
+    target_sample_rate: t.SampleRate = 44100
+    force_channels: t.Channels | None = 2
     """Whether to force mono or stereo audio input. If None, keep original."""
 
     model_config = _PYDANTIC_STRICT_CONFIG
@@ -191,7 +178,7 @@ class TorchCompileConfig(BaseModel):
 
 class InferenceConfig(BaseModel):
     normalize_input_audio: bool = False
-    batch_size: BatchSize = 8
+    batch_size: t.BatchSize = 8
     force_weights_dtype: TorchDtype | None = None
     use_autocast_dtype: TorchDtype | None = None
     compile_model: TorchCompileConfig | None = None
@@ -202,9 +189,9 @@ class InferenceConfig(BaseModel):
 
 class ChunkingConfig(BaseModel):
     method: Literal["overlap_add_windowed"] = "overlap_add_windowed"
-    overlap_ratio: OverlapRatio = 0.5
-    window_shape: WindowShape = "hann"
-    padding_mode: PaddingMode = "reflect"
+    overlap_ratio: t.OverlapRatio = 0.5
+    window_shape: t.WindowShape = "hann"
+    padding_mode: t.PaddingMode = "reflect"
 
     model_config = _PYDANTIC_STRICT_CONFIG
 
@@ -243,8 +230,8 @@ DerivedStemsConfig: TypeAlias = dict[DerivedStemName, DerivedStemRule]
 
 class OutputConfig(BaseModel):
     stem_names: Literal["all"] | NonEmptyUnique[Tuple[StemName]] = "all"
-    file_format: FileFormat = "wav"
-    bit_rate: BitRate | None = None
+    file_format: t.FileFormat = "wav"
+    bit_rate: t.BitRate | None = None
     """Output bit rate for lossy formats. The default is chosen by FFmpeg."""
 
     model_config = _PYDANTIC_STRICT_CONFIG
@@ -257,7 +244,7 @@ class OutputConfig(BaseModel):
 class Config(BaseModel):
     identifier: str
     """Unique identifier for this configuration"""
-    model_type: ModelType
+    model_type: t.ModelType
     model: LazyModelConfig
     stft: StftConfig | None = None
     audio_io: AudioIOConfig = Field(default_factory=AudioIOConfig)

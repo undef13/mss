@@ -1,3 +1,21 @@
+"""Band-Split RoPE Transformer
+
+- BS-RoFormer: https://arxiv.org/abs/2309.02612
+- Mel-RoFormer: https://arxiv.org/abs/2409.04702
+
+This implementation merges the two versions found in https://github.com/lucidrains/BS-RoFormer.
+However, there are several inconsistencies in lucidrain's version which we inherit from to
+maintain compatability in weights:
+
+- `MLP` was defined differently in each file, one that has `depth - 1` hidden layers and one that
+  has `depth` layers. we use `is_mel_mlp_depth` to switch between the two.
+- `BSRoformer` applies one final RMSNorm after the entire stack of transformer layers, while the
+  `MelBandRoformer` applies an RMSNorm at the end of *each* axial transformer block (time_transformer,
+  freq_transformer, etc.) and has no final normalization layer.
+- `bs_roformer.py::Attention` and `mel_roformer.py::Attention` both have `v = v.lerp(value_residual, mix)`
+  but is swapped in the linear attention. we do not implement it.
+"""
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -12,24 +30,10 @@ from torch import Tensor, nn
 from torch.nn import Module, ModuleList
 from torch.utils.checkpoint import checkpoint
 
-from . import (
-    ChunkSize,
-    Dropout,
-    Ge0,
-    Gt0,
-    HopSize,
-    ModelInputType,
-    ModelOutputStemName,
-    ModelOutputType,
-    ModelParamsLike,
-)
-from .utils.attend import Attend
+from . import ModelParamsLike
 
-try:
-    from .utils.attend_sage import AttendSage
-except ImportError:
-    pass
 if TYPE_CHECKING:
+    from .. import types as t
     from ..config import TorchDtype
 
 # fmt: off
@@ -47,56 +51,56 @@ DEFAULT_FREQS_PER_BANDS = (
 @dataclass
 class FixedBandsConfig:
     kind: Literal["fixed"] = "fixed"
-    freqs_per_bands: tuple[Gt0[int], ...] = field(default_factory=lambda: DEFAULT_FREQS_PER_BANDS)
+    freqs_per_bands: tuple[t.Gt0[int], ...] = field(default_factory=lambda: DEFAULT_FREQS_PER_BANDS)
 
 
 @dataclass
 class MelBandsConfig:
     kind: Literal["mel"]
-    num_bands: Gt0[int]
-    sample_rate: Gt0[int]
-    stft_n_fft: Gt0[int]
+    num_bands: t.Gt0[int]
+    sample_rate: t.Gt0[int]
+    stft_n_fft: t.Gt0[int]
 
 
 @dataclass
 class BSRoformerParams(ModelParamsLike):
-    chunk_size: ChunkSize
-    output_stem_names: tuple[ModelOutputStemName, ...]
-    dim: Gt0[int]
-    depth: Gt0[int]
-    stft_hop_length: HopSize
+    chunk_size: t.ChunkSize
+    output_stem_names: tuple[t.ModelOutputStemName, ...]
+    dim: t.Gt0[int]
+    depth: t.Gt0[int]
+    stft_hop_length: t.HopSize
     stereo: bool = True
-    time_transformer_depth: Gt0[int] = 1
-    freq_transformer_depth: Gt0[int] = 1
-    linear_transformer_depth: Ge0[int] = 0
+    time_transformer_depth: t.Gt0[int] = 1
+    freq_transformer_depth: t.Gt0[int] = 1
+    linear_transformer_depth: t.Ge0[int] = 0
     band_config: FixedBandsConfig | MelBandsConfig = field(default_factory=FixedBandsConfig)
     dim_head: int = 64
-    heads: Gt0[int] = 8
-    attn_dropout: Dropout = 0.0
-    ff_dropout: Dropout = 0.0
-    ff_mult: Gt0[int] = 4
+    heads: t.Gt0[int] = 8
+    attn_dropout: t.Dropout = 0.0
+    ff_dropout: t.Dropout = 0.0
+    ff_mult: t.Gt0[int] = 4
     flash_attn: bool = True
     norm_output: bool = False
     """Note that in `lucidrains`' implementation, this is set to
     False for `bs_roformer` but True for `mel_roformer`!!"""
-    mask_estimator_depth: Gt0[int] = 2
-    mlp_expansion_factor: Gt0[int] = 4
+    mask_estimator_depth: t.Gt0[int] = 2
+    mlp_expansion_factor: t.Gt0[int] = 4
     use_torch_checkpoint: bool = False
     sage_attention: bool = False
     use_shared_bias: bool = False  # COMPAT: weights are all zeros anyways, disabling by default
     skip_connection: bool = False  # NOTE: not yet implemented
-    rms_norm_eps: Ge0[float] | None = None
+    rms_norm_eps: t.Ge0[float] | None = None
     rotary_embed_dtype: TorchDtype | None = None
     transformer_residual_dtype: TorchDtype | None = None
     debug: bool = False
     """Whether to check for nan/inf in model outputs. Keep it off for [torch.compile][]."""
 
     @property
-    def input_type(self) -> ModelInputType:
+    def input_type(self) -> t.ModelInputType:
         return "spectrogram"
 
     @property
-    def output_type(self) -> ModelOutputType:
+    def output_type(self) -> t.ModelOutputType:
         return "spectrogram_mask"
 
 
@@ -194,6 +198,7 @@ class FeedForward(Module):
     ):
         super().__init__()
         dim_inner = int(dim * mult)
+        # NOTE: in the paper: RMSNorm -> FC -> Tanh -> FC -> GLU
         self.net = nn.Sequential(
             rms_norm(dim, eps=rms_norm_eps),
             nn.Linear(dim, dim_inner),
@@ -229,9 +234,13 @@ class Attention(Module):
         self.rotary_embed = rotary_embed
 
         if sage_attention:
+            from .utils.attend_sage import AttendSage
+
             self.attend = AttendSage(flash=flash, dropout=dropout)
         else:
-            self.attend = Attend(flash=flash, dropout=dropout)
+            from .utils.attend import Attend
+
+            self.attend = Attend(flash=flash, dropout=dropout)  # type: ignore
 
         self.norm = rms_norm(dim, eps=rms_norm_eps)
         self.to_qkv = nn.Linear(dim, dim_inner * 3, bias=(shared_qkv_bias is not None))
@@ -298,8 +307,12 @@ class LinearAttention(Module):
         self.temperature = nn.Parameter(torch.ones(heads, 1, 1))
 
         if sage_attention:
-            self.attend = AttendSage(scale=scale, dropout=dropout, flash=flash)  # type: ignore
+            from .utils.attend_sage import AttendSage
+
+            self.attend = AttendSage(scale=scale, dropout=dropout, flash=flash)
         else:
+            from .utils.attend import Attend
+
             self.attend = Attend(scale=scale, dropout=dropout, flash=flash)  # type: ignore
 
         self.to_out = nn.Sequential(
@@ -530,8 +543,7 @@ class BSRoformer(Module):
             seq_len=t_frames, dim_head=cfg.dim_head, dtype=cfg.rotary_embed_dtype
         )
 
-        self.is_mel = isinstance(cfg.band_config, MelBandsConfig)
-        if self.is_mel:
+        if is_mel := isinstance(cfg.band_config, MelBandsConfig):
             from torchaudio.functional import melscale_fbanks
 
             mel_cfg = cfg.band_config
@@ -575,6 +587,7 @@ class BSRoformer(Module):
             num_bands = len(cfg.band_config.freqs_per_bands)
         else:
             raise TypeError(f"unknown band config: {cfg.band_config}")
+        self.is_mel = is_mel
 
         freq_rotary_embed = RotaryEmbedding(
             seq_len=num_bands, dim_head=cfg.dim_head, dtype=cfg.rotary_embed_dtype

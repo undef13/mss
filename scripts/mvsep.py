@@ -19,8 +19,8 @@ from pydantic import BaseModel, BeforeValidator
 from rich.logging import RichHandler
 from rich.progress import Progress, TaskID
 
+import splifft.types as t
 from splifft import PATH_DOCS_ASSETS
-from splifft.core import Sdr as _Sdr
 
 logging.basicConfig(level="INFO", format="%(message)s", datefmt="[%X]", handlers=[RichHandler()])
 logger = logging.getLogger(__name__)
@@ -109,7 +109,7 @@ def fetch(
 
 
 Sdr: TypeAlias = Annotated[
-    _Sdr | None, BeforeValidator(lambda v: None if v == 0 or v == -1000 else v)
+    t.Sdr | None, BeforeValidator(lambda v: None if v == 0 or v == -1000 else v)
 ]
 
 

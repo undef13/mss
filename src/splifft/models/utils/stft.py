@@ -7,7 +7,7 @@ import torch.nn.functional as F
 from torch import Tensor, nn
 
 if TYPE_CHECKING:
-    from ...core import ComplexSpectrogram, NormalizedAudioTensor, RawAudioTensor
+    from ... import types as t
 
 
 class Stft(nn.Module):
@@ -43,7 +43,7 @@ class Stft(nn.Module):
         self.register_buffer("real_conv_weight", real_kernels.T.unsqueeze(1).to(self.conv_dtype))
         self.register_buffer("imag_conv_weight", imag_kernels.T.unsqueeze(1).to(self.conv_dtype))
 
-    def forward(self, x: Tensor) -> ComplexSpectrogram:
+    def forward(self, x: Tensor) -> t.ComplexSpectrogram:
         b, s, t = x.shape
         x = x.reshape(b * s, 1, t).to(self.conv_dtype)
 
@@ -80,13 +80,13 @@ class IStft(nn.Module):
         self.window = window_fn(self.win_length)
 
     def forward(
-        self, spec: ComplexSpectrogram, length: int | None = None
-    ) -> RawAudioTensor | NormalizedAudioTensor:
+        self, spec: t.ComplexSpectrogram, length: int | None = None
+    ) -> t.RawAudioTensor | t.NormalizedAudioTensor:
         device = spec.device
         is_mps = device.type == "mps"
         window = self.window.to(device)
         # see https://github.com/lucidrains/BS-RoFormer/issues/47
-        # this would introduces a breaking change.
+        # this would introduce a breaking change.
         # spec = spec.index_fill(1, torch.tensor(0, device=spec.device), 0.)  # type: ignore
         spec_complex = torch.view_as_complex(spec)
 

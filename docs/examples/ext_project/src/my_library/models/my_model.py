@@ -2,13 +2,8 @@ from dataclasses import dataclass
 
 from torch import nn
 
-from splifft.models import (
-    ChunkSize,
-    ModelInputType,
-    ModelOutputStemName,
-    ModelOutputType,
-    ModelParamsLike,
-)
+from splifft.models import ModelParamsLike
+from splifft.types import ChunkSize, ModelInputType, ModelOutputStemName, ModelOutputType
 
 
 @dataclass

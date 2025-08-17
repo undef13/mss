@@ -4,28 +4,12 @@ from __future__ import annotations
 
 import importlib
 from dataclasses import dataclass
-from typing import (
-    TYPE_CHECKING,
-    Annotated,
-    Generic,
-    Literal,
-    Protocol,
-    TypeAlias,
-    TypeVar,
-    runtime_checkable,
-)
+from typing import TYPE_CHECKING, Generic, Protocol, TypeVar, runtime_checkable
 
-import annotated_types as at
 from torch import nn
 
 if TYPE_CHECKING:
-    from typing_extensions import TypeAlias
-
-ModelType: TypeAlias = str
-"""The type of the model, e.g. `bs_roformer`, `demucs`"""
-
-ModelInputType: TypeAlias = Literal["waveform", "spectrogram", "waveform_and_spectrogram"]
-ModelOutputType: TypeAlias = Literal["waveform", "spectrogram_mask", "spectrogram"]
+    from .. import types as t
 
 
 @runtime_checkable
@@ -34,37 +18,14 @@ class ModelParamsLike(Protocol):
     Note that `input_type` and `output_type` belong to a model's definition
     and does not allow modification via the configuration dictionary."""
 
-    chunk_size: ChunkSize
-    output_stem_names: tuple[ModelOutputStemName, ...]
+    chunk_size: t.ChunkSize
+    output_stem_names: tuple[t.ModelOutputStemName, ...]
 
     @property
-    def input_type(self) -> ModelInputType: ...
+    def input_type(self) -> t.ModelInputType: ...
     @property
-    def output_type(self) -> ModelOutputType: ...
+    def output_type(self) -> t.ModelOutputType: ...
 
-
-_T = TypeVar("_T")
-Gt0: TypeAlias = Annotated[_T, at.Gt(0)]
-Ge0: TypeAlias = Annotated[_T, at.Ge(0)]
-ChunkSize: TypeAlias = Gt0[int]
-"""The length of an audio segment, in samples, processed by the model at one time.
-
-A full audio track is often too long to fit into GPU, instead we process it in fixed-size chunks.
-A larger chunk size may allow the model to capture more temporal context at the cost of increased
-memory usage.
-"""
-HopSize: TypeAlias = Annotated[int, at.Gt(0)]
-"""The step size, in samples, between the start of consecutive [chunks][splifft.models.ChunkSize].
-
-To avoid artifacts at the edges of chunks, we process them with overlap. The hop size is the
-distance we "slide" the chunking window forward. `ChunkSize < HopSize` implies overlap and the
-overlap amount is `ChunkSize - HopSize`.
-"""
-
-Dropout: TypeAlias = Annotated[float, at.Ge(0.0), at.Le(1.0)]
-
-ModelOutputStemName: TypeAlias = Annotated[str, at.MinLen(1)]
-"""The output stem name, e.g. `vocals`, `drums`, `bass`, etc."""
 
 ModelT = TypeVar("ModelT", bound=nn.Module)
 ModelParamsLikeT = TypeVar("ModelParamsLikeT", bound=ModelParamsLike)
@@ -74,7 +35,7 @@ ModelParamsLikeT = TypeVar("ModelParamsLikeT", bound=ModelParamsLike)
 class ModelMetadata(Generic[ModelT, ModelParamsLikeT]):
     """Metadata about a model, including its type, parameter class, and model class."""
 
-    model_type: ModelType
+    model_type: t.ModelType
     params: type[ModelParamsLikeT]
     model: type[ModelT]
 
@@ -84,7 +45,7 @@ class ModelMetadata(Generic[ModelT, ModelParamsLikeT]):
         module_name: str,
         model_cls_name: str,
         *,
-        model_type: ModelType,
+        model_type: t.ModelType,
         package: str | None = None,
     ) -> ModelMetadata[nn.Module, ModelParamsLike]:
         """

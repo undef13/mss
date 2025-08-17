@@ -16,6 +16,7 @@ nav:
     - IO: "api/io.md"
     - Inference: "api/inference.md"
     - Training: "api/training.md"
+    - Types: "api/types.md"
 theme:
   name: material
   features:

@@ -3,8 +3,9 @@ from typing import Any
 import pytest
 from pydantic import ValidationError
 
+from splifft import types as t
 from splifft.config import Config, LazyModelConfig
-from splifft.models import ModelInputType, ModelOutputType, ModelParamsLike
+from splifft.models import ModelParamsLike
 
 #
 # model
@@ -67,11 +68,11 @@ def test_model_config_to_concrete_extra_fields() -> None:
         param_2: int
 
         @property
-        def input_type(self) -> ModelInputType:
+        def input_type(self) -> t.ModelInputType:
             return "waveform"
 
         @property
-        def output_type(self) -> ModelOutputType:
+        def output_type(self) -> t.ModelOutputType:
             return "waveform"
 
     lazy_model_config = LazyModelConfig.model_validate(MODEL_CONFIG_EXTRA)
@@ -190,7 +191,7 @@ def test_lazy_model_config_protocol() -> None:
     from splifft.models import ModelParamsLike
 
     class _ModelParam(LazyModelConfig):
-        input_type: ModelInputType
-        output_type: ModelOutputType
+        input_type: t.ModelInputType
+        output_type: t.ModelOutputType
 
     assert set(_ModelParam.__pydantic_fields__) == ModelParamsLike.__protocol_attrs__  # type: ignore
