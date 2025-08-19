@@ -44,6 +44,7 @@ def _get_torch_dtype_schema(_source_type: Any, _handler: GetCoreSchemaHandler) -
     return core_schema.json_or_python_schema(
         json_schema=core_schema.chain_schema(
             [
+                core_schema.str_schema(),
                 core_schema.no_info_plain_validator_function(str_to_torch_dtype),
             ]
         ),
@@ -303,3 +304,72 @@ class Config(BaseModel):
         strict=True,
         extra="forbid",
     )
+
+
+#
+# registry
+#
+
+
+class Model(BaseModel):
+    authors: list[str]
+    purpose: (
+        Literal[
+            "separation",
+            "denoise",
+            "de-reverb",
+            "enhancement",
+            "crowd_removal",
+            "upscaler",
+            "phase_fixer",
+        ]
+        | str
+    )
+    architecture: Literal["bs_roformer", "mel_roformer", "mdx23c", "scnet"] | str
+    release_date: str | None = None
+    """YYYY-MM-DD, date is optional"""
+    finetuned_from: t.Identifier | None = None
+    output: list[t.Instrument] = Field(default_factory=list)
+    status: Literal["alpha", "beta", "stable", "deprecated"] | None = None
+    metrics: list[Metrics] = Field(default_factory=list)
+    description: list[Comment] = Field(default_factory=list)
+    approx_model_size_mb: float | None = None
+
+
+class Metrics(BaseModel):
+    values: dict[t.Instrument, dict[t.Metric, float]] = Field(default_factory=dict)
+    source: Literal["mvsep"] | str | None = None  #  e.g. mvsep quality checker link
+
+
+class Resource(BaseModel):
+    kind: Literal[
+        "model_ckpt",
+        "huggingface",
+        "config_msst",
+        "colab",
+        "mvsep",
+        "other",
+    ]
+    url: str
+    digest: str | None = None
+
+
+class Comment(BaseModel):
+    content: list[str]
+    """Condensed informative points of the model (lowercase)"""
+    author: str | None = None
+
+
+class Registry(dict[t.Identifier, Model]):
+    @classmethod
+    def __get_pydantic_core_schema__(
+        cls, source_type: Any, handler: GetCoreSchemaHandler
+    ) -> CoreSchema:
+        return core_schema.no_info_after_validator_function(cls, handler(dict[t.Identifier, Model]))
+
+    @classmethod
+    def from_file(cls, path: Path) -> Registry:
+        with open(path, "r") as f:
+            data = f.read()
+        ta = TypeAdapter(cls)
+        return ta.validate_json(data)

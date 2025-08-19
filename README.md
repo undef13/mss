@@ -182,14 +182,15 @@ uv sync --all-extras --all-groups
 You may also want to use `--editable` with `sync`. Check your code:
 
 ```sh
-# lint
-uv run ruff check src tests
-# format
-uv run ruff format --check src tests
+# lint & format
+just fmt
 # build & host documentation
-uv run mkdocs serve
-# type check
-uv run mypy src tests
+just docs
+```
+
+Format your code:
+```sh
+just fmt
 ```
 
 This repo is no longer compatible with zfturbo's repo. The last version that does so is [`v0.0.1`](https://github.com/undef13/splifft/tree/v0.0.1). To pin a specific version in `uv`, change your `pyproject.toml`:

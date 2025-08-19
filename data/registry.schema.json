@@ -1,0 +1,290 @@
+{
+  "$defs": {
+    "Comment": {
+      "properties": {
+        "content": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Content",
+          "type": "array"
+        },
+        "author": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Author"
+        }
+      },
+      "required": [
+        "content"
+      ],
+      "title": "Comment",
+      "type": "object"
+    },
+    "Metrics": {
+      "properties": {
+        "values": {
+          "additionalProperties": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "propertyNames": {
+              "enum": [
+                "sdr",
+                "si_sdr",
+                "l1_freq",
+                "log_wmse",
+                "aura_stft",
+                "aura_mrstft",
+                "bleedless",
+                "fullness"
+              ]
+            },
+            "type": "object"
+          },
+          "propertyNames": {
+            "enum": [
+              "instrum",
+              "vocals",
+              "drums",
+              "bass",
+              "other",
+              "piano",
+              "lead_vocals",
+              "back_vocals",
+              "guitar",
+              "vocals1",
+              "vocals2",
+              "strings",
+              "wind",
+              "music",
+              "sfx",
+              "speech",
+              "restored",
+              "back",
+              "lead",
+              "back-instrum",
+              "kick",
+              "snare",
+              "toms",
+              "hh",
+              "cymbals",
+              "hh-cymbals",
+              "male",
+              "female",
+              "violin",
+              "dry",
+              "reverb",
+              "clean",
+              "crowd",
+              "denoised",
+              "noise",
+              "vocals_dry",
+              "dereverb"
+            ]
+          },
+          "title": "Values",
+          "type": "object"
+        },
+        "source": {
+          "anyOf": [
+            {
+              "const": "mvsep",
+              "type": "string"
+            },
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Source"
+        }
+      },
+      "title": "Metrics",
+      "type": "object"
+    },
+    "Model": {
+      "properties": {
+        "authors": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Authors",
+          "type": "array"
+        },
+        "purpose": {
+          "anyOf": [
+            {
+              "enum": [
+                "separation",
+                "denoise",
+                "de-reverb",
+                "enhancement",
+                "crowd_removal",
+                "upscaler",
+                "phase_fixer"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "title": "Purpose"
+        },
+        "architecture": {
+          "anyOf": [
+            {
+              "enum": [
+                "bs_roformer",
+                "mel_roformer",
+                "mdx23c",
+                "scnet"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "title": "Architecture"
+        },
+        "release_date": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Release Date"
+        },
+        "finetuned_from": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Finetuned From"
+        },
+        "output": {
+          "items": {
+            "enum": [
+              "instrum",
+              "vocals",
+              "drums",
+              "bass",
+              "other",
+              "piano",
+              "lead_vocals",
+              "back_vocals",
+              "guitar",
+              "vocals1",
+              "vocals2",
+              "strings",
+              "wind",
+              "music",
+              "sfx",
+              "speech",
+              "restored",
+              "back",
+              "lead",
+              "back-instrum",
+              "kick",
+              "snare",
+              "toms",
+              "hh",
+              "cymbals",
+              "hh-cymbals",
+              "male",
+              "female",
+              "violin",
+              "dry",
+              "reverb",
+              "clean",
+              "crowd",
+              "denoised",
+              "noise",
+              "vocals_dry",
+              "dereverb"
+            ],
+            "type": "string"
+          },
+          "title": "Output",
+          "type": "array"
+        },
+        "status": {
+          "anyOf": [
+            {
+              "enum": [
+                "alpha",
+                "beta",
+                "stable",
+                "deprecated"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Status"
+        },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "title": "Metrics",
+          "type": "array"
+        },
+        "description": {
+          "items": {
+            "$ref": "#/$defs/Comment"
+          },
+          "title": "Description",
+          "type": "array"
+        },
+        "approx_model_size_mb": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Approx Model Size Mb"
+        }
+      },
+      "required": [
+        "authors",
+        "purpose",
+        "architecture"
+      ],
+      "title": "Model",
+      "type": "object"
+    }
+  },
+  "additionalProperties": {
+    "$ref": "#/$defs/Model"
+  },
+  "type": "object"
+}

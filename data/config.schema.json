@@ -1,0 +1,468 @@
+{
+  "$defs": {
+    "AudioIOConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "target_sample_rate": {
+          "default": 44100,
+          "exclusiveMinimum": 0,
+          "title": "Target Sample Rate",
+          "type": "integer"
+        },
+        "force_channels": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": 2,
+          "title": "Force Channels"
+        }
+      },
+      "title": "AudioIOConfig",
+      "type": "object"
+    },
+    "ChunkingConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "method": {
+          "const": "overlap_add_windowed",
+          "default": "overlap_add_windowed",
+          "title": "Method",
+          "type": "string"
+        },
+        "overlap_ratio": {
+          "default": 0.5,
+          "exclusiveMaximum": 1,
+          "minimum": 0,
+          "title": "Overlap Ratio",
+          "type": "number"
+        },
+        "window_shape": {
+          "default": "hann",
+          "enum": [
+            "hann",
+            "hamming",
+            "linear_fade"
+          ],
+          "title": "Window Shape",
+          "type": "string"
+        },
+        "padding_mode": {
+          "default": "reflect",
+          "enum": [
+            "reflect",
+            "constant",
+            "replicate"
+          ],
+          "title": "Padding Mode",
+          "type": "string"
+        }
+      },
+      "title": "ChunkingConfig",
+      "type": "object"
+    },
+    "InferenceConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "normalize_input_audio": {
+          "default": false,
+          "title": "Normalize Input Audio",
+          "type": "boolean"
+        },
+        "batch_size": {
+          "default": 8,
+          "exclusiveMinimum": 0,
+          "title": "Batch Size",
+          "type": "integer"
+        },
+        "force_weights_dtype": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Force Weights Dtype"
+        },
+        "use_autocast_dtype": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Use Autocast Dtype"
+        },
+        "compile_model": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/TorchCompileConfig"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "apply_tta": {
+          "default": false,
+          "title": "Apply Tta",
+          "type": "boolean"
+        }
+      },
+      "title": "InferenceConfig",
+      "type": "object"
+    },
+    "LazyModelConfig": {
+      "additionalProperties": true,
+      "description": "A lazily validated model configuration.\n\nNote that it is not guaranteed to be fully valid until `to_concrete` is called.",
+      "properties": {
+        "chunk_size": {
+          "exclusiveMinimum": 0,
+          "title": "Chunk Size",
+          "type": "integer"
+        },
+        "output_stem_names": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "minLength": 1,
+          "title": "Output Stem Names",
+          "type": "array",
+          "unique_items": true
+        }
+      },
+      "required": [
+        "chunk_size",
+        "output_stem_names"
+      ],
+      "title": "LazyModelConfig",
+      "type": "object"
+    },
+    "MaskingConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "add_sub_dtype": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Add Sub Dtype"
+        },
+        "out_dtype": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Out Dtype"
+        }
+      },
+      "title": "MaskingConfig",
+      "type": "object"
+    },
+    "OutputConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "stem_names": {
+          "anyOf": [
+            {
+              "const": "all",
+              "type": "string"
+            },
+            {
+              "items": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "minLength": 1,
+              "type": "array",
+              "unique_items": true
+            }
+          ],
+          "default": "all",
+          "title": "Stem Names"
+        },
+        "file_format": {
+          "default": "wav",
+          "enum": [
+            "flac",
+            "wav",
+            "ogg"
+          ],
+          "title": "File Format",
+          "type": "string"
+        },
+        "bit_rate": {
+          "anyOf": [
+            {
+              "enum": [
+                8,
+                16,
+                24,
+                32,
+                64
+              ],
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Bit Rate"
+        }
+      },
+      "title": "OutputConfig",
+      "type": "object"
+    },
+    "StftConfig": {
+      "additionalProperties": false,
+      "description": "configuration for the short-time fourier transform.",
+      "properties": {
+        "n_fft": {
+          "exclusiveMinimum": 0,
+          "title": "N Fft",
+          "type": "integer"
+        },
+        "hop_length": {
+          "exclusiveMinimum": 0,
+          "title": "Hop Length",
+          "type": "integer"
+        },
+        "win_length": {
+          "exclusiveMinimum": 0,
+          "title": "Win Length",
+          "type": "integer"
+        },
+        "window_shape": {
+          "default": "hann",
+          "enum": [
+            "hann",
+            "hamming",
+            "linear_fade"
+          ],
+          "title": "Window Shape",
+          "type": "string"
+        },
+        "normalized": {
+          "default": false,
+          "title": "Normalized",
+          "type": "boolean"
+        },
+        "conv_dtype": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Conv Dtype"
+        }
+      },
+      "required": [
+        "n_fft",
+        "hop_length",
+        "win_length"
+      ],
+      "title": "StftConfig",
+      "type": "object"
+    },
+    "SubtractConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "operation": {
+          "const": "subtract",
+          "title": "Operation",
+          "type": "string"
+        },
+        "stem_name": {
+          "minLength": 1,
+          "title": "Stem Name",
+          "type": "string"
+        },
+        "by_stem_name": {
+          "minLength": 1,
+          "title": "By Stem Name",
+          "type": "string"
+        }
+      },
+      "required": [
+        "operation",
+        "stem_name",
+        "by_stem_name"
+      ],
+      "title": "SubtractConfig",
+      "type": "object"
+    },
+    "SumConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "operation": {
+          "const": "sum",
+          "title": "Operation",
+          "type": "string"
+        },
+        "stem_names": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "minLength": 1,
+          "title": "Stem Names",
+          "type": "array",
+          "unique_items": true
+        }
+      },
+      "required": [
+        "operation",
+        "stem_names"
+      ],
+      "title": "SumConfig",
+      "type": "object"
+    },
+    "TorchCompileConfig": {
+      "properties": {
+        "fullgraph": {
+          "default": true,
+          "title": "Fullgraph",
+          "type": "boolean"
+        },
+        "dynamic": {
+          "default": true,
+          "title": "Dynamic",
+          "type": "boolean"
+        },
+        "mode": {
+          "default": "reduce-overhead",
+          "enum": [
+            "default",
+            "reduce-overhead",
+            "max-autotune",
+            "max-autotune-no-cudagraphs"
+          ],
+          "title": "Mode",
+          "type": "string"
+        }
+      },
+      "title": "TorchCompileConfig",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "identifier": {
+      "title": "Identifier",
+      "type": "string"
+    },
+    "model_type": {
+      "title": "Model Type",
+      "type": "string"
+    },
+    "model": {
+      "$ref": "#/$defs/LazyModelConfig"
+    },
+    "stft": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/StftConfig"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "audio_io": {
+      "$ref": "#/$defs/AudioIOConfig"
+    },
+    "inference": {
+      "$ref": "#/$defs/InferenceConfig"
+    },
+    "chunking": {
+      "$ref": "#/$defs/ChunkingConfig"
+    },
+    "masking": {
+      "$ref": "#/$defs/MaskingConfig"
+    },
+    "derived_stems": {
+      "anyOf": [
+        {
+          "additionalProperties": {
+            "discriminator": {
+              "mapping": {
+                "subtract": "#/$defs/SubtractConfig",
+                "sum": "#/$defs/SumConfig"
+              },
+              "propertyName": "operation"
+            },
+            "oneOf": [
+              {
+                "$ref": "#/$defs/SubtractConfig"
+              },
+              {
+                "$ref": "#/$defs/SumConfig"
+              }
+            ]
+          },
+          "propertyNames": {
+            "minLength": 1
+          },
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Derived Stems"
+    },
+    "output": {
+      "$ref": "#/$defs/OutputConfig"
+    },
+    "experimental": {
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Experimental"
+    }
+  },
+  "required": [
+    "identifier",
+    "model_type",
+    "model"
+  ],
+  "title": "Config",
+  "type": "object"
+}

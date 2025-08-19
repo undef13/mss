@@ -1,0 +1,22 @@
+lockfileVersion: '9.0'
+
+settings:
+  autoInstallPeers: true
+  excludeLinksFromLockfile: false
+
+importers:
+
+  .:
+    devDependencies:
+      fracturedjsonjs:
+        specifier: ^4.1.1
+        version: 4.1.1
+
+packages:
+
+  fracturedjsonjs@4.1.1:
+    resolution: {integrity: sha512-zpxgrF586btwidqdDRggOviFnihJh2uqompWfV8EkSd0zPROgQKToY2QCPkG+2uzHvt1fmRkqZIWklAnsKuRsA==}
+
+snapshots:
+
+  fracturedjsonjs@4.1.1: {}

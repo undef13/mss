@@ -1,0 +1,10 @@
+{
+    "editor.formatOnSave": true,
+    "json.schemas": [
+        { "fileMatch": ["data/config/*.json"], "url": "./data/config.schema.json" },
+        { "fileMatch": ["data/registry.json"], "url": "./data/registry.schema.json" }
+    ],
+    "[javascript]": {
+        "editor.indentSize": 2
+    }
+}

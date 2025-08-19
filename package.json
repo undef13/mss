@@ -1,0 +1,12 @@
+{
+  "name": "splifft-web",
+  "version": "1.0.0",
+  "description": "The frontend for splifft.",
+  "type": "module",
+  "scripts": {
+    "fmt:json": "node scripts/fmt_fractured_json.js"
+  },
+  "devDependencies": {
+    "fracturedjsonjs": "^4.1.1"
+  }
+}

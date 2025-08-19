@@ -8,6 +8,8 @@ from typing import Annotated, Callable, Optional, ParamSpec, TypeVar
 import typer
 from rich.logging import RichHandler
 
+from splifft import PATH_DATA
+
 logging.basicConfig(level="INFO", format="%(message)s", datefmt="[%X]", handlers=[RichHandler()])
 logger = logging.getLogger(__name__)
 
@@ -174,6 +176,25 @@ def separate(
             encoder = AudioEncoder(samples=stem_data.cpu(), sample_rate=mixture.sample_rate)
             encoder.to_file(str(output_file), bit_rate=config.output.bit_rate)
             logger.info(f"wrote stem `{stem_name}` to {output_file}")
+
+
+@app.command()
+def list_models(
+    registry_path: Annotated[
+        Path,
+        typer.Option(
+            "--registry",
+            "-r",
+            help="Path to the model registry file.",
+        ),
+    ] = PATH_DATA / "registry.json",
+) -> None:
+    from .config import Registry
+
+    registry = Registry.from_file(registry_path)
+
+    for identifier, model in registry.items():
+        logger.info(f"{identifier}: {model}")
 
 
 @app.command()

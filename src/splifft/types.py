@@ -198,6 +198,36 @@ PreprocessFn: TypeAlias = Callable[[RawAudioTensor | NormalizedAudioTensor], tup
 PostprocessFn: TypeAlias = Callable[..., SeparatedChunkedTensor]
 
 #
+# registry
+#
+
+Identifier: TypeAlias = at.LowerCase[str]
+"""`{{architecture}}-{{first_author}}-{{unique_name_short}}`, use underscore if it has spaces"""
+# fmt: off
+Instrument: TypeAlias = Literal[
+    "instrum", "vocals", "drums", "bass", "other", "piano",
+    "lead_vocals", "back_vocals",
+    "guitar",
+    "vocals1", "vocals2",
+    "strings", "wind",
+    "music", "sfx", "speech",
+    "restored",
+    "back", "lead",
+    "back-instrum", "kick", "snare", "toms", "hh", "cymbals", "hh-cymbals",
+    "male", "female",
+    # we follow mvsep's leaderboard naming conventions up til this point, the following are extra
+    "violin",
+    "dry", "reverb",
+    "clean", "crowd",
+    "denoised", "noise",
+    "vocals_dry", "dereverb"
+]
+# fmt: on
+Metric: TypeAlias = Literal[
+    "sdr", "si_sdr", "l1_freq", "log_wmse", "aura_stft", "aura_mrstft", "bleedless", "fullness"
+]
+
+#
 # evaluation metrics
 # We use bold letters like $\mathbf{s}$ to denote the entire signal tensor.
 # NOTE: once we implement these metrics, cut down on the docstrings.

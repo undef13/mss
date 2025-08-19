@@ -3,17 +3,25 @@
 - BS-RoFormer: https://arxiv.org/abs/2309.02612
 - Mel-RoFormer: https://arxiv.org/abs/2409.04702
 
-This implementation merges the two versions found in https://github.com/lucidrains/BS-RoFormer.
-However, there are several inconsistencies in lucidrain's version which we inherit from to
-maintain compatability in weights:
+This implementation merges the two versions found in
+[`lucidrains`'s implementation](https://github.com/lucidrains/BS-RoFormer)
+However, there are several inconsistencies:
 
 - `MLP` was defined differently in each file, one that has `depth - 1` hidden layers and one that
-  has `depth` layers. we use `is_mel_mlp_depth` to switch between the two.
+  has `depth` layers.
 - `BSRoformer` applies one final RMSNorm after the entire stack of transformer layers, while the
   `MelBandRoformer` applies an RMSNorm at the end of *each* axial transformer block (time_transformer,
   freq_transformer, etc.) and has no final normalization layer.
-- `bs_roformer.py::Attention` and `mel_roformer.py::Attention` both have `v = v.lerp(value_residual, mix)`
-  but is swapped in the linear attention. we do not implement it.
+
+Since fixing the three inconsistencies upstream is too big of a breaking change, we inherit them to
+maintain compatability with community-trained models.
+See: https://github.com/lucidrains/BS-RoFormer/issues/48.
+
+To avoid dependency bloat, we do not:
+
+- depend on `rotary_embeddings_torch`
+- implement [`hyper_connections`](https://arxiv.org/abs/2409.19606)
+- implement [learned value residual learning](https://doi.org/10.18653/v1%2F2025.acl-long.1375)
 """
 
 from __future__ import annotations
@@ -89,11 +97,11 @@ class BSRoformerParams(ModelParamsLike):
 - depth = 1: (dim_in, dim_out)
 - depth = 2: (dim_in, dim_hidden, dim_out)
 
-Note that in `lucidrain`'s implementation of **mel-band roformers**, the number of hidden layers
+Note that in `lucidrains`' implementation of **mel-band roformers**, the number of hidden layers
 is incorrectly set as `mask_estimator_depth`. This includes popular models like kim-vocals and
 all models that use `zfturbo`'s music-source-separation training.
 
-If you are migrating a mel-band former's `zfturbo` configuration, **increment** the mask_estimator
+If you are migrating a mel-band roformer's `zfturbo` configuration, **increment** the mask_estimator
 depth by 1.
     """
     mlp_expansion_factor: t.Gt0[int] = 4

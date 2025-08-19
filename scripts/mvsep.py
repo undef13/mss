@@ -145,25 +145,10 @@ class EntryData(BaseModel):
 # preprocessing
 #
 
-Metrics: TypeAlias = Literal[
-    "sdr", "si_sdr", "l1_freq", "log_wmse", "aura_stft", "aura_mrstft", "bleedless", "fullness"
-]
-METRICS = get_args(Metrics)
+METRICS = get_args(t.Metric)
 # fmt: off
-Instruments: TypeAlias = Literal[
-    "instrum", "vocals", "drums", "bass", "other", "piano",
-    "lead_vocals", "back_vocals",
-    "guitar",
-    "vocals1", "vocals2",
-    "strings", "wind",
-    "music", "sfx", "speech",
-    "restored",
-    "back", "lead",
-    "back-instrum", "kick", "snare", "toms", "hh", "cymbals", "hh-cymbals",
-    "male", "female",
-]
 # fmt: on
-INSTRUMENTS = get_args(Instruments)
+INSTRUMENTS = get_args(t.Instrument)
 EXPECTED_METRIC_INSTRUMENTS = tuple(
     f"{metric}_{instrument}" for metric in METRICS for instrument in INSTRUMENTS
 )
