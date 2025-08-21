@@ -1,3 +1,12 @@
+## Basic inference
+
+This example demonstrates the lower level API for inference usecases.
+In the future, we will have a high level API for convenience.
+
+```py title="inference.py"
+--8<-- "docs/examples/inference.py"
+```
+
 ## Extending `splifft`
 
 `splifft` is designed to be easily extended without modifying its core.
@@ -39,7 +48,7 @@ Make sure you have [added `splifft` as a dependency](./index.md#library). Assumi
 
 Instead, define a [stdlib `dataclass`][dataclasses.dataclass] separate from the model:
 
-```py title="src/my_library/models/my_model.py" hl_lines="8-12 16"
+```py title="src/my_library/models/my_model.py" hl_lines="10"
 --8<-- "docs/examples/ext_project/src/my_library/models/my_model.py"
 ```
 

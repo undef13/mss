@@ -312,7 +312,6 @@ def _create_stft_preprocessor(
     ) -> tuple[t.ComplexSpectrogram]:
         spec_batch = stft_module(chunk_batch)
         b, s, f, t_frames, _ = spec_batch.shape
-        # (b, s, f, t, c) -> (b, f, s, t, c) -> (b, f*s, t, c)
         model_input = spec_batch.permute(0, 2, 1, 3, 4).reshape(b, f * s, t_frames, 2)
         return (model_input,)
 
@@ -426,7 +425,7 @@ def str_to_torch_dtype(value: Any) -> torch.dtype:
     try:
         dtype = getattr(torch, value)
     except AttributeError:
-        raise ValueError(f"`{value}` is cannot be found under the `torch` namespace")
+        raise ValueError(f"`{value}` cannot be found under the `torch` namespace")
     if not isinstance(dtype, torch.dtype):
         raise TypeError(f"expected {dtype} to be a dtype but it is a {type(dtype)}")
     return dtype

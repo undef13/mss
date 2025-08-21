@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import json
-from pathlib import Path
 from typing import (
     Annotated,
     Any,
@@ -125,6 +123,7 @@ class LazyModelConfig(BaseModel):
             that doesn't exist in the concrete model parameters.
         """
         # input_type and output_type are inconfigurable anyway
+        # TODO: use lru cache to avoid recreating the TypeAdapter in a hot loop but dict isn't hashable
         ta = TypeAdapter(
             type(
                 f"{model_params.__name__}Validator",
@@ -294,10 +293,9 @@ class Config(BaseModel):
         return self
 
     @classmethod
-    def from_file(cls, path: Path) -> Config:
-        with open(path, "r") as f:
-            config_data = json.load(f)
-        return Config.model_validate(config_data)
+    def from_file(cls, path: t.BytesPath) -> Config:
+        with open(path, "rb") as f:
+            return Config.model_validate_json(f.read())
 
     model_config = ConfigDict(
         arbitrary_types_allowed=True,  # for .model
@@ -368,7 +366,7 @@ class Registry(dict[t.Identifier, Model]):
         return core_schema.no_info_after_validator_function(cls, handler(dict[t.Identifier, Model]))
 
     @classmethod
-    def from_file(cls, path: Path) -> Registry:
+    def from_file(cls, path: t.StrOrBytesPath) -> Registry:
         with open(path, "r") as f:
             data = f.read()
         ta = TypeAdapter(cls)

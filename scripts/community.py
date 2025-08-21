@@ -37,7 +37,9 @@ class JarredouModel:
     config_url: str
     checkpoint_url: str
 
+
 OutputPath = Annotated[Path, typer.Option("--output", "-o", help="use `-` for stdout")]
+
 
 @app.command()
 def parse_jarredou_colab(
@@ -103,10 +105,11 @@ KEYWORDS_GUIDE_NON_MODELS = [
 ]
 # fmt: on
 
+
 @app.command()
 def parse_guide(
     blacklist_keywords: list[str] = KEYWORDS_GUIDE_NON_MODELS,
-    output_path: OutputPath = PATH_GUIDE_MODELS_MD
+    output_path: OutputPath = PATH_GUIDE_MODELS_MD,
 ) -> None:
     """Output a pruned version of the guide in markdown."""
     if not PATH_GUIDE_DOCX.exists():
@@ -117,6 +120,7 @@ def parse_guide(
         )
         return
     subprocess.run(["pandoc", str(PATH_GUIDE_DOCX), "-o", str(PATH_GUIDE_MD)])
+
     def write_pruned_guide(file_out: IO[str]) -> None:
         with open(PATH_GUIDE_MD, "r", encoding="utf-8") as file_in:
             for line in prune_sections(file_in, blacklist_keywords):
@@ -150,7 +154,7 @@ def prune_sections(
                 logger.info(f"excluding `{line_ls}`")
         if exclude_level is None:
             yield line
-    if (unused := set(blacklist_keywords) - set(used_keywords)):
+    if unused := set(blacklist_keywords) - set(used_keywords):
         logger.warning(f"unused keywords: {unused}")
 
 

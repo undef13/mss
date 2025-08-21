@@ -6,10 +6,14 @@ distinction to avoid mixing up different kinds of tensors.
 Note that **no code implementations shall be placed here**.
 """
 
+from os import PathLike
 from typing import Annotated, Callable, Literal, NewType, TypeAlias, TypeVar
 
 import annotated_types as at
 from torch import Tensor
+
+StrPath: TypeAlias = str | PathLike[str]
+BytesPath: TypeAlias = bytes | PathLike[bytes]
 
 _T = TypeVar("_T")
 Gt0: TypeAlias = Annotated[_T, at.Gt(0)]

@@ -1,0 +1,1921 @@
+{
+    "mel_roformer-mesk-rifforge_beta": {
+        "authors": ["mesk"],
+        "purpose": "separation",
+        "architecture": "mel_roformer",
+        "output": ["instrum"],
+        "status": "beta",
+        "description": [
+            {
+                "content": [
+                    "metal mel-roformer fine-tune instrumental model",
+                    "focused more on bleedless",
+                    "training is still in progress, that's why it's a beta test of the model",
+                    "it should work fine for a lot of things, but it has quirks on some tracks",
+                    "to me there's some vocal stuff still audible on some tracks",
+                    "i'm mostly trying to get feedback on how i could improve it"
+                ],
+                "author": "mesk"
+            }
+        ],
+        "resources": [
+            {
+                "kind": "model_ckpt",
+                "url": "https://huggingface.co/meskvlla33/rifforge_beta_v1/blob/main/config_rifforge_mesk.yaml"
+            },
+            {"kind": "other", "url": "https://drive.proton.me/urls/5XM3PR1M7G#F3UhCU8RDGhX"},
+            {
+                "kind": "other",
+                "url": "https://discord.com/channels/708579735583588363/708580573697933382/1405719212592464003"
+            }
+        ]
+    },
+    "mel_roformer-aufr33-denoise_average": {
+        "authors": ["aufr33"],
+        "purpose": "crowd_removal",
+        "architecture": "mel_roformer",
+        "output": ["clean"],
+        "description": [
+            { "content": ["can be also used for crowd removal"], "author": "gabox" }
+        ],
+        "resources": [
+            {
+                "kind": "model_ckpt",
+                "url": "https://mega.nz/file/vM4mHTYQ#f_uCxxS_olfTR4iAsOc-XS6sfUecfbF-ZKXrk3IjbnY"
+            },
+            {
+                "kind": "config_msst",
+                "url": "https://drive.google.com/file/d/1uwInhwgjOMIdOMTgj_oNR_dmaq7E-b3g/view?usp=sharing"
+            }
+        ]
+    },
+    "bs_roformer-zfturbo-mvsep_violin": {
+        "authors": ["zfturbo"],
+        "purpose": "separation",
+        "architecture": "bs_roformer",
+        "output": ["violin"],
+        "metrics": [
+            {
+                "values": { "violin": {"sdr": 7.29} },
+                "source": "internal validation by author"
+            }
+        ],
+        "description": [
+            {
+                "content": ["can even separate violin quartets from cellos"],
+                "author": "smilewasfound"
+            },
+            {
+                "content": [
+                    "does seem to pick up more than just violins imo",
+                    "for separating high strings in particular it is really cool"
+                ],
+                "author": "musicalman"
+            }
+        ],
+        "resources": [ {"kind": "mvsep", "url": "https://mvsep.com/home?sep_type=65"} ]
+    },
+    "bs_roformer-unwa-resurrection_instrumental": {
+        "authors": ["unwa"],
+        "purpose": "separation",
+        "architecture": "bs_roformer",
+        "output": ["instrum"],
+        "metrics": [
+            {
+                "values": { "instrum": {"sdr": 17.25, "bleedless": 40.14, "fullness": 34.93} }
+            }
+        ],
+        "description": [
+            {
+                "content": [
+                    "one of my favorite fullness inst models atm.",
+                    "sounds like v1e to me but cleaner.",
+                    "especially with guitar/piano where v1e tended to add more phase distortion, i guess that's what you'd call it lol.",
+                    "this model preserves their purity better imo"
+                ],
+                "author": "musicalman"
+            },
+            {
+                "content": [
+                    "the way it sounds, is indeed the best fullness model, it's like between v1e and v1e+",
+                    "not so noisy and full enough",
+                    "creates problems with instruments gone in the instrumental sadly",
+                    "fixes crossbleeding of vocals in instrumental in a lot of songs, compared to previous models",
+                    "no robotic voice bug at silent instrumental moments"
+                ],
+                "author": "dca100fb8"
+            },
+            {
+                "content": ["some songs leaves vocal residue. it is heard little but felt"],
+                "author": "fabio"
+            },
+            {
+                "content": ["almost loses some sounds that v1e+ picks up just fine"],
+                "author": "neoculture"
+            },
+            {
+                "content": [
+                    "mushes some synths a bit in e.g. trap/drill tune compared to inst mel-roformers like instv7/becruily/fvx/inst3",
+                    "the residues/vocal shells are a bit quieter, although the clarity is also decreased a bit.",
+                    "less crossbleeding than paid dango 11."
+                ]
+            }
+        ],
+        "approx_model_size_mb": 204.0,
+        "resources": [
+            {
+                "kind": "model_ckpt",
+                "url": "https://huggingface.co/pcunwa/BS-Roformer-Resurrection/resolve/main/BS-Roformer-Resurrection-Inst.ckpt"
+            },
+            {
+                "kind": "config_msst",
+                "url": "https://huggingface.co/pcunwa/BS-Roformer-Resurrection/resolve/main/BS-Roformer-Resurrection-Inst-Config.yaml"
+            }
+        ]
+    },
+    "mel_roformer-gabox-voc_fv6": {
+        "authors": ["gabox"],
+        "purpose": "separation",
+        "architecture": "mel_roformer",
+        "output": ["vocals"],
+        "metrics": [
+            {
+                "values": { "vocals": {"bleedless": 26.61, "fullness": 24.93, "sdr": 10.64} }
+            }
+        ],
+        "description": [
+            {
+                "content": [
+                    "sounds like b5e with vocal enhancer.",
+                    "needs more training, some instruments are confused as vocals"
+                ],
+                "author": "gabox"
+            },
+            {
+                "content": ["fv6 = fv4 but with better background vocal capture"],
+                "author": "neoculture"
+            }
+        ],
+        "resources": [
+            {
+                "kind": "model_ckpt",
+                "url": "https://huggingface.co/GaboxR67/MelBandRoformers/blob/main/melbandroformers/vocals/voc_fv6.ckpt"
+            },
+            {
+                "kind": "config_msst",
+                "url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/vocals/voc_gabox.yaml"
+            }
+        ]
+    },
+    "mel_roformer-gabox-kar_v2": {
+        "authors": ["gabox"],
+        "purpose": "separation",
+        "architecture": "mel_roformer",
+        "output": ["lead"],
+        "metrics": [
+            {
+                "values": {
+                    "lead": {"bleedless": 27.58, "fullness": 15.24},
+                    "back-instrum": {"bleedless": 50.67, "fullness": 32.46}
+                }
+            }
+        ],
+        "description": [
+            {
+                "content": [
+                    "you'll most likely get better results with gabox denoise/debleed mel-roformer model instead"
+                ],
+                "author": "gabox"
+            }
+        ],
+        "resources": [
+            {
+                "kind": "model_ckpt",
+                "url": "https://huggingface.co/GaboxR67/MelBandRoformers/blob/main/melbandroformers/experimental/Karaoke_GaboxV2.ckpt"
+            },
+            {
+                "kind": "config_msst",
+                "url": "https://huggingface.co/GaboxR67/MelBandRoformers/blob/main/melbandroformers/karaoke/karaokegabox_1750911344.yaml"
+            }
+        ]
+    },
+    "mel_roformer-gabox-lead_vocal_de-reverb": {
+        "authors": ["gabox"],
+        "purpose": "de-reverb",
+        "architecture": "mel_roformer",
+        "output": ["vocals_dry"],
+        "description": [
+            { "content": ["just use it on the mixture"], "author": "gabox" },
+            { "content": ["sounds great"], "author": "rage313" },
+            {
+                "content": [
+                    "sometimes removes back vocals especially if they're panned to the sides."
+                ]
+            },
+            {
+                "content": [
+                    "also a vocal/inst seperator. dry vocals go in vocal stem, everything else goes to reverb."
+                ],
+                "author": "musicalman"
+            }
+        ],
+        "resources": [
+            {
+                "kind": "model_ckpt",
+                "url": "https://huggingface.co/GaboxR67/MelBandRoformers/blob/main/melbandroformers/experimental/Lead_VocalDereverb.ckpt"
+            },
+            {
+                "kind": "config_msst",
+                "url": "https://huggingface.co/GaboxR67/MelBandRoformers/blob/main/melbandroformers/karaoke/karaokegabox_1750911344.yaml"
+            }
+        ]
+    },
+    "mel_roformer-gabox-voc_gabox2": {
+        "authors": ["gabox"],
+        "purpose": "separation",
+        "architecture": "mel_roformer",
+        "output": ["vocals"],
+        "metrics": [
+            {
+                "values": { "vocals": {"bleedless": 33.13, "fullness": 18.98, "sdr": 10.98} }
+            }
+        ],
+        "resources": [
+            {
+                "kind": "model_ckpt",
+                "url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/vocals/voc_gabox2.ckpt"
+            },
+            {
+                "kind": "config_msst",
+                "url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/vocals/voc_gabox.yaml"
+            }
+        ]
+    },
+    "bs_roformer-unwa-resurrection": {
+        "authors": ["unwa"],
+        "purpose": "separation",
+        "architecture": "bs_roformer",
+        "output": ["vocals"],
+        "metrics": [
+            {
+                "values": { "vocals": {"bleedless": 39.99, "fullness": 15.14, "sdr": 11.34} }
+            }
+        ],
+        "description": [
+            {
+                "content": [
+                    "omg, this model is doing a really good job at capturing backing vocals",
+                    "honestly, it sounds a bit muddy, and there's some instrumental bleeding into the vocal stems"
+                ],
+                "author": "neoculture"
+            },
+            {
+                "content": ["not so good for speech denoising unlike some other models"],
+                "author": "musicalman"
+            }
+        ],
+        "resources": [
+            {
+                "kind": "model_ckpt",
+                "url": "https://huggingface.co/pcunwa/BS-Roformer-Resurrection/resolve/main/BS-Roformer-Resurrection.ckpt"
+            },
+            {
+                "kind": "config_msst",
+                "url": "https://huggingface.co/pcunwa/BS-Roformer-Resurrection/resolve/main/BS-Roformer-Resurrection-Config.yaml"
+            }
+        ]
+    },
+    "mel_roformer-gabox-instv7_beta3": {
+        "authors": ["gabox"],
+        "purpose": "separation",
+        "architecture": "mel_roformer",
+        "output": ["instrum"],
+        "status": "beta",
+        "description": [
+            {
+                "content": [
+                    "noisy with small vocal residuals in places where music is low and deletions of some musical instruments."
+                ]
+            }
+        ],
+        "resources": [
+            {
+                "kind": "model_ckpt",
+                "url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/experimental/instv7beta3.ckpt"
+            }
+        ]
+    },
+    "mel_roformer-gabox-instv7_beta2": {
+        "authors": ["gabox"],
+        "purpose": "separation",
+        "architecture": "mel_roformer",
+        "output": ["instrum"],
+        "status": "beta",
+        "metrics": [
+            {
+                "values": { "instrum": {"bleedless": 34.66, "fullness": 38.96} }
+            }
+        ],
+        "description": [
+            {
+                "content": [
+                    "noisy with small vocal residuals in places where music is low and deletions of some musical instruments."
+                ]
+            }
+        ],
+        "resources": [ {"kind": "model_ckpt", "url": "https://gofile.io/d/aiZiEl"} ]
+    },
+    "mel_roformer-gabox-instv7_beta": {
+        "authors": ["gabox"],
+        "purpose": "separation",
+        "architecture": "mel_roformer",
+        "output": ["instrum"],
+        "status": "beta",
+        "metrics": [
+            {
+                "values": { "instrum": {"bleedless": 35.01, "fullness": 38.39} }
+            }
+        ],
+        "description": [
+            {
+                "content": [
+                    "sound is good, but sometimes some instruments are lowered or deleted",
+                    "while the annoying buzzing/noise is still present, it seems to be more contained."
+                ]
+            }
+        ],
+        "resources": [
+            {
+                "kind": "model_ckpt",
+                "url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/experimental/instv7beta.ckpt"
+            },
+            {
+                "kind": "config_msst",
+                "url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/instrumental/inst_gabox.yaml"
+            }
+        ]
+    },
+    "mel_roformer-gabox-inst_v10_experimental": {
+        "authors": ["gabox"],
+        "purpose": "separation",
+        "architecture": "mel_roformer",
+        "output": ["instrum"],
+        "status": "alpha",
+        "description": [
+            {
+                "content": [
+                    "less full than v7, but have less vocal residues.",
+                    "results from v8 and v10 are the same",
+                    "both remove some instruments from the music, like v7.",
+                    "as for noise, however, they are less noisy"
+                ]
+            }
+        ],
+        "resources": [
+            {
+                "kind": "huggingface",
+                "url": "https://huggingface.co/GaboxR67/MelBandRoformers/tree/main/melbandroformers/experimental"
+            }
+        ]
+    },
+    "mel_roformer-gabox-fullness_v2": {
+        "authors": ["gabox"],
+        "purpose": "separation",
+        "architecture": "mel_roformer",
+        "output": ["instrum"],
+        "resources": [
+            {
+                "kind": "huggingface",
+                "url": "https://huggingface.co/GaboxR67/MelBandRoformers/tree/main/melbandroformers"
+            }
+        ]
+    },
+    "mel_roformer-gabox-fullness_v1": {
+        "authors": ["gabox"],
+        "purpose": "separation",
+        "architecture": "mel_roformer",
+        "output": ["instrum"],
+        "metrics": [
+            {
+                "values": { "instrum": {"bleedless": 37.19, "fullness": 37.26} }
+            }
+        ],
+        "description": [
+            { "content": ["noisier but fuller"] }
+        ],
+        "resources": [
+            {
+                "kind": "huggingface",
+                "url": "https://huggingface.co/GaboxR67/MelBandRoformers/tree/main/melbandroformers"
+            }
+        ]
+    },
+    "mel_roformer-gabox-voc_fv1": {
+        "authors": ["gabox"],
+        "purpose": "separation",
+        "architecture": "mel_roformer",
+        "output": ["vocals"],
+        "resources": [
+            {
+                "kind": "huggingface",
+                "url": "https://huggingface.co/GaboxR67/MelBandRoformers/tree/main/melbandroformers/vocals"
+            }
+        ]
+    },
+    "mel_roformer-gabox-inst_gaboxfv7z": {
+        "authors": ["gabox"],
+        "purpose": "separation",
+        "architecture": "mel_roformer",
+        "output": ["instrum"],
+        "metrics": [
+            {
+                "values": { "instrum": {"fullness": 29.38, "bleedless": 44.95} }
+            }
+        ],
+        "description": [
+            { "content": ["focusing on the less amount of noise keeping fullness"] },
+            {
+                "content": ["the results were similar to instv7 but with less noise"],
+                "author": "neoculture"
+            }
+        ],
+        "resources": [
+            {
+                "kind": "model_ckpt",
+                "url": "https://huggingface.co/GaboxR67/MelBandRoformers/blob/main/melbandroformers/instrumental/Inst_GaboxFv7z.ckpt"
+            },
+            {
+                "kind": "config_msst",
+                "url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/instrumental/inst_gabox.yaml"
+            }
+        ]
+    },
+    "mel_roformer-gabox-inst_fv8b": {
+        "authors": ["gabox"],
+        "purpose": "separation",
+        "architecture": "mel_roformer",
+        "output": ["instrum"],
+        "metrics": [
+            {
+                "values": { "instrum": {"fullness": 35.05, "bleedless": 36.90, "sdr": 16.59} }
+            }
+        ],
+        "description": [
+            { "content": ["very clean", "muddier than v1e+."] }
+        ],
+        "resources": [
+            {
+                "kind": "model_ckpt",
+                "url": "https://huggingface.co/GaboxR67/MelBandRoformers/blob/main/melbandroformers/experimental/Inst_FV8b.ckpt"
+            }
+        ]
+    },
+    "mel_roformer-gabox-instv7plus": {
+        "authors": ["gabox"],
+        "purpose": "separation",
+        "architecture": "mel_roformer",
+        "output": ["instrum"],
+        "status": "alpha",
+        "metrics": [
+            {
+                "values": { "instrum": {"fullness": 29.83, "bleedless": 39.36, "sdr": 16.51} }
+            }
+        ],
+        "resources": [
+            {
+                "kind": "model_ckpt",
+                "url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/experimental/instv7plus.ckpt"
+            }
+        ]
+    },
+    "bs_roformer-unwa-revive3e": {
+        "authors": ["unwa", "aufr33"],
+        "purpose": "separation",
+        "architecture": "bs_roformer",
+        "output": ["vocals"],
+        "metrics": [
+            {
+                "values": { "vocals": {"sdr": 10.98, "fullness": 21.43, "bleedless": 30.51} },
+                "source": "https://mvsep.com/quality_checker/entry/8337"
+            }
+        ],
+        "description": [
+            {
+                "content": [
+                    "a vocal model specialized in fullness.",
+                    "revive 3e is the opposite of version 2 --- it pushes fullness to the extreme."
+                ],
+                "author": "unwa"
+            }
+        ],
+        "resources": [
+            {
+                "kind": "model_ckpt",
+                "url": "https://huggingface.co/pcunwa/BS-Roformer-Revive/blob/main/bs_roformer_revive3e.ckpt"
+            },
+            {
+                "kind": "config_msst",
+                "url": "https://huggingface.co/pcunwa/BS-Roformer-Revive/resolve/main/config.yaml"
+            }
+        ]
+    },
+    "mel_roformer-becruily-guitar": {
+        "authors": ["becruily"],
+        "purpose": "separation",
+        "architecture": "mel_roformer",
+        "output": ["guitar"],
+        "description": [
+            {
+                "content": [
+                    "not sota, but much more efficient and comparable to existing guitar models",
+                    "for some songs it might work better because it picks up more guitars (though it can also pick some other instruments).",
+                    "for better results you might try first removing vocals."
+                ]
+            }
+        ],
+        "resources": [
+            {
+                "kind": "model_ckpt",
+                "url": "https://huggingface.co/becruily/mel-band-roformer-guitar/resolve/main/becruily_guitar.ckpt"
+            },
+            {
+                "kind": "config_msst",
+                "url": "https://huggingface.co/becruily/mel-band-roformer-guitar/resolve/main/config_guitar_becruily.yaml"
+            }
+        ]
+    },
+    "bs_roformer-unwa-revive2": {
+        "authors": ["unwa"],
+        "purpose": "separation",
+        "architecture": "bs_roformer",
+        "output": ["vocals"],
+        "metrics": [
+            {
+                "values": { "vocals": {"bleedless": 40.07, "fullness": 15.13, "sdr": 10.97} }
+            }
+        ],
+        "description": [
+            { "content": ["has a bleedless score that surpasses the ft2 bleedless"] },
+            { "content": ["can keep the string well"], "author": "daylight" },
+            { "content": ["it does capture more than viperx's"], "author": "mesk" }
+        ],
+        "resources": [
+            {
+                "kind": "huggingface",
+                "url": "https://huggingface.co/pcunwa/BS-Roformer-Revive/tree/main"
+            }
+        ]
+    },
+    "bs_roformer-unwa-revive": {
+        "authors": ["unwa"],
+        "purpose": "separation",
+        "architecture": "bs_roformer",
+        "output": ["vocals"],
+        "metrics": [
+            {
+                "values": { "vocals": {"bleedless": 38.80, "fullness": 15.48, "sdr": 11.03} }
+            }
+        ],
+        "description": [
+            {
+                "content": [
+                    "less instrument bleed in vocal track compared to bs 1296/1297",
+                    "works great as a phase fixer reference to remove mel roformer inst models noise"
+                ],
+                "author": "dca100fb8"
+            }
+        ],
+        "resources": [
+            {
+                "kind": "huggingface",
+                "url": "https://huggingface.co/pcunwa/BS-Roformer-Revive/tree/main"
+            }
+        ]
+    },
+    "mel_roformer-gabox-inst_gaboxfv8": {
+        "authors": ["gabox"],
+        "purpose": "separation",
+        "architecture": "mel_roformer",
+        "output": ["instrum"],
+        "metrics": [
+            {
+                "values": { "instrum": {"bleedless": 38.06, "fullness": 35.57, "sdr": 16.51} }
+            }
+        ],
+        "description": [
+            { "content": ["might have some \"ugly vocal residues\" at times"], "author": "dca" },
+            {
+                "content": ["vs v1e \"it seems to pick up some instruments better\""],
+                "author": "gabox"
+            },
+            {
+                "content": [
+                    "a bit cleaner-sounding and has less filtering/watery artifacts.",
+                    "both models are prone to very strange vocal leakage",
+                    "because fv8 can be so clean at times, the leakage can be fairly obvious."
+                ],
+                "author": "musicalman"
+            }
+        ],
+        "resources": [
+            {
+                "kind": "model_ckpt",
+                "url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/instrumental/Inst_GaboxFv8.ckpt"
+            },
+            {
+                "kind": "config_msst",
+                "url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/instrumental/inst_gabox.yaml"
+            }
+        ]
+    },
+    "mel_roformer-gabox-voc_fv5": {
+        "authors": ["gabox"],
+        "purpose": "separation",
+        "architecture": "mel_roformer",
+        "output": ["vocals"],
+        "metrics": [
+            {
+                "values": { "vocals": {"bleedless": 29.50, "fullness": 20.67, "sdr": 10.56} }
+            }
+        ],
+        "description": [
+            {
+                "content": [
+                    "fv5 sounds a bit fuller than fv4, but the vocal chops end up in the vocal stem.",
+                    "in my opinion, fv4 is better for removing vocal chops from the vocal stem"
+                ],
+                "author": "neoculture"
+            },
+            {
+                "content": [
+                    "v5 is slightly fuller, v4 is less full but also slightly more careful about what it considers as vocals.",
+                    "i think b5e is the fullest overall, but it's a bit much sometimes.",
+                    "pretty sure the gabox models are a little more accurate with vocal/instrument detection."
+                ],
+                "author": "musicalman"
+            }
+        ],
+        "resources": [
+            {
+                "kind": "model_ckpt",
+                "url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/vocals/voc_fv5.ckpt"
+            },
+            {
+                "kind": "config_msst",
+                "url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/vocals/voc_gabox.yaml"
+            }
+        ]
+    },
+    "mel_roformer-unwa-v1e_plus": {
+        "authors": ["unwa"],
+        "purpose": "separation",
+        "architecture": "mel_roformer",
+        "output": ["instrum"],
+        "metrics": [
+            {
+                "values": { "instrum": {"bleedless": 36.53, "fullness": 37.89, "sdr": 16.65} }
+            }
+        ],
+        "description": [
+            {
+                "content": [
+                    "less noise than v1e (esp. in the lower frequencies), but it's also less full - \"somewhere between v1 and v1e.\"",
+                    "has fewer problems with quiet vocals in instrumentals than the v1+",
+                    "issues with harmonica, saxophone, elec guitar and synth seem to have been fixed.",
+                    "the loss function was changed to be more fullness-oriented, and trained a further 50k steps from the v1+ test."
+                ],
+                "author": "unwa"
+            },
+            {
+                "content": ["v1e keeps better instruments like trumps than v1e+"],
+                "author": "koseidon72"
+            },
+            {
+                "content": [
+                    "v1e+ has a strange problem of almost vocoding the vocals and keeping them in quietly",
+                    "has some problems with cymbals bleed in vocals"
+                ],
+                "author": "dca"
+            }
+        ],
+        "resources": [
+            {
+                "kind": "model_ckpt",
+                "url": "https://huggingface.co/pcunwa/Mel-Band-Roformer-Inst/resolve/main/inst_v1e_plus.ckpt"
+            },
+            {
+                "kind": "config_msst",
+                "url": "https://huggingface.co/pcunwa/Mel-Band-Roformer-Inst/resolve/main/config_melbandroformer_inst.yaml"
+            }
+        ]
+    },
+    "mel_roformer-unwa-v1_plus": {
+        "authors": ["unwa"],
+        "purpose": "separation",
+        "architecture": "mel_roformer",
+        "output": ["instrum"],
+        "metrics": [
+            {
+                "values": { "instrum": {"bleedless": 38.26, "fullness": 35.31, "sdr": 16.72} }
+            }
+        ],
+        "description": [
+            {
+                "content": [
+                    "it is based on v1e, but the fullness is not as high as v1e, so it is positioned as an improved version of v1."
+                ],
+                "author": "unwa"
+            },
+            { "content": ["very nice model, the multistft noise is gone"] },
+            {
+                "content": [
+                    "seems to have significantly less sax and harmonica bleed in vocal",
+                    "it still struggles with other things like fx and kazoo."
+                ],
+                "author": "dca"
+            },
+            {
+                "content": [
+                    "it sounds clean. the only thing [is] that some instruments are deleted, and in some tracks leaves remnants of voice in the instrumental."
+                ],
+                "author": "fabio"
+            }
+        ],
+        "resources": [
+            {
+                "kind": "huggingface",
+                "url": "https://huggingface.co/pcunwa/Mel-Band-Roformer-Inst/tree/main"
+            }
+        ]
+    },
+    "mel_roformer-mesk-metal_preview": {
+        "authors": ["mesk"],
+        "purpose": "separation",
+        "architecture": "mel_roformer",
+        "output": ["instrum"],
+        "status": "beta",
+        "metrics": [
+            {
+                "values": {
+                    "instrum": {"bleedless": 48.8100, "fullness": 42.8500, "sdr": 13.7621}
+                },
+                "source": "private dataset"
+            }
+        ],
+        "description": [
+            {
+                "content": [
+                    "should work fine for all genres of metal, but doesn't work on:",
+                    "- hard compressed screams",
+                    "- some background vocals",
+                    "- weird tracks (think meshuggah's \"the ayahuasca experience\")"
+                ]
+            }
+        ],
+        "resources": [
+            {
+                "kind": "huggingface",
+                "url": "https://huggingface.co/meskvlla33/metal_roformer_preview/tree/main"
+            }
+        ]
+    },
+    "mel_roformer-unwa-big_beta6x": {
+        "authors": ["unwa"],
+        "purpose": "separation",
+        "architecture": "mel_roformer",
+        "output": ["vocals"],
+        "metrics": [
+            {
+                "values": { "vocals": {"bleedless": 35.16, "fullness": 17.77, "sdr": 11.12} }
+            }
+        ],
+        "description": [
+            {
+                "content": [
+                    "it is probably the highest sdr or log wmse score in my model to date.",
+                    "dim 512, depth 12.",
+                    "it is the largest mel-band roformer model i have ever uploaded."
+                ]
+            }
+        ],
+        "resources": [
+            {
+                "kind": "model_ckpt",
+                "url": "https://huggingface.co/pcunwa/Mel-Band-Roformer-big/resolve/main/big_beta6x.ckpt"
+            },
+            {
+                "kind": "config_msst",
+                "url": "https://huggingface.co/pcunwa/Mel-Band-Roformer-big/resolve/main/big_beta6x.yaml"
+            }
+        ]
+    },
+    "mel_roformer-gabox-instv8n": {
+        "authors": ["gabox"],
+        "purpose": "separation",
+        "architecture": "mel_roformer",
+        "output": ["instrum"],
+        "status": "alpha",
+        "description": [
+            { "content": ["noticed too many vocal residues.", "there is no noise"] }
+        ],
+        "resources": [
+            {
+                "kind": "model_ckpt",
+                "url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/experimental/INSTV8N.ckpt"
+            },
+            {
+                "kind": "config_msst",
+                "url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/instrumental/inst_gabox.yaml"
+            }
+        ]
+    },
+    "mel_roformer-unwa-kim_ft3_preview": {
+        "authors": ["unwa"],
+        "purpose": "separation",
+        "architecture": "mel_roformer",
+        "output": ["vocals"],
+        "status": "beta",
+        "metrics": [
+            {
+                "values": { "vocals": {"bleedless": 36.11, "fullness": 16.80, "sdr": 11.05} }
+            }
+        ],
+        "description": [
+            { "content": ["primarily aimed at reducing leakage of wind instruments to vocals."] }
+        ],
+        "resources": [
+            {
+                "kind": "model_ckpt",
+                "url": "https://huggingface.co/pcunwa/Kim-Mel-Band-Roformer-FT/blob/main/kimmel_unwa_ft3_prev.ckpt"
+            },
+            {
+                "kind": "config_msst",
+                "url": "https://huggingface.co/pcunwa/Kim-Mel-Band-Roformer-FT/resolve/main/config_kimmel_unwa_ft.yaml"
+            }
+        ]
+    },
+    "mel_roformer-gabox-inst_gaboxbv3": {
+        "authors": ["gabox"],
+        "purpose": "separation",
+        "architecture": "mel_roformer",
+        "output": ["instrum"],
+        "metrics": [
+            {
+                "values": { "instrum": {"bleedless": 41.69, "fullness": 32.13} }
+            }
+        ],
+        "description": [
+            { "content": ["can be muddy sometimes"] }
+        ],
+        "resources": [
+            {
+                "kind": "model_ckpt",
+                "url": "https://huggingface.co/GaboxR67/MelBandRoformers/blob/main/melbandroformers/instrumental/inst_gaboxBv3.ckpt"
+            }
+        ]
+    },
+    "mel_roformer-gabox-instv7": {
+        "authors": ["gabox"],
+        "purpose": "separation",
+        "architecture": "mel_roformer",
+        "output": ["instrum"],
+        "description": [
+            { "content": ["i hear less noise compared to v1e, but it has worse bleedless metric"] }
+        ],
+        "resources": [
+            {
+                "kind": "model_ckpt",
+                "url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/instrumental/Inst_GaboxV7.ckpt"
+            }
+        ]
+    },
+    "mel_roformer-gabox-kar_gabox": {
+        "authors": ["gabox"],
+        "purpose": "separation",
+        "architecture": "mel_roformer",
+        "output": ["lead_vocals"],
+        "description": [
+            {
+                "content": [
+                    "the lead vocals are good and clean!",
+                    "while the backing tracks are lossy for this model, [it still] provide[s] great convenient for those who need ldv",
+                    "the model doesn't keep the backing vocals below the main vocals, sometimes the backing vocals will be lost"
+                ]
+            }
+        ],
+        "resources": [
+            {
+                "kind": "model_ckpt",
+                "url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/experimental/kar_gabox.ckpt"
+            }
+        ]
+    },
+    "mel_roformer-amane-fullnessvocalmodel": {
+        "authors": ["amane"],
+        "purpose": "separation",
+        "architecture": "mel_roformer",
+        "output": ["vocals"],
+        "metrics": [
+            {
+                "values": { "vocals": {"bleedless": 32.98, "fullness": 18.83} }
+            }
+        ],
+        "description": [
+            {
+                "content": [
+                    "while it emphasizes fullness, the noise is well-balanced and does not interfere much",
+                    "in sections without vocals, faint, rustling vocals can be heard"
+                ]
+            }
+        ],
+        "resources": [
+            {
+                "kind": "model_ckpt",
+                "url": "https://huggingface.co/Aname-Tommy/MelBandRoformers/blob/main/FullnessVocalModel.ckpt"
+            },
+            {
+                "kind": "config_msst",
+                "url": "https://huggingface.co/Aname-Tommy/MelBandRoformers/blob/main/config.yaml"
+            }
+        ]
+    },
+    "mel_roformer-gabox-voc_fv4": {
+        "authors": ["gabox"],
+        "purpose": "separation",
+        "architecture": "mel_roformer",
+        "output": ["vocals"],
+        "metrics": [
+            {
+                "values": { "vocals": {"bleedless": 29.07, "fullness": 21.33} }
+            }
+        ],
+        "description": [
+            {
+                "content": ["very clean, non-muddy vocals. loving this model so far"],
+                "author": "mrmason347"
+            }
+        ],
+        "resources": [
+            {
+                "kind": "model_ckpt",
+                "url": "https://huggingface.co/GaboxR67/MelBandRoformers/blob/main/melbandroformers/vocals/voc_fv4.ckpt"
+            },
+            {
+                "kind": "config_msst",
+                "url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/vocals/voc_gabox.yaml"
+            }
+        ]
+    },
+    "mel_roformer-unwa-big_beta6": {
+        "authors": ["unwa"],
+        "purpose": "separation",
+        "architecture": "mel_roformer",
+        "output": ["vocals"],
+        "status": "beta",
+        "description": [
+            {
+                "content": [
+                    "although it belongs to the big series, the characteristics of the model are similar to those of the ft series",
+                    "this model is based on ft2 bleedless with the dim increased to 512",
+                    "it does not have the output noise problem of 5e, but instead sacrifices fullness",
+                    "simply put, it is a more conservative model"
+                ],
+                "author": "unwa"
+            }
+        ],
+        "resources": [
+            {
+                "kind": "model_ckpt",
+                "url": "https://huggingface.co/pcunwa/Mel-Band-Roformer-big/resolve/main/big_beta6.ckpt"
+            },
+            {
+                "kind": "config_msst",
+                "url": "https://huggingface.co/pcunwa/Mel-Band-Roformer-big/blob/main/big_beta6.yaml"
+            }
+        ]
+    },
+    "mel_roformer-gabox-instv6n": {
+        "authors": ["gabox"],
+        "purpose": "separation",
+        "architecture": "mel_roformer",
+        "output": ["instrum"],
+        "metrics": [
+            {
+                "values": { "instrum": {"bleedless": 32.63, "fullness": 41.68} },
+                "source": "https://mvsep.com/quality_checker/entry/7915"
+            }
+        ],
+        "description": [
+            {
+                "content": [
+                    "more fullness than v1e",
+                    "some people find it having less noise vs v1e, and more fullness",
+                    "more fullness vs instv6, and more noise"
+                ]
+            }
+        ],
+        "resources": [
+            {
+                "kind": "model_ckpt",
+                "url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/instrumental/INSTV6N.ckpt"
+            },
+            {
+                "kind": "config_msst",
+                "url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/instrumental/inst_gabox.yaml"
+            }
+        ]
+    },
+    "mel_roformer-gabox-denoisedebleed": {
+        "authors": ["gabox"],
+        "purpose": "denoise",
+        "architecture": "mel_roformer",
+        "output": ["denoised"],
+        "description": [
+            {
+                "content": [
+                    "for noise from fullness models (tested on v5n) - it can't remove vocal residues"
+                ]
+            }
+        ],
+        "resources": [
+            {
+                "kind": "model_ckpt",
+                "url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/instrumental/denoisedebleed.ckpt"
+            },
+            {
+                "kind": "config_msst",
+                "url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/instrumental/inst_gabox.yaml"
+            }
+        ]
+    },
+    "mel_roformer-amane-small": {
+        "authors": ["amane"],
+        "purpose": "separation",
+        "architecture": "mel_roformer",
+        "output": ["vocals"],
+        "approx_model_size_mb": 200.0,
+        "resources": [
+            {
+                "kind": "huggingface",
+                "url": "https://huggingface.co/Aname-Tommy/Mel_Band_Roformer_small/tree/main"
+            }
+        ]
+    },
+    "mel_roformer-gabox-instv5n": {
+        "authors": ["gabox"],
+        "purpose": "separation",
+        "architecture": "mel_roformer",
+        "output": ["instrum"],
+        "metrics": [ {"source": "https://mvsep.com/quality_checker/entry/7884"} ],
+        "resources": [
+            {
+                "kind": "model_ckpt",
+                "url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/instrumental/INSTV5N.ckpt"
+            },
+            {
+                "kind": "config_msst",
+                "url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/instrumental/inst_gabox.yaml"
+            }
+        ]
+    },
+    "mel_roformer-gabox-voc_fv3": {
+        "authors": ["gabox"],
+        "purpose": "separation",
+        "architecture": "mel_roformer",
+        "output": ["vocals"],
+        "resources": [
+            {
+                "kind": "model_ckpt",
+                "url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/vocals/voc_Fv3.ckpt"
+            },
+            {
+                "kind": "config_msst",
+                "url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/instrumental/inst_gabox.yaml"
+            }
+        ]
+    },
+    "mel_roformer-gabox-instv6": {
+        "authors": ["gabox"],
+        "purpose": "separation",
+        "architecture": "mel_roformer",
+        "output": ["instrum"],
+        "description": [
+            {
+                "content": [
+                    "is slightly better than v5",
+                    "v1e still gives better fullness, but noise [in v1e] is a problem"
+                ]
+            }
+        ],
+        "resources": [
+            {
+                "kind": "huggingface",
+                "url": "https://huggingface.co/GaboxR67/MelBandRoformers/tree/main/melbandroformers/instrumental"
+            }
+        ]
+    },
+    "bs_roformer-anvuew-dereverb_mono": {
+        "authors": ["anvuew"],
+        "purpose": "de-reverb",
+        "architecture": "bs_roformer",
+        "output": ["dry"],
+        "metrics": [
+            {
+                "values": { "dereverb": {"sdr": 20.4029} }
+            }
+        ],
+        "description": [
+            {
+                "content": [
+                    "supports mono, but ability to remove bleed and bv is decreased",
+                    "should not matter whether it's singing or speech, because my dataset contains speech"
+                ]
+            }
+        ],
+        "resources": [
+            {
+                "kind": "model_ckpt",
+                "url": "https://huggingface.co/anvuew/dereverb_mel_band_roformer/blob/main/dereverb_mel_band_roformer_mono_anvuew_sdr_20.4029.ckpt"
+            }
+        ]
+    },
+    "mel_roformer-unwa-kim_ft2_bleedless": {
+        "authors": ["unwa"],
+        "purpose": "separation",
+        "architecture": "mel_roformer",
+        "output": ["vocals"],
+        "metrics": [
+            {
+                "values": { "vocals": {"bleedless": 39.3, "fullness": 15.77, "sdr": 11.05} }
+            }
+        ],
+        "resources": [
+            {
+                "kind": "model_ckpt",
+                "url": "https://huggingface.co/pcunwa/Kim-Mel-Band-Roformer-FT/resolve/main/kimmel_unwa_ft2_bleedless.ckpt"
+            },
+            {
+                "kind": "config_msst",
+                "url": "https://huggingface.co/pcunwa/Kim-Mel-Band-Roformer-FT/resolve/main/config_kimmel_unwa_ft.yaml"
+            }
+        ]
+    },
+    "mel_roformer-gabox-instv5": {
+        "authors": ["gabox"],
+        "purpose": "separation",
+        "architecture": "mel_roformer",
+        "output": ["instrum"],
+        "metrics": [
+            {
+                "values": { "instrum": {"fullness": 39.4, "bleedless": 33.49} }
+            }
+        ],
+        "description": [
+            {
+                "content": [
+                    "it seems that most vocal leakage is gone, and the noise did significantly decrease, although there's still a bit more noise presence than v1e.",
+                    "in terms of fullness though, for some reason it sounds as if it's actually less full than v1e, despite the higher instrumental fullness sdr."
+                ],
+                "author": "shintaro"
+            }
+        ],
+        "resources": [
+            {
+                "kind": "huggingface",
+                "url": "https://huggingface.co/GaboxR67/MelBandRoformers/tree/main/melbandroformers/instrumental"
+            },
+            {
+                "kind": "config_msst",
+                "url": "https://huggingface.co/becruily/mel-band-roformer-instrumental/resolve/main/config_instrumental_becruily.yaml"
+            }
+        ]
+    },
+    "mel_roformer-syh99999-syhftb1": {
+        "authors": ["SYH99999"],
+        "purpose": "separation",
+        "architecture": "mel_roformer",
+        "output": ["vocals"],
+        "resources": [
+            {
+                "kind": "huggingface",
+                "url": "https://huggingface.co/SYH99999/MelBandRoformerSYHFTB1/tree/main"
+            }
+        ]
+    },
+    "bs_roformer-gabox-instrumental": {
+        "authors": ["gabox"],
+        "purpose": "separation",
+        "architecture": "bs_roformer",
+        "output": ["instrum"],
+        "description": [
+            {
+                "content": [
+                    "doesn't struggle so much with choirs like most mel-roformers, although may not help in all cases"
+                ]
+            }
+        ],
+        "resources": [
+            {
+                "kind": "huggingface",
+                "url": "https://huggingface.co/GaboxR67/BSRoformerVocTest/tree/main"
+            }
+        ]
+    },
+    "mel_roformer-gabox-inst_gaboxfv3": {
+        "authors": ["gabox"],
+        "purpose": "separation",
+        "architecture": "mel_roformer",
+        "output": ["instrum"],
+        "metrics": [
+            {
+                "values": { "instrum": {"sdr": 16.43, "fullness": 38.71, "bleedless": 35.62} }
+            }
+        ],
+        "description": [
+            {
+                "content": [
+                    "like v1e when it comes to fullness",
+                    "it might pick up entire sax in vocal stem."
+                ]
+            }
+        ],
+        "resources": [
+            {
+                "kind": "model_ckpt",
+                "url": "https://huggingface.co/GaboxR67/MelBandRoformers/resolve/main/melbandroformers/instrumental/inst_gaboxFv3.ckpt"
+            }
+        ]
+    },
+    "bs_roformer-yukunelatyh-4_stems": {
+        "authors": ["yukunelatyh", "SYH99999"],
+        "purpose": "separation",
+        "architecture": "bs_roformer",
+        "output": ["vocals", "drums", "bass", "other"],
+        "description": [
+            {
+                "content": [
+                    "it's like demucs v4 but worse i think",
+                    "the vocals have a ton of bleed, the bass is disappointing tbh",
+                    "the other stem has a ton of bgv and adlib bleed in it"
+                ],
+                "author": "isling"
+            }
+        ],
+        "resources": [ {"kind": "other", "url": "https://uvronline.app/ai?discordtest"} ]
+    },
+    "bs_roformer-amane-4_stems": {
+        "authors": ["shintaro"],
+        "purpose": "separation",
+        "architecture": "bs_roformer",
+        "output": ["vocals", "drums", "bass", "other"],
+        "resources": [
+            {
+                "kind": "model_ckpt",
+                "url": "https://mega.nz/file/GwY1TQoB#UmeMGO2BBtgrUXkmXXQQVXqwR_hwxaAmkycDr-fitWg"
+            },
+            {
+                "kind": "config_msst",
+                "url": "https://mega.nz/file/Pwp32DrY#Kyl5sK3j6l5kXCe7Br52gN2CXn9c8N6lzOYT1g0FOS0"
+            }
+        ]
+    },
+    "mel_roformer-gabox-instrumental": {
+        "authors": ["gabox"],
+        "purpose": "separation",
+        "architecture": "mel_roformer",
+        "output": ["instrum"],
+        "metrics": [
+            {
+                "values": { "instrum": {"bleedless": 37.4, "fullness": 37.07} }
+            }
+        ],
+        "description": [
+            {
+                "content": [
+                    "it's like the v1 model with phase fixer, but it gets more instruments,",
+                    "like, it prevents some instruments getting into the vocals",
+                    "sometimes both models don't get choirs"
+                ]
+            }
+        ],
+        "resources": [
+            {
+                "kind": "huggingface",
+                "url": "https://huggingface.co/GaboxR67/MelBandRoformers/tree/main/melbandroformers"
+            }
+        ]
+    },
+    "mel_roformer-gabox-voc_gabox": {
+        "authors": ["gabox"],
+        "purpose": "separation",
+        "architecture": "mel_roformer",
+        "output": ["vocals"],
+        "metrics": [
+            {
+                "values": { "vocals": {"bleedless": 34.66, "fullness": 18.1} }
+            }
+        ],
+        "resources": [
+            {
+                "kind": "model_ckpt",
+                "url": "https://huggingface.co/GaboxR67/MelBandRoformers/tree/main/melbandroformers/vocals/voc_gabox.ckpt"
+            }
+        ]
+    },
+    "mel_roformer-gabox-voc_fv2": {
+        "authors": ["gabox"],
+        "purpose": "separation",
+        "architecture": "mel_roformer",
+        "output": ["vocals"],
+        "metrics": [
+            {
+                "values": { "vocals": {"bleedless": 33.4013, "fullness": 19.3064} }
+            }
+        ],
+        "resources": [
+            {
+                "kind": "huggingface",
+                "url": "https://huggingface.co/GaboxR67/MelBandRoformers/tree/main/melbandroformers/vocals"
+            }
+        ]
+    },
+    "bs_roformer-aufr33-male_female_beta": {
+        "authors": ["aufr33"],
+        "purpose": "separation",
+        "architecture": "bs_roformer",
+        "output": ["male"],
+        "status": "beta",
+        "description": [
+            {
+                "content": [
+                    "this model only works with vocals. you need to pre-isolate the vocals."
+                ]
+            }
+        ],
+        "resources": [
+            {
+                "kind": "model_ckpt",
+                "url": "https://mega.nz/file/XZwV2QwB#5nvWpmvtoBMTJkpor-lMUZCbBZWDH-3i52ELJS_JmcU"
+            },
+            {
+                "kind": "config_msst",
+                "url": "https://huggingface.co/Sucial/Chorus_Male_Female_BS_Roformer/blob/main/config_chorus_male_female_bs_roformer.yaml"
+            }
+        ]
+    },
+    "mel_roformer-unwa-kim_ft2": {
+        "authors": ["unwa"],
+        "purpose": "separation",
+        "architecture": "mel_roformer",
+        "output": ["vocals"],
+        "metrics": [ {"source": "https://mvsep.com/quality_checker/entry/7714"} ],
+        "description": [
+            {
+                "content": [
+                    "it tends to muddy instrumental outputs at times, similarly like the og kim's model was doing, which didn't happen in the previous ft model by unwa."
+                ]
+            }
+        ],
+        "resources": [
+            {
+                "kind": "huggingface",
+                "url": "https://huggingface.co/pcunwa/Kim-Mel-Band-Roformer-FT/tree/main"
+            }
+        ]
+    },
+    "bs_roformer-unwa-inst_exp_value_residual": {
+        "authors": ["unwa"],
+        "purpose": "separation",
+        "architecture": "bs_roformer",
+        "output": ["instrum"],
+        "status": "alpha",
+        "description": [
+            {
+                "content": [
+                    "it's using a new value residual learning added to roformer arch by lucidrains in the og roformer."
+                ]
+            },
+            {
+                "content": [
+                    "i think it sounds better than large rn but still not good, needs some [more] epoch[s]!"
+                ]
+            }
+        ],
+        "resources": [
+            {
+                "kind": "huggingface",
+                "url": "https://huggingface.co/pcunwa/BS-Roformer-Inst-EXP-Value-Residual"
+            }
+        ]
+    },
+    "mel_roformer-sucial-dereverb_echo_fused": {
+        "authors": ["sucial"],
+        "purpose": "de-reverb",
+        "architecture": "mel_roformer",
+        "output": ["dry"],
+        "description": [
+            {
+                "content": [
+                    "trained two new models specifically targeting large reverb removal.",
+                    "after training, i combined these two models with my v2 model through a blending process, to better handle all scenarios.",
+                    "more effective in removing large reverb."
+                ],
+                "author": "sucial"
+            }
+        ],
+        "resources": [
+            {
+                "kind": "model_ckpt",
+                "url": "https://huggingface.co/Sucial/Dereverb-Echo_Mel_Band_Roformer/blob/main/dereverb_echo_mbr_fused_0.5_v2_0.25_big_0.25_super.ckpt"
+            },
+            {
+                "kind": "config_msst",
+                "url": "https://huggingface.co/Sucial/Dereverb-Echo_Mel_Band_Roformer/blob/main/config_dereverb_echo_mbr_v2.yaml"
+            }
+        ]
+    },
+    "mel_roformer-becruily-instrumental": {
+        "authors": ["becruily"],
+        "purpose": "separation",
+        "architecture": "mel_roformer",
+        "output": ["instrum"],
+        "metrics": [
+            {
+                "values": { "instrum": {"sdr": 16.4719, "fullness": 33.9763, "bleedless": 40.4849} }
+            }
+        ],
+        "description": [
+            {
+                "content": [
+                    "instrumental model is as clean as unwa's v1, but has less noise",
+                    "doesn't require phase fix from mel-kim like unwa models",
+                    "it handles the busy instrumentals in a way that makes vr finally an arch of the past",
+                    "correctly removes sfx voice.",
+                    "more instruments correctly recognized as instruments and not vocals"
+                ]
+            }
+        ],
+        "resources": [
+            {
+                "kind": "model_ckpt",
+                "url": "https://huggingface.co/becruily/mel-band-roformer-instrumental/resolve/main/mel_band_roformer_instrumental_becruily.ckpt"
+            },
+            {
+                "kind": "config_msst",
+                "url": "https://huggingface.co/becruily/mel-band-roformer-instrumental/resolve/main/config_instrumental_becruily.yaml"
+            }
+        ]
+    },
+    "mel_roformer-becruily-vocals": {
+        "authors": ["becruily"],
+        "purpose": "separation",
+        "architecture": "mel_roformer",
+        "output": ["vocals"],
+        "metrics": [
+            {
+                "values": { "vocals": {"sdr": 10.5547, "fullness": 20.7284, "bleedless": 31.2549} }
+            }
+        ],
+        "description": [
+            {
+                "content": [
+                    "vocal model pulling almost studio quality metal screams effortlessly. wow, i've never heard that scream so cleanly"
+                ],
+                "author": "mesk"
+            }
+        ],
+        "resources": [
+            {
+                "kind": "model_ckpt",
+                "url": "https://huggingface.co/becruily/mel-band-roformer-vocals/resolve/main/mel_band_roformer_vocals_becruily.ckpt"
+            },
+            {
+                "kind": "config_msst",
+                "url": "https://huggingface.co/becruily/mel-band-roformer-vocals/resolve/main/config_vocals_becruily.yaml"
+            }
+        ]
+    },
+    "mel_roformer-unwa-kim_ft": {
+        "authors": ["unwa"],
+        "purpose": "separation",
+        "architecture": "mel_roformer",
+        "output": ["vocals"],
+        "metrics": [
+            {
+                "values": { "vocals": {"bleedless": 36.95, "fullness": 16.40, "sdr": 10.97} },
+                "source": "https://mvsep.com/quality_checker/entry/7585"
+            }
+        ],
+        "description": [
+            {
+                "content": [
+                    "it enhances both our new bleedless (36.95 vs 36.75) and fullness (16.40 vs 16.26) metric for vocals vs the original mel kim model."
+                ]
+            }
+        ],
+        "resources": [
+            {
+                "kind": "huggingface",
+                "url": "https://huggingface.co/pcunwa/Kim-Mel-Band-Roformer-FT/tree/main"
+            }
+        ]
+    },
+    "bs_roformer-sucial-male_female": {
+        "authors": ["sucial"],
+        "purpose": "separation",
+        "architecture": "bs_roformer",
+        "output": ["male"],
+        "description": [
+            {
+                "content": [
+                    "if they sing at intervals (one by one), they cannot be separated.",
+                    "works pretty good, bleed might occur occasionally.",
+                    "it seems to pick up various people dialogues."
+                ]
+            }
+        ],
+        "resources": [
+            {
+                "kind": "other",
+                "url": "https://github.com/ZFTurbo/Music-Source-Separation-Training/issues/1#issuecomment-2525052333"
+            },
+            {
+                "kind": "config_msst",
+                "url": "https://drive.google.com/file/d/15dxMvEanC8h_djEuHoQXHKMk0ERN02_y/view?usp=sharing"
+            }
+        ]
+    },
+    "mel_roformer-unwa-big_beta5e": {
+        "authors": ["unwa"],
+        "purpose": "separation",
+        "architecture": "mel_roformer",
+        "output": ["vocals"],
+        "status": "beta",
+        "description": [
+            {
+                "content": ["it seems to fix some issues with trumpets in vocal stem"],
+                "author": "maxi74x1"
+            },
+            { "content": ["it handles reverb tails much better"], "author": "jarredou/Rage123" },
+            {
+                "content": [
+                    "it's noisy and, idk, grainy? when the accompaniment gets too loud.",
+                    "definitely not muddy though, which is a welcome change imho.",
+                    "i think i prefer beta 4 overall"
+                ],
+                "author": "musicalman"
+            },
+            {
+                "content": [
+                    "the noise is terrible when that model is used for very intense songs"
+                ],
+                "author": "unwa"
+            },
+            {
+                "content": [
+                    "feel so full af, but it has noticeable noise similar to lew's vocal enhancer"
+                ]
+            }
+        ],
+        "resources": [
+            {
+                "kind": "huggingface",
+                "url": "https://huggingface.co/pcunwa/Mel-Band-Roformer-big/tree/main"
+            }
+        ]
+    },
+    "mel_roformer-unwa-v1e": {
+        "authors": ["unwa"],
+        "purpose": "separation",
+        "architecture": "mel_roformer",
+        "output": ["instrum"],
+        "description": [
+            {
+                "content": [
+                    "the \"e\" stands for emphasis, indicating that this is a model that emphasizes fullness.",
+                    "however, compared to v1, while the fullness score has increased, there is a possibility that noise has also increased.",
+                    "lighter compared to v2."
+                ]
+            }
+        ],
+        "resources": [
+            {
+                "kind": "huggingface",
+                "url": "https://huggingface.co/pcunwa/Mel-Band-Roformer-Inst/tree/main"
+            }
+        ]
+    },
+    "mel_roformer-unwa-v2": {
+        "authors": ["unwa"],
+        "purpose": "separation",
+        "architecture": "mel_roformer",
+        "output": ["instrum"],
+        "metrics": [
+            {
+                "values": { "instrum": {"sdr": 16.845} }
+            }
+        ],
+        "description": [
+            { "content": ["sounds very similar to v1 but has less noise, pretty good"] },
+            {
+                "content": [
+                    "the aforementioned noise from the v1 is less noticeable to none at all, depending on the track."
+                ]
+            },
+            {
+                "content": [
+                    "v2 is more muddy than v1 (on some songs), but less muddy than the kim model.",
+                    "[as for v1,] sometimes it's better at high frequencies"
+                ],
+                "author": "aufr33"
+            }
+        ],
+        "resources": [
+            {
+                "kind": "huggingface",
+                "url": "https://huggingface.co/pcunwa/Mel-Band-Roformer-Inst/tree/main"
+            }
+        ]
+    },
+    "mel_roformer-unwa-duality_v2": {
+        "authors": ["unwa"],
+        "purpose": "separation",
+        "architecture": "mel_roformer",
+        "output": ["vocals", "other"],
+        "description": [
+            { "content": ["slightly a bit better sdr and fewer residues"] }
+        ],
+        "resources": [
+            {
+                "kind": "huggingface",
+                "url": "https://huggingface.co/pcunwa/Mel-Band-Roformer-InstVoc-Duality/tree/main"
+            }
+        ]
+    },
+    "mel_roformer-unwa-duality_v1": {
+        "authors": ["unwa"],
+        "purpose": "separation",
+        "architecture": "mel_roformer",
+        "output": ["vocals", "other"],
+        "description": [
+            {
+                "content": [
+                    "focused on both instrumental and vocal stem.",
+                    "vocals sound similar to beta 4 model, instrumentals are deprived of the noise present in inst v1 model, but as a downside, they don't sound similarly muddy to previous roformers."
+                ]
+            }
+        ],
+        "resources": [
+            {
+                "kind": "huggingface",
+                "url": "https://huggingface.co/pcunwa/Mel-Band-Roformer-InstVoc-Duality/tree/main"
+            }
+        ]
+    },
+    "mel_roformer-unwa-v1": {
+        "authors": ["unwa"],
+        "purpose": "separation",
+        "architecture": "mel_roformer",
+        "output": ["instrum"],
+        "description": [
+            {
+                "content": [
+                    "much less muddy (..) but carries the exact same uvr noise from the [mdx-net v2] models"
+                ]
+            },
+            { "content": ["it's a different type of noise, so aufr33 denoiser won't work on it."] }
+        ],
+        "resources": [
+            {
+                "kind": "huggingface",
+                "url": "https://huggingface.co/pcunwa/Mel-Band-Roformer-Inst/tree/main"
+            }
+        ]
+    },
+    "mel_roformer-unwa-big_beta4": {
+        "authors": ["unwa"],
+        "purpose": "separation",
+        "architecture": "mel_roformer",
+        "output": ["vocals"],
+        "status": "beta",
+        "description": [
+            {
+                "content": [
+                    "metrics on my test dataset have improved over beta3, but are probably not accurate due to the small test dataset.",
+                    "the high frequencies of vocals are now extracted more aggressively. however, leakage may have increased."
+                ],
+                "author": "unwa"
+            },
+            {
+                "content": [
+                    "one of the best at isolating most vocals with very little vocal bleed and still doesn't sound muddy",
+                    "gives fuller vocals"
+                ]
+            }
+        ],
+        "resources": [
+            {
+                "kind": "huggingface",
+                "url": "https://huggingface.co/pcunwa/Mel-Band-Roformer-big/tree/main"
+            }
+        ]
+    },
+    "mel_roformer-unwa-big_beta3": {
+        "authors": ["unwa", "bas curtiz"],
+        "purpose": "separation",
+        "architecture": "mel_roformer",
+        "output": ["vocals"],
+        "status": "beta",
+        "description": [
+            {
+                "content": [
+                    "free from the high frequency ringing present in the previous beta models",
+                    "definitely better than kim's now"
+                ]
+            }
+        ],
+        "resources": [
+            {
+                "kind": "huggingface",
+                "url": "https://huggingface.co/pcunwa/Mel-Band-Roformer-big/tree/main"
+            }
+        ]
+    },
+    "bs_roformer-unwa-largev1": {
+        "authors": ["unwa"],
+        "purpose": "separation",
+        "architecture": "bs_roformer",
+        "finetuned_from": "bs_roformer-viperx-1297",
+        "output": ["vocals"],
+        "description": [
+            {
+                "content": [
+                    "worse sdr than other fine-tuned models on mvsep by zfturbo, but better sdr than kim's melroformer and viperx base model"
+                ]
+            },
+            {
+                "content": [
+                    "more muddy than kim's roformer, a bit less of vocal residues, a bit more artificial sound"
+                ]
+            }
+        ],
+        "metrics": [
+            {
+                "values": { "instrum": {"sdr": 12.59} }
+            }
+        ],
+        "resources": [
+            {
+                "kind": "model_ckpt",
+                "url": "https://drive.google.com/file/d/1Q_M9rlEjYlBZbG2qHScvp4Sa0zfdP9TL/view"
+            }
+        ]
+    },
+    "mel_roformer-aufr33-karaoke": {
+        "authors": ["aufr33", "viperx"],
+        "purpose": "separation",
+        "architecture": "mel_roformer",
+        "output": ["lead_vocals"],
+        "resources": [
+            {
+                "kind": "model_ckpt",
+                "url": "https://huggingface.co/jarredou/aufr33-viperx-karaoke-melroformer-model/resolve/main/mel_band_roformer_karaoke_aufr33_viperx_sdr_10.1956.ckpt"
+            },
+            {
+                "kind": "config_msst",
+                "url": "https://huggingface.co/jarredou/aufr33-viperx-karaoke-melroformer-model/resolve/main/config_mel_band_roformer_karaoke.yaml"
+            }
+        ]
+    },
+    "mel_roformer-kim-vocals": {
+        "authors": ["kimberley jensen"],
+        "purpose": "separation",
+        "architecture": "mel_roformer",
+        "output": ["vocals"],
+        "resources": [
+            {
+                "kind": "model_ckpt",
+                "url": "https://huggingface.co/KimberleyJSN/melbandroformer/resolve/main/MelBandRoformer.ckpt"
+            },
+            {
+                "kind": "config_msst",
+                "url": "https://raw.githubusercontent.com/ZFTurbo/Music-Source-Separation-Training/main/configs/KimberleyJensen/config_vocals_mel_band_roformer_kj.yaml"
+            }
+        ]
+    },
+    "mel_roformer-yolkis-drums": {
+        "authors": ["yolkis"],
+        "purpose": "separation",
+        "architecture": "mel_roformer",
+        "output": ["drums"],
+        "metrics": [
+            {
+                "values": { "drums": {"sdr": 7.68} }
+            }
+        ],
+        "description": [
+            {
+                "content": [
+                    "not totally bad results as for 7.68 sdr, but it was trained on subpar gpu for roformers for only 5 days"
+                ]
+            }
+        ],
+        "resources": [
+            {
+                "kind": "other",
+                "url": "https://github.com/ZFTurbo/Music-Source-Separation-Training/issues/1#issuecomment-2156069553"
+            }
+        ]
+    },
+    "mel_roformer-aufr33-decrowd": {
+        "authors": ["aufr33", "viperx"],
+        "purpose": "crowd_removal",
+        "architecture": "mel_roformer",
+        "output": ["clean"],
+        "description": [
+            {
+                "content": [
+                    "the roformer model does a better job at retaining the instruments and vocals as well as some sound effects and synths better than the mdx-net decrowd, but at the cost of crowd bleed.",
+                    "sometimes [the old model] mistakes the fuzzy sounds of guitar as crowd noise",
+                    "also isolates some kicks in songs"
+                ],
+                "author": "kashi"
+            }
+        ],
+        "resources": [
+            {"kind": "model_ckpt", "url": "https://buzzheavier.com/f/GV6ppLupAAA"},
+            {"kind": "config_msst", "url": "https://buzzheavier.com/f/GV6psmJpAAA"}
+        ]
+    },
+    "mel_roformer-aufr33-denoise": {
+        "authors": ["aufr33"],
+        "purpose": "denoise",
+        "architecture": "mel_roformer",
+        "output": ["denoised"],
+        "resources": [
+            {
+                "kind": "model_ckpt",
+                "url": "https://mega.nz/file/rIRQGJ4D#9SHaPIXt8GRoi2SL29WUILW0g9dk26I5njyFPZuPJQ8"
+            },
+            {
+                "kind": "model_ckpt",
+                "url": "https://mega.nz/file/vM4mHTYQ#f_uCxxS_olfTR4iAsOc-XS6sfUecfbF-ZKXrk3IjbnY"
+            },
+            {
+                "kind": "config_msst",
+                "url": "https://drive.google.com/file/d/1uwInhwgjOMIdOMTgj_oNR_dmaq7E-b3g/view?usp=sharing"
+            }
+        ]
+    },
+    "bs_roformer-anvuew-dereverb": {
+        "authors": ["anvuew"],
+        "purpose": "de-reverb",
+        "architecture": "bs_roformer",
+        "output": ["dry"],
+        "resources": [
+            {
+                "kind": "other",
+                "url": "https://github.com/ZFTurbo/Music-Source-Separation-Training/issues/1#issuecomment-2229279531"
+            }
+        ]
+    },
+    "mel_roformer-anvuew-dereverb": {
+        "authors": ["anvuew"],
+        "purpose": "de-reverb",
+        "architecture": "mel_roformer",
+        "output": ["dry"],
+        "description": [
+            {
+                "content": [
+                    "anvuew's models can remove reverb effect only from vocals.",
+                    "old foxjoy's model works with full track."
+                ]
+            }
+        ],
+        "resources": [
+            {
+                "kind": "other",
+                "url": "https://github.com/ZFTurbo/Music-Source-Separation-Training/issues/1#issuecomment-2226805511"
+            }
+        ]
+    },
+    "bs_roformer-viperx-1297": {
+        "authors": ["viperx"],
+        "purpose": "separation",
+        "architecture": "bs_roformer",
+        "output": ["vocals"],
+        "description": [
+            { "content": ["base model with SDR of 12.9755, widely used for fine-tuning."] }
+        ],
+        "resources": [
+            {
+                "kind": "model_ckpt",
+                "url": "https://github.com/TRvlvr/model_repo/releases/download/all_public_uvr_models/model_bs_roformer_ep_317_sdr_12.9755.ckpt"
+            },
+            {
+                "kind": "config_msst",
+                "url": "https://raw.githubusercontent.com/ZFTurbo/Music-Source-Separation-Training/main/configs/viperx/model_bs_roformer_ep_317_sdr_12.9755.yaml"
+            }
+        ]
+    }
+}

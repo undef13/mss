@@ -35,9 +35,9 @@ readme = "README.md"
 dependencies = [
     "annotated-types>=0.7.0",
     "einops>=0.8.1",
-    "numpy>=2.2.6",
-    "torch>=2.7.1",
-    "torchaudio>=2.7.1"  # for melband roformers
+    "numpy>=2",
+    "torch>=2.7.0",
+    "torchaudio>=2.7.0",      # for melband roformers, we should probably put this as optional but eh...
 ]
 
 [project.urls]
@@ -48,12 +48,12 @@ Releases = "https://github.com/undef13/splifft/releases"
 [project.optional-dependencies]
 config = ["pydantic>=2.11.5"]
 inference = [
-    "torchcodec>=0.6",
+    "torchcodec>=0.5",                               # AudioEncoder is only available for >=0.5
     "soundfile>=0.13.1 ; sys_platform == 'Windows'",
-    "rich>=14.1.0",
+    "rich>=14.1.0",                                  # replacement for tqdm, though cli should already provide it
 ]
-registry = ["splifft[config]", "splifft[networking]"]
 cli = ["typer>=0.16.0"]
+recommended = ["splifft[config,inference,cli]"] # experimental!
 sageattention = ["sageattention>=1.0.6"]
 # the following are experimental, used only in scripts
 networking = [
